@@ -42,20 +42,20 @@ export default function OnboardingLandingPage() {
       <ul className="mt-12 space-y-4">
         <li>
           <PathCard
-            href="/dashboard/onboarding/claim"
+            href="/dashboard/onboarding/submit"
             eyebrow="Path A"
-            icon={MagnifyingGlass}
-            title="Claim an existing listing."
-            body="If your product is already in the directory as an editorial stub, claim it and we'll transfer ownership after verifying. You can edit the description, add screenshots, and update categories."
+            icon={Plus}
+            title="Submit a new product."
+            body="Walk through three short steps to set up your company profile and add your first product to the directory. We'll review the submission and email you when it's live, usually within two business days."
           />
         </li>
         <li>
           <PathCard
-            href="/dashboard/onboarding/submit"
+            href="/dashboard/onboarding/claim"
             eyebrow="Path B"
-            icon={Plus}
-            title="Submit a new product."
-            body="Walk through three short steps to set up your company profile and add your first product to the directory. We'll review the submission and email you when it's live, usually within two business days."
+            icon={MagnifyingGlass}
+            title="Claim an existing listing."
+            body="If your product is already in the directory as an editorial stub, claim it and we'll transfer ownership after verifying. You can edit the description, add screenshots, and update categories."
           />
         </li>
       </ul>
