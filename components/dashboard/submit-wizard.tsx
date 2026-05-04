@@ -261,7 +261,13 @@ export function SubmitWizard({
       // eslint-disable-next-line no-console
       console.info("[mock submission]", data);
     }
-    setTimeout(() => router.push("/dashboard/onboarding/complete"), 400);
+    // Returning vendors land back on their dashboard; first-time vendors see
+    // the onboarding "thanks, we'll review" page since this is their first
+    // submission and they haven't seen the dashboard yet.
+    const target = skipCompanyStep
+      ? "/dashboard?submitted=1"
+      : "/dashboard/onboarding/complete";
+    setTimeout(() => router.push(target), 400);
   };
 
   // Returning vendors already have a company profile — render the entire

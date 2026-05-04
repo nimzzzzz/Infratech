@@ -29,7 +29,7 @@ export function Header() {
             Login
           </Link>
           <Link
-            href="/login"
+            href="/login?intent=submit"
             className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-[0.18em] text-white transition-transform active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[11px]"
           >
             <span>List your product</span>

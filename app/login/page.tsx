@@ -10,9 +10,9 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 
 export const metadata: Metadata = {
-  title: "List your product",
+  title: "Sign in",
   description:
-    "Sign in with LinkedIn to claim an existing listing or submit a new one to the directory.",
+    "Sign in with LinkedIn to manage your dashboard, claim a listing, or submit a new product.",
   alternates: { canonical: "/login" },
   robots: { index: false, follow: false },
 };
@@ -30,8 +30,37 @@ function findHeroImage(): string | null {
   return null;
 }
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const intentParam = Array.isArray(sp.intent) ? sp.intent[0] : sp.intent;
+  const intent = intentParam === "submit" ? "submit" : "signin";
   const heroImage = findHeroImage();
+
+  // Where each path lands. Real auth is mocked — for the LinkedIn button
+  // we treat success as "returning vendor signs in"; for the demo button
+  // we let you preview the new-vendor flow explicitly.
+  const linkedInHref =
+    intent === "submit"
+      ? "/dashboard/onboarding/submit?as=returning"
+      : "/dashboard";
+  const newVendorHref = "/dashboard?as=new"; // gating redirects to /dashboard/onboarding
+  const returningVendorHref =
+    intent === "submit"
+      ? "/dashboard/onboarding/submit?as=returning"
+      : "/dashboard";
+
+  const eyebrow = intent === "submit" ? "List your product" : "Sign in";
+  const title = intent === "submit" ? "List your product." : "Welcome back.";
+  const subtitle =
+    intent === "submit"
+      ? "Sign in with LinkedIn to claim an existing listing or submit a new one. We use LinkedIn to verify you represent the company before a listing goes live."
+      : "Sign in with LinkedIn to manage your dashboard, edit listings, and reply to inquiries.";
+  const primaryCtaLabel =
+    intent === "submit" ? "Continue with LinkedIn" : "Sign in with LinkedIn";
 
   return (
     <div className="grid min-h-[100dvh] grid-cols-1 bg-[var(--color-canvas)] md:grid-cols-2">
@@ -80,7 +109,9 @@ export default function LoginPage() {
             &sect; Edition 01 &middot; The Index
           </p>
           <p className="mt-4 font-heading text-[24px] leading-tight text-white md:text-[28px] lg:text-[34px]">
-            Get your product seen by the people who run the projects.
+            {intent === "submit"
+              ? "Get your product seen by the people who run the projects."
+              : "Pick up where you left off."}
           </p>
         </div>
       </aside>
@@ -138,23 +169,21 @@ export default function LoginPage() {
         <div className="flex flex-1 items-center">
           <div className="w-full max-w-md">
             <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-              &sect; For vendors
+              &sect; {eyebrow}
             </p>
             <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
-              List your product.
+              {title}
             </h1>
             <p className="mt-5 max-w-[44ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
-              Sign in with LinkedIn to claim an existing listing or submit a new
-              one. We use LinkedIn to verify you represent the company before a
-              listing goes live.
+              {subtitle}
             </p>
 
             <Link
-              href="/dashboard?as=new"
+              href={linkedInHref}
               className="group mt-10 inline-flex h-12 w-full items-center justify-center gap-2.5 bg-[#0A66C2] px-5 text-[14px] font-medium text-white transition-colors hover:bg-[#0959AB] active:translate-y-[1px] sm:h-14 sm:text-[15px]"
             >
               <LinkedinLogo size={20} weight="fill" />
-              <span>Continue with LinkedIn</span>
+              <span>{primaryCtaLabel}</span>
               <ArrowRight
                 size={14}
                 weight="bold"
@@ -172,7 +201,7 @@ export default function LoginPage() {
               </p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Link
-                  href="/dashboard?as=new"
+                  href={newVendorHref}
                   className="group inline-flex h-10 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[11px] uppercase tracking-[0.16em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)]"
                 >
                   New vendor
@@ -183,7 +212,7 @@ export default function LoginPage() {
                   />
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href={returningVendorHref}
                   className="group inline-flex h-10 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[11px] uppercase tracking-[0.16em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)]"
                 >
                   Returning vendor
