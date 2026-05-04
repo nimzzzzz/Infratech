@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -115,6 +115,18 @@ export function SubmitWizard({
   // Suppress browser-back popstate handling once after we sync state from it.
   const skipPopRef = useRef(false);
 
+  // Take over scroll restoration while the wizard is mounted — the browser's
+  // default behavior would restore the bottom-of-page scroll position from
+  // wherever you clicked Continue, fighting with our scroll-to-top.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const prev = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    return () => {
+      window.history.scrollRestoration = prev;
+    };
+  }, []);
+
   // Push a history entry per step so the browser Back button steps back
   // through the wizard instead of navigating to the page we came from.
   // We tag entries with { wizardStep } so popstate can restore the right step.
@@ -147,7 +159,9 @@ export function SubmitWizard({
   }, [minStep]);
 
   // Scroll to top (or a specific section) AFTER the new step has rendered.
-  useEffect(() => {
+  // useLayoutEffect runs synchronously after DOM commit and before paint, so
+  // the user never sees a flash of the wrong scroll position.
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const target = scrollTargetRef.current;
     scrollTargetRef.current = null;
@@ -580,7 +594,7 @@ function SinglePageSubmit({
     pricingValid();
   const allValid = basicsOk && descOk && taxonomyOk && industryPricingOk;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const target = scrollTargetRef.current;
     scrollTargetRef.current = null;
