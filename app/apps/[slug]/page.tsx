@@ -312,7 +312,7 @@ export default async function AppDetailPage({
                   &sect; More like this
                 </p>
                 <h2 className="mt-3 font-heading text-[28px] leading-[1.05] tracking-tight md:text-[36px]">
-                  Tools in adjacent territory.
+                  Products in adjacent territory.
                 </h2>
               </div>
               <Link

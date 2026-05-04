@@ -183,7 +183,7 @@ export function ContactForm({
             rows={8}
             value={data.message}
             onChange={(e) => update("message", e.target.value)}
-            placeholder="Hi — we're evaluating tools for…"
+            placeholder="Hi — we're evaluating products for…"
             maxLength={3000}
             className="border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2.5 text-[15px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
           />

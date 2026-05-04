@@ -18,7 +18,7 @@ export default function TermsPage() {
         The directory is published for reference only. Listings reflect
         publicly-available information at the time of writing and are not
         endorsements. Always evaluate fit-for-purpose against your project&rsquo;s
-        constraints before committing to a tool.
+        constraints before committing to a product.
       </p>
     </LegalShell>
   );

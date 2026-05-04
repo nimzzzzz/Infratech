@@ -92,7 +92,7 @@ export default async function DashboardOverviewPage({
         />
         <StatCard
           icon={Stack}
-          label="Listed tools"
+          label="Listed products"
           value={listings.filter((l) => l.status === "live").length}
           href="#listings"
         />
@@ -187,7 +187,7 @@ export default async function DashboardOverviewPage({
             className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
           >
             <Plus size={11} weight="bold" />
-            Add another tool
+            Add another product
           </Link>
         </header>
 

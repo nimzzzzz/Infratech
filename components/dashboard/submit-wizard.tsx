@@ -88,7 +88,7 @@ const initialState = (companyName: string, domain: string): FormState => ({
 
 const steps = [
   { n: 1, label: "Your company", scope: "company" as const },
-  { n: 2, label: "Tool details", scope: "tool" as const },
+  { n: 2, label: "Product details", scope: "tool" as const },
   { n: 3, label: "Review", scope: "review" as const },
 ];
 
@@ -290,12 +290,12 @@ export function SubmitWizard({
         {step === 2 ? (
           <div className="space-y-14">
             <div id="section-basics" className="scroll-mt-24">
-              <Section title="Tool basics" n={1}>
+              <Section title="Product basics" n={1}>
                 <ToolBasicsStep data={data} update={update} />
               </Section>
             </div>
             <div id="section-description" className="scroll-mt-24">
-              <Section title="Tool description" n={2}>
+              <Section title="Product description" n={2}>
                 <ToolDescStep data={data} update={update} />
               </Section>
             </div>
@@ -409,7 +409,7 @@ function ProgressRail({
   const headlineFor = (n: number): string => {
     switch (n) {
       case 1: return "First, about your company.";
-      case 2: return "Now, the tool itself.";
+      case 2: return "Now, the product itself.";
       default: return "Look it over before submitting.";
     }
   };
@@ -418,7 +418,7 @@ function ProgressRail({
   const visibleSteps = skipCompanyStep ? steps.slice(1) : steps;
   const totalVisible = visibleSteps.length;
   const displayIndex = skipCompanyStep ? step - 1 : step;
-  const eyebrowLabel = skipCompanyStep ? "Add a tool" : "New listing";
+  const eyebrowLabel = skipCompanyStep ? "Add a product" : "New listing";
 
   return (
     <div>
@@ -489,17 +489,17 @@ function FullReviewView({
       </ReviewBlock>
 
       <ReviewBlock
-        title="Tool basics"
+        title="Product basics"
         onEdit={() => onEditSection("section-basics")}
       >
-        <ReviewRow label="Tool" value={data.name} />
+        <ReviewRow label="Product" value={data.name} />
         <ReviewRow label="Website" value={data.url} />
         {data.founded ? (
           <ReviewRow label="Launched" value={data.founded} />
         ) : null}
         {data.logoFile ? (
           <ReviewLogo
-            label="Tool logo"
+            label="Product logo"
             file={data.logoFile}
             alt={data.logoAlt}
           />
@@ -507,7 +507,7 @@ function FullReviewView({
       </ReviewBlock>
 
       <ReviewBlock
-        title="Tool description"
+        title="Product description"
         onEdit={() => onEditSection("section-description")}
       >
         <ReviewRow label="Tagline" value={data.tagline} />
@@ -617,7 +617,7 @@ function SinglePageSubmit({
     return (
       <div className="mt-8">
         <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-          &sect; Add a tool &middot; Review
+          &sect; Add a product &middot; Review
         </p>
         <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
           Look it over before submitting.
@@ -629,17 +629,17 @@ function SinglePageSubmit({
 
         <div className="mt-10 space-y-8 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
           <ReviewBlock
-            title="Tool basics"
+            title="Product basics"
             onEdit={() => editAt("section-basics")}
           >
-            <ReviewRow label="Tool" value={data.name} />
+            <ReviewRow label="Product" value={data.name} />
             <ReviewRow label="Website" value={data.url} />
             {data.founded ? (
               <ReviewRow label="Launched" value={data.founded} />
             ) : null}
             {data.logoFile ? (
               <ReviewLogo
-                label="Tool logo"
+                label="Product logo"
                 file={data.logoFile}
                 alt={data.logoAlt}
               />
@@ -647,7 +647,7 @@ function SinglePageSubmit({
           </ReviewBlock>
 
           <ReviewBlock
-            title="Tool description"
+            title="Product description"
             onEdit={() => editAt("section-description")}
           >
             <ReviewRow label="Tagline" value={data.tagline} />
@@ -745,10 +745,10 @@ function SinglePageSubmit({
   return (
     <div className="mt-8">
       <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-        &sect; Add a tool
+        &sect; Add a product
       </p>
       <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
-        Tell us about the new tool.
+        Tell us about the new product.
       </h1>
       <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
         Fill everything in on this page, then review before submitting.
@@ -757,12 +757,12 @@ function SinglePageSubmit({
 
       <div className="mt-12 space-y-14">
         <div id="section-basics" className="scroll-mt-24">
-          <Section title="Tool basics" n={1}>
+          <Section title="Product basics" n={1}>
             <ToolBasicsStep data={data} update={update} />
           </Section>
         </div>
         <div id="section-description" className="scroll-mt-24">
-          <Section title="Tool description" n={2}>
+          <Section title="Product description" n={2}>
             <ToolDescStep data={data} update={update} />
           </Section>
         </div>
@@ -897,8 +897,8 @@ function CompanyStep({
         <code className="rounded bg-[var(--color-canvas-warm)] px-1.5 py-0.5 text-[12px] text-[var(--color-ink)]">
           stagecraft/vendors/your-company
         </code>
-        . You&rsquo;ll only see this step once &mdash; future tool submissions
-        skip straight to the tool details.
+        . You&rsquo;ll only see this step once &mdash; future product submissions
+        skip straight to the product details.
       </p>
 
       <div className="md:col-span-2">
@@ -1020,7 +1020,7 @@ function ToolBasicsStep({
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <div className="md:col-span-2">
-        <Field label="Tool name" htmlFor="name" required>
+        <Field label="Product name" htmlFor="name" required>
           <input
             id="name"
             type="text"
@@ -1031,7 +1031,7 @@ function ToolBasicsStep({
           />
         </Field>
       </div>
-      <Field label="Tool website" htmlFor="url" required>
+      <Field label="Product website" htmlFor="url" required>
         <input
           id="url"
           type="url"
@@ -1042,9 +1042,9 @@ function ToolBasicsStep({
         />
       </Field>
       <Field
-        label="Tool launched"
+        label="Product launched"
         htmlFor="founded"
-        hint="Year this specific tool launched (often different from the company's founding year). Optional."
+        hint="Year this specific product launched (often different from the company's founding year). Optional."
       >
         <input
           id="founded"
@@ -1060,13 +1060,13 @@ function ToolBasicsStep({
       </Field>
       <div className="md:col-span-2">
         <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
-          Tool logo{" "}
+          Product logo{" "}
           <span className="normal-case tracking-normal text-[var(--color-ink-3)]">
             (optional &mdash; overrides the company logo on this listing only)
           </span>
         </p>
         <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
-          Skip if your tool uses the same brand mark as the company.
+          Skip if your product uses the same brand mark as the company.
         </p>
         <div className="mt-2">
           <LogoUpload
@@ -1098,7 +1098,7 @@ function ToolDescStep({
         label="Tagline"
         htmlFor="tagline"
         required
-        hint="One sentence, plain English. Describe the tool, not the company. Avoid 'elevate', 'seamless', 'next-gen'."
+        hint="One sentence, plain English. Describe the product, not the company. Avoid 'elevate', 'seamless', 'next-gen'."
       >
         <input
           id="tagline"
@@ -1116,17 +1116,17 @@ function ToolDescStep({
       </Field>
 
       <Field
-        label="What the tool does"
+        label="What the product does"
         htmlFor="description"
         required
-        hint="Two short paragraphs at most. Tool capabilities and where it fits — not company background. Editorial team may copy-edit before publishing."
+        hint="Two short paragraphs at most. Product capabilities and where it fits — not company background. Editorial team may copy-edit before publishing."
       >
         <textarea
           id="description"
           rows={6}
           value={data.description}
           onChange={(e) => update("description", e.target.value)}
-          placeholder="What does the tool actually do? What's distinctive? Skip the marketing language."
+          placeholder="What does the product actually do? What's distinctive? Skip the marketing language."
           maxLength={1200}
           className="border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2.5 text-[14px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
         />
@@ -1162,7 +1162,7 @@ function TaxonomyStep({
       <ChipGroup
         label="Project stages"
         required
-        hint="Pick every stage your tool actively supports. Stages are the directory's primary axis and aren't open for new proposals."
+        hint="Pick every stage your product actively supports. Stages are the directory's primary axis and aren't open for new proposals."
         options={stages.map((s) => ({ slug: s.slug, name: s.name }))}
         selected={data.stages}
         onToggle={(slug) => toggle("stages", slug)}
@@ -1170,7 +1170,7 @@ function TaxonomyStep({
       <ChipGroup
         label="Capabilities"
         required
-        hint="What the tool actually does. Pick up to five for clarity. Don't see one? Suggest it — admins review proposed tags before they go live."
+        hint="What the product actually does. Pick up to five for clarity. Don't see one? Suggest it — admins review proposed tags before they go live."
         options={capabilities}
         selected={data.capabilities}
         onToggle={(slug) => toggle("capabilities", slug)}

@@ -39,7 +39,7 @@ export const stages: Stage[] = [
   {
     slug: "general",
     name: "General",
-    short: "Cross-stage platforms and tooling.",
+    short: "Cross-stage platforms and products.",
     index: "06",
   },
 ];

@@ -46,7 +46,7 @@ export default function OnboardingLandingPage() {
             eyebrow="Path A"
             icon={MagnifyingGlass}
             title="Claim an existing listing."
-            body="If your tool is already in the directory as an editorial stub, claim it and we'll transfer ownership after verifying. You can edit the description, add screenshots, and update categories."
+            body="If your product is already in the directory as an editorial stub, claim it and we'll transfer ownership after verifying. You can edit the description, add screenshots, and update categories."
           />
         </li>
         <li>
@@ -54,8 +54,8 @@ export default function OnboardingLandingPage() {
             href="/dashboard/onboarding/submit"
             eyebrow="Path B"
             icon={Plus}
-            title="Submit a new tool."
-            body="Walk through six short steps to set up your company profile and add your first tool to the directory. We'll review the submission and email you when it's live, usually within two business days."
+            title="Submit a new product."
+            body="Walk through three short steps to set up your company profile and add your first product to the directory. We'll review the submission and email you when it's live, usually within two business days."
           />
         </li>
       </ul>

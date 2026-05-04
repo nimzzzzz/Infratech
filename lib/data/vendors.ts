@@ -33,7 +33,7 @@ export const vendors: Vendor[] = [
     shortBlurb:
       "One of the largest enterprise software companies in the world; the parent of Primavera and Aconex.",
     description:
-      "Oracle is one of the largest enterprise software companies in the world, with deep roots in databases and a wide-ranging applications portfolio. Their Construction and Engineering business unit, formed largely from the 2008 acquisition of Primavera Systems and the 2017 acquisition of Aconex, serves the controls and document-collaboration needs of major capital programmes globally.\n\nThe directory lists two of their tools: Primavera P6 (the de-facto enterprise scheduling system in EPC, infrastructure, and major programmes) and Aconex (cross-organisation document control on major programmes).",
+      "Oracle is one of the largest enterprise software companies in the world, with deep roots in databases and a wide-ranging applications portfolio. Their Construction and Engineering business unit, formed largely from the 2008 acquisition of Primavera Systems and the 2017 acquisition of Aconex, serves the controls and document-collaboration needs of major capital programmes globally.\n\nThe directory lists two of their products: Primavera P6 (the de-facto enterprise scheduling system in EPC, infrastructure, and major programmes) and Aconex (cross-organisation document control on major programmes).",
     websiteUrl: "https://www.oracle.com",
     founded: 1977,
     employeeBand: "100,000+",
@@ -85,7 +85,7 @@ export const vendors: Vendor[] = [
     shortBlurb:
       "Default productivity stack across most enterprises; lists Microsoft Project here.",
     description:
-      "Microsoft needs little introduction. The company's project management and productivity portfolio — anchored by Microsoft Project, Project for the Web, Microsoft 365, Power BI, and the Power Platform — is the default stack across most enterprises.\n\nThe directory lists Microsoft Project, the long-tenured scheduling tool that remains the most widely-recognised Gantt format in the broader business world.",
+      "Microsoft needs little introduction. The company's project management and productivity portfolio — anchored by Microsoft Project, Project for the Web, Microsoft 365, Power BI, and the Power Platform — is the default stack across most enterprises.\n\nThe directory lists Microsoft Project, the long-tenured scheduling product that remains the most widely-recognised Gantt format in the broader business world.",
     websiteUrl: "https://www.microsoft.com",
     founded: 1975,
     employeeBand: "220,000+",
@@ -96,9 +96,9 @@ export const vendors: Vendor[] = [
     slug: "bentley-systems",
     name: "Bentley Systems",
     shortBlurb:
-      "Pennsylvania-headquartered infrastructure software company; tools used on major rail, road, and energy projects.",
+      "Pennsylvania-headquartered infrastructure software company; products used on major rail, road, and energy projects.",
     description:
-      "Bentley Systems is a Pennsylvania-headquartered software company specialising in tools for designing, simulating, and operating world infrastructure. Public on NASDAQ since 2020 (BSY), Bentley's portfolio includes MicroStation, OpenRoads, OpenBuildings, ProjectWise, SYNCHRO, and the iTwin Platform — heavily used in major infrastructure programmes.\n\nThe directory lists Synchro 4D, their model-based scheduling tool.",
+      "Bentley Systems is a Pennsylvania-headquartered software company specialising in products for designing, simulating, and operating world infrastructure. Public on NASDAQ since 2020 (BSY), Bentley's portfolio includes MicroStation, OpenRoads, OpenBuildings, ProjectWise, SYNCHRO, and the iTwin Platform — heavily used in major infrastructure programmes.\n\nThe directory lists Synchro 4D, their model-based scheduling product.",
     websiteUrl: "https://www.bentley.com",
     founded: 1984,
     employeeBand: "5,001-10,000",
@@ -148,9 +148,9 @@ export const vendors: Vendor[] = [
     slug: "bimcrone",
     name: "BIMCRONE",
     shortBlurb:
-      "Construction tech company building mobile-first 4D BIM tooling for site progress capture.",
+      "Construction tech company building mobile-first 4D BIM products for site progress capture.",
     description:
-      "BIMCRONE is a construction technology company building mobile-first 4D BIM tooling for site progress capture. Their product lets site teams mark elements complete directly against a federated model from a phone, with installed quantities rolling up to schedule and cost dashboards in near-real time.\n\nMost commonly deployed on MEP-heavy fit-out projects where install rate is the binding constraint.",
+      "BIMCRONE is a construction technology company building mobile-first 4D BIM products for site progress capture. Their product lets site teams mark elements complete directly against a federated model from a phone, with installed quantities rolling up to schedule and cost dashboards in near-real time.\n\nMost commonly deployed on MEP-heavy fit-out projects where install rate is the binding constraint.",
     websiteUrl: "https://www.bimcrone.com",
     founded: 2019,
     employeeBand: "11-50",
@@ -163,7 +163,7 @@ export const vendors: Vendor[] = [
     shortBlurb:
       "AI company automating tendering and proposal workflows for engineering and construction.",
     description:
-      "Bridge2AI is a young AI company focused on automating tendering and proposal workflows for the engineering and construction industry. Their tool reads RFP documents and drafts compliant responses with traceable citations back to the source material.",
+      "Bridge2AI is a young AI company focused on automating tendering and proposal workflows for the engineering and construction industry. Their product reads RFP documents and drafts compliant responses with traceable citations back to the source material.",
     websiteUrl: "https://www.bridge2ai.com",
     founded: 2023,
     employeeBand: "1-10",
@@ -189,7 +189,7 @@ export const vendors: Vendor[] = [
     shortBlurb:
       "UK construction tech company providing operational dashboards for asset maintenance teams.",
     description:
-      "Rdash is a UK construction technology company providing operational dashboards for housing and infrastructure asset maintenance teams. Their platform sits on top of works-order systems and contractor scheduling tools, giving asset directors a single pane of glass for SLA risk, contractor performance, and resident-impact metrics.",
+      "Rdash is a UK construction technology company providing operational dashboards for housing and infrastructure asset maintenance teams. Their platform sits on top of works-order systems and contractor scheduling products, giving asset directors a single pane of glass for SLA risk, contractor performance, and resident-impact metrics.",
     websiteUrl: "https://www.rdash.com",
     founded: 2018,
     employeeBand: "11-50",
@@ -200,9 +200,9 @@ export const vendors: Vendor[] = [
     slug: "white-helmet-safety",
     name: "White Helmet Safety",
     shortBlurb:
-      "Construction tech company building mobile-first HSEQ tooling for site teams.",
+      "Construction tech company building mobile-first HSEQ products for site teams.",
     description:
-      "White Helmet Safety builds mobile-first health, safety, environment, and quality (HSEQ) tooling for construction site teams. Their platform replaces paper inspections with structured, photo-first observation flows and routable findings, with rollup analytics for HSE leadership.",
+      "White Helmet Safety builds mobile-first health, safety, environment, and quality (HSEQ) products for construction site teams. Their platform replaces paper inspections with structured, photo-first observation flows and routable findings, with rollup analytics for HSE leadership.",
     websiteUrl: "https://www.whitehelmet.io",
     founded: 2016,
     employeeBand: "11-50",

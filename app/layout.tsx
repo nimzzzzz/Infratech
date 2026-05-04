@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     template: `%s · ${SITE_NAME}`,
   },
   description:
-    "An independent reference of project management and infrastructure software, organised by stage and capability. Browse the tools running feasibility, delivery, and operations.",
+    "An independent reference of project management and infrastructure software, organised by stage and capability. Browse the products running feasibility, delivery, and operations.",
   applicationName: SITE_NAME,
   openGraph: {
     type: "website",

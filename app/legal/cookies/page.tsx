@@ -11,7 +11,7 @@ export default function CookiesPage() {
   return (
     <LegalShell title="Cookies" updated="Draft &mdash; pre-launch">
       <p>
-        We use Plausible Analytics, a privacy-friendly tool that does not set
+        We use Plausible Analytics, a privacy-friendly product that does not set
         cookies, does not track users across sites, and aggregates all data.
         For most visitors, no cookies are set at all.
       </p>

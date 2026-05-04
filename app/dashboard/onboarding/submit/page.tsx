@@ -7,7 +7,7 @@ import { getMockSession } from "@/lib/auth/mock-session";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Submit a tool",
+  title: "Submit a product",
   alternates: { canonical: "/dashboard/onboarding/submit" },
 };
 

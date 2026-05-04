@@ -27,7 +27,7 @@ export const apps: App[] = [
     blurb:
       "Generative scheduling that explores millions of build sequences against time and cost objectives.",
     description:
-      "ALICE generates and compares construction schedule scenarios at a scale planners can't reach manually — the engine takes a project's activities, durations, and crew constraints and explores millions of valid sequences against the team's chosen objectives (shortest duration, lowest cost, fewest crew swings, fastest revenue date). Planners use it for two main moves: pre-bid optioneering, and mid-project rebaselining when the original sequence stops fitting reality.\n\nThe tool integrates with Primavera P6 and Microsoft Project as the import / export interface, so the underlying contract schedule stays in the canonical tool while ALICE acts as the optimisation layer on top.",
+      "ALICE generates and compares construction schedule scenarios at a scale planners can't reach manually — the engine takes a project's activities, durations, and crew constraints and explores millions of valid sequences against the team's chosen objectives (shortest duration, lowest cost, fewest crew swings, fastest revenue date). Planners use it for two main moves: pre-bid optioneering, and mid-project rebaselining when the original sequence stops fitting reality.\n\nThe product integrates with Primavera P6 and Microsoft Project as the import / export interface, so the underlying contract schedule stays in the canonical product while ALICE acts as the optimisation layer on top.",
     websiteUrl: "https://www.alicetechnologies.com",
     stages: ["definition", "delivery"],
     capabilities: ["scheduling", "ai-agents", "forecasting"],
@@ -45,7 +45,7 @@ export const apps: App[] = [
     blurb:
       "4D BIM and progress tracking from a phone in the field. Captures install rate against the model in real time.",
     description:
-      "BIMCRONE is a mobile-first 4D BIM tool that lets site teams mark elements complete directly against the federated model from a phone or tablet. Installed quantities roll up to dashboards in near-real-time, and the system reconciles actual install rate against the planned baseline so the schedule team sees variance the same day rather than at the end of the month.\n\nMost commonly deployed on MEP-heavy fit-out projects where install rate is the binding constraint and the foreman wants something faster than walking the site with a printout.",
+      "BIMCRONE is a mobile-first 4D BIM product that lets site teams mark elements complete directly against the federated model from a phone or tablet. Installed quantities roll up to dashboards in near-real-time, and the system reconciles actual install rate against the planned baseline so the schedule team sees variance the same day rather than at the end of the month.\n\nMost commonly deployed on MEP-heavy fit-out projects where install rate is the binding constraint and the foreman wants something faster than walking the site with a printout.",
     websiteUrl: "https://www.bimcrone.com",
     stages: ["delivery"],
     capabilities: ["building-information-modelling", "field-management", "monitoring"],
@@ -164,7 +164,7 @@ export const apps: App[] = [
     blurb:
       "Operational dashboards for housing and asset maintenance teams. Built around live works orders.",
     description:
-      "Rdash gives housing associations, social landlords, and infrastructure asset owners a live operational dashboard built on top of their works-order system. Teams see open jobs, SLA risk, contractor performance, and resident-impact metrics from one screen rather than chasing reports across half a dozen contractor portals.\n\nIntegrates with the major housing management systems and contractor scheduling tools. Mostly deployed at the in-house repairs team or asset director level, where the user is operational rather than IT.",
+      "Rdash gives housing associations, social landlords, and infrastructure asset owners a live operational dashboard built on top of their works-order system. Teams see open jobs, SLA risk, contractor performance, and resident-impact metrics from one screen rather than chasing reports across half a dozen contractor portals.\n\nIntegrates with the major housing management systems and contractor scheduling products. Mostly deployed at the in-house repairs team or asset director level, where the user is operational rather than IT.",
     websiteUrl: "https://www.rdash.com",
     stages: ["operations", "post-delivery"],
     capabilities: ["asset-management", "reporting", "monitoring"],
@@ -218,9 +218,9 @@ export const apps: App[] = [
     vendor: "Microsoft",
     vendorSlug: "microsoft",
     blurb:
-      "Long-tenured planning and Gantt tooling. Familiar to most stakeholders; pairs with Microsoft 365 controls.",
+      "Long-tenured planning and Gantt product. Familiar to most stakeholders; pairs with Microsoft 365 controls.",
     description:
-      "Microsoft Project remains the most familiar scheduling tool across the project management market — most stakeholders can read a Project Gantt without needing a tutorial. The current Project for the Web product is a substantial rebuild on top of the Microsoft 365 ecosystem, with Power BI, Teams, and SharePoint as the natural reporting and collaboration layer.\n\nUseful as the canonical schedule for projects below the threshold where Primavera P6 makes sense, and for in-house programmes where the team is already on the Microsoft stack.",
+      "Microsoft Project remains the most familiar scheduling product across the project management market — most stakeholders can read a Project Gantt without needing a tutorial. The current Project for the Web product is a substantial rebuild on top of the Microsoft 365 ecosystem, with Power BI, Teams, and SharePoint as the natural reporting and collaboration layer.\n\nUseful as the canonical schedule for projects below the threshold where Primavera P6 makes sense, and for in-house programmes where the team is already on the Microsoft stack.",
     websiteUrl: "https://www.microsoft.com/en-us/microsoft-365/project/project-management-software",
     stages: ["definition", "delivery", "general"],
     capabilities: ["scheduling", "resource-planning"],
@@ -256,7 +256,7 @@ export const apps: App[] = [
     blurb:
       "4D model-based scheduling that ties activities to BIM elements for sequence rehearsal and field comms.",
     description:
-      "Synchro 4D ties schedule activities to BIM elements so the team can rehearse the build sequence visually before site work begins, then use the same model to communicate next week's plan to the field. Useful on phased fit-outs, complex civil engineering sequences, and bid presentations where the visual makes the construction logic legible to non-experts.\n\nPairs with most major scheduling tools (P6, MSP) for the underlying activity data.",
+      "Synchro 4D ties schedule activities to BIM elements so the team can rehearse the build sequence visually before site work begins, then use the same model to communicate next week's plan to the field. Useful on phased fit-outs, complex civil engineering sequences, and bid presentations where the visual makes the construction logic legible to non-experts.\n\nPairs with most major scheduling products (P6, MSP) for the underlying activity data.",
     websiteUrl: "https://www.bentley.com/software/synchro/",
     stages: ["definition", "delivery"],
     capabilities: ["building-information-modelling", "scheduling"],

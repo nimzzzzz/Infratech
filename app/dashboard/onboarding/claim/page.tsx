@@ -34,7 +34,7 @@ export default function ClaimPage() {
         Find {company.name}&rsquo;s listing.
       </h1>
       <p className="mt-5 max-w-[58ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
-        Search the directory for your tool. If we&rsquo;ve already catalogued
+        Search the directory for your product. If we&rsquo;ve already catalogued
         it as an editorial stub, request to claim it. We&rsquo;ll cross-check
         your LinkedIn affiliation against the vendor before transferring.
       </p>

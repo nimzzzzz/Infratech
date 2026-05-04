@@ -26,7 +26,7 @@ export async function HomeIndex({
             An index of{" "}
             <span className="italic text-[var(--color-magenta)]">every</span>{" "}
             <span className="italic text-[var(--color-coral)]">project</span>{" "}
-            tool.
+            product.
           </h1>
         </Container>
       </div>
@@ -67,7 +67,7 @@ export async function HomeIndex({
                 <span className="num text-[var(--color-ink)]">
                   {results.length}
                 </span>{" "}
-                of <span className="num">{apps.length}</span> tools
+                of <span className="num">{apps.length}</span> products
               </p>
             </div>
             <SortTabs />
@@ -97,7 +97,7 @@ function EmptyState() {
         No matches
       </p>
       <p className="mt-3 max-w-[40ch] mx-auto text-[15px] text-[var(--color-ink-2)]">
-        No tools match the current combination of filters. Try removing one, or
+        No products match the current combination of filters. Try removing one, or
         clearing all filters above.
       </p>
     </div>

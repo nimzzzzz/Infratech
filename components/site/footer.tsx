@@ -13,7 +13,7 @@ const columns: { title: string; links: { href: string; label: string }[] }[] = [
   {
     title: "For vendors",
     links: [
-      { href: "/login", label: "List your tool" },
+      { href: "/login", label: "List your product" },
       { href: "/legal/vendor-terms", label: "Vendor terms" },
     ],
   },

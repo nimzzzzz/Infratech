@@ -43,10 +43,10 @@ export default function AboutPage() {
               estate &mdash; not on which vendor has the slickest landing page.
             </p>
             <p>
-              The directory is a soft credibility tool. It collects what
+              The directory is a soft credibility asset. It collects what
               we&rsquo;ve seen run real programmes, organised by stage and
               capability, with descriptions written by people who&rsquo;ve actually
-              used the tools. Inclusion here is not an endorsement &mdash; teams
+              used the products. Inclusion here is not an endorsement &mdash; teams
               should always evaluate fit against their own constraints.
             </p>
             <p>

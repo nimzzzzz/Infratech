@@ -43,7 +43,7 @@ export const messages: VendorMessage[] = [
     },
     subject: "Inquiry about Arctus Field — pilot programme fit",
     body:
-      "Hi team,\n\nWe're a 600-person GC running 14 active jobsites across the south-east US. Our superintendents are spending 4-6 hours a week chasing permit and inspection paperwork across local jurisdiction portals — exactly the pain point your tagline mentions.\n\nA few questions before we evaluate:\n\n1. Which US state portals do you currently integrate with? Our footprint is heaviest in TX, GA, FL, and TN.\n2. Do you offer a paid pilot on a single project before a portfolio rollout?\n3. What's a typical implementation timeline from kickoff to first jurisdiction online?\n\nHappy to set up a call. Our procurement window for new field tools is May–June.\n\nThanks,\nHannah",
+      "Hi team,\n\nWe're a 600-person GC running 14 active jobsites across the south-east US. Our superintendents are spending 4-6 hours a week chasing permit and inspection paperwork across local jurisdiction portals — exactly the pain point your tagline mentions.\n\nA few questions before we evaluate:\n\n1. Which US state portals do you currently integrate with? Our footprint is heaviest in TX, GA, FL, and TN.\n2. Do you offer a paid pilot on a single project before a portfolio rollout?\n3. What's a typical implementation timeline from kickoff to first jurisdiction online?\n\nHappy to set up a call. Our procurement window for new field products is May–June.\n\nThanks,\nHannah",
     receivedAt: "2026-05-04T14:23:00Z",
     status: "unread",
   },
@@ -93,7 +93,7 @@ export const messages: VendorMessage[] = [
     },
     subject: "Inquiry about Arctus Field — single-user pricing?",
     body:
-      "Hello,\n\nI'm an independent construction PM working across 3-5 projects at a time, mostly mid-rise residential in the Pacific Northwest. Your tool looks ideal but the per-project pricing model on similar platforms usually doesn't work for solo operators.\n\nDo you have a single-user / freelance tier, or is the licensing only for organisations?\n\nThanks,\nMarcus",
+      "Hello,\n\nI'm an independent construction PM working across 3-5 projects at a time, mostly mid-rise residential in the Pacific Northwest. Your product looks ideal but the per-project pricing model on similar platforms usually doesn't work for solo operators.\n\nDo you have a single-user / freelance tier, or is the licensing only for organisations?\n\nThanks,\nMarcus",
     receivedAt: "2026-04-30T11:12:00Z",
     status: "read",
   },
@@ -110,7 +110,7 @@ export const messages: VendorMessage[] = [
     },
     subject: "Inquiry about Arctus Insights — Asia-Pacific availability",
     body:
-      "Hello,\n\nWe're a Tokyo-based EPC contractor evaluating schedule analytics tools for our Asia-Pacific portfolio (mostly Japan, Vietnam, Indonesia).\n\nDoes Arctus Insights have any APAC customers, and is the platform available in our region from a data-residency standpoint? Our procurement team requires confirmation that customer data isn't transferred outside our jurisdiction.\n\nKind regards,\nYuki Tanaka",
+      "Hello,\n\nWe're a Tokyo-based EPC contractor evaluating schedule analytics products for our Asia-Pacific portfolio (mostly Japan, Vietnam, Indonesia).\n\nDoes Arctus Insights have any APAC customers, and is the platform available in our region from a data-residency standpoint? Our procurement team requires confirmation that customer data isn't transferred outside our jurisdiction.\n\nKind regards,\nYuki Tanaka",
     receivedAt: "2026-04-28T08:55:00Z",
     status: "read",
   },

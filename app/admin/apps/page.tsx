@@ -45,7 +45,7 @@ export default function AdminAppsPage() {
         <li className="hidden grid-cols-[40px_minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1fr)_72px_auto] items-center gap-4 px-3 py-3 md:grid">
           <span aria-hidden />
           <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-            Tool
+            Product
           </span>
           <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
             Stages

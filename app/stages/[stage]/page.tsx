@@ -42,7 +42,7 @@ export default async function StagePage({
       <InnerHero
         eyebrow={`Stage ${data.index} · ${data.name}`}
         title={<>{data.name} software.</>}
-        body={<p>{data.short} &mdash; the tools teams reach for in this phase.</p>}
+        body={<p>{data.short} &mdash; the products teams reach for in this phase.</p>}
       />
       <section className="bg-[var(--color-canvas)] pb-24 md:pb-32">
         <Container>

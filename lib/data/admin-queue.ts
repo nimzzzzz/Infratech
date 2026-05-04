@@ -82,7 +82,7 @@ export const queue: Submission[] = [
       employeeBand: "11-50",
       headquarters: "Austin, Texas, USA",
       description:
-        "Arctus builds permit and inspection lookup tooling for general contractors and owners working across multiple US jurisdictions. The team's previous experience was at Procore and Autodesk.",
+        "Arctus builds permit and inspection lookup products for general contractors and owners working across multiple US jurisdictions. The team's previous experience was at Procore and Autodesk.",
       galleryCount: 4,
     },
     app: {

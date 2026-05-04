@@ -35,7 +35,7 @@ export default async function MessagesInboxPage({
         Inquiries from visitors.
       </h1>
       <p className="mt-3 max-w-[60ch] text-[13px] leading-relaxed text-[var(--color-ink-2)] md:text-[14px]">
-        Sent through the &ldquo;Contact vendor&rdquo; form on your tool pages.
+        Sent through the &ldquo;Contact vendor&rdquo; form on your product pages.
         Reply directly via email &mdash; the visitor&rsquo;s address is on each
         message.
       </p>

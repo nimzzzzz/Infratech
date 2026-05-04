@@ -25,7 +25,7 @@ export function Header() {
           href="/login"
           className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] sm:h-10 sm:px-4 sm:text-[11px]"
         >
-          <span>List your tool</span>
+          <span>List your product</span>
           <ArrowUpRight
             size={11}
             weight="bold"

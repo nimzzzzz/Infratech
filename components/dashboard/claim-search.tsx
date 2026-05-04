@@ -47,7 +47,7 @@ export function ClaimSearch() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by tool name or vendor…"
+          placeholder="Search by product name or vendor…"
           className="h-full w-full bg-transparent px-3 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:outline-none"
           aria-label="Search the directory"
         />
@@ -135,7 +135,7 @@ export function ClaimSearch() {
       </ul>
 
       <p className="mt-8 text-[12px] leading-relaxed text-[var(--color-ink-3)]">
-        Can&rsquo;t find your tool?{" "}
+        Can&rsquo;t find your product?{" "}
         <a
           href="/dashboard/onboarding/submit"
           className="underline underline-offset-4 hover:text-[var(--color-ink)]"

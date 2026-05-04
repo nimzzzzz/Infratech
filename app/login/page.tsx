@@ -10,7 +10,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 
 export const metadata: Metadata = {
-  title: "List your tool",
+  title: "List your product",
   description:
     "Sign in with LinkedIn to claim an existing listing or submit a new one to the directory.",
   alternates: { canonical: "/login" },
@@ -80,7 +80,7 @@ export default function LoginPage() {
             &sect; Edition 01 &middot; The Index
           </p>
           <p className="mt-4 font-heading text-[24px] leading-tight text-white md:text-[28px] lg:text-[34px]">
-            Get your tool seen by the people who run the projects.
+            Get your product seen by the people who run the projects.
           </p>
         </div>
       </aside>
@@ -141,7 +141,7 @@ export default function LoginPage() {
               &sect; For vendors
             </p>
             <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
-              List your tool.
+              List your product.
             </h1>
             <p className="mt-5 max-w-[44ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
               Sign in with LinkedIn to claim an existing listing or submit a new
@@ -202,7 +202,7 @@ export default function LoginPage() {
                 Why LinkedIn?
               </p>
               <p className="mt-2 max-w-[52ch] text-[13px] leading-relaxed text-[var(--color-ink-2)]">
-                Tool listings are tied to verified vendor companies &mdash; no
+                Product listings are tied to verified vendor companies &mdash; no
                 anonymous claims, no astroturfing. LinkedIn lets us confirm you
                 actually work where you say without asking for documents.
               </p>
@@ -231,7 +231,7 @@ export default function LoginPage() {
 
         {/* alternative path — bottom of form column */}
         <p className="mt-12 max-w-[60ch] text-[11px] leading-relaxed text-[var(--color-ink-3)] md:mt-0">
-          Don&rsquo;t represent the tool you want to recommend?{" "}
+          Don&rsquo;t represent the product you want to recommend?{" "}
           <Link
             href="/suggest"
             className="underline underline-offset-4 hover:text-[var(--color-ink)]"

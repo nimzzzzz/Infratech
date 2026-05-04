@@ -22,7 +22,7 @@ type Filter = "all" | "new" | "claim" | "pending";
 const filters: { key: Filter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "pending", label: "Pending" },
-  { key: "new", label: "New tools" },
+  { key: "new", label: "New products" },
   { key: "claim", label: "Claims" },
 ];
 
@@ -116,7 +116,7 @@ function SubmissionRow({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-                {sub.type === "new" ? "New tool" : "Claim"}
+                {sub.type === "new" ? "New product" : "Claim"}
               </span>
               <StatusPill status={decision ?? sub.status} />
             </div>
@@ -289,14 +289,14 @@ function SubmissionDetail({ sub }: { sub: Submission }) {
               }
             />
             <p className="mt-2 text-[11px] leading-relaxed text-[var(--color-coral)]">
-              First submission from this vendor &mdash; approving the tool also
+              First submission from this vendor &mdash; approving the product also
               publishes the company profile.
             </p>
           </DetailBlock>
         ) : null}
 
         {sub.type === "new" ? (
-          <DetailBlock title="Tool">
+          <DetailBlock title="Product">
             <DetailRow label="Name" value={sub.app.name} />
             <DetailRow label="Vendor" value={sub.app.vendor} />
             <DetailRow

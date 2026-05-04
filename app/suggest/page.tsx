@@ -14,7 +14,7 @@ export default function SuggestPage() {
     <>
       <InnerHero
         eyebrow="Suggest"
-        title={<>Tell us about a tool.</>}
+        title={<>Tell us about a product.</>}
         body={
           <p>
             Form submission lands in phase 2. For now, the fields below show

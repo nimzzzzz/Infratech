@@ -124,7 +124,7 @@ export default async function VendorDetailPage({
                 >
                   <Stack size={13} weight="regular" />
                   <span>
-                    {tools.length} {tools.length === 1 ? "tool" : "tools"} listed
+                    {tools.length} {tools.length === 1 ? "product" : "products"} listed
                   </span>
                 </Link>
               </div>
@@ -153,7 +153,7 @@ export default async function VendorDetailPage({
                 />
                 <FactRow
                   icon={Buildings}
-                  label="Tools listed"
+                  label="Products listed"
                   value={<span className="num">{tools.length}</span>}
                 />
               </dl>
@@ -171,7 +171,7 @@ export default async function VendorDetailPage({
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-                &sect; Tools by this vendor
+                &sect; Products by this vendor
               </p>
               <h2 className="mt-3 font-heading text-[28px] leading-[1.05] tracking-tight md:text-[36px]">
                 {tools.length === 1
@@ -193,7 +193,7 @@ export default async function VendorDetailPage({
           </div>
           {tools.length === 0 ? (
             <p className="border border-dashed border-[var(--color-line-strong)] bg-[var(--color-surface)] p-12 text-center text-[15px] text-[var(--color-ink-2)]">
-              No tools listed yet.
+              No products listed yet.
             </p>
           ) : (
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

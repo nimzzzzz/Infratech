@@ -105,7 +105,7 @@ export default function AdminOverviewPage() {
                 className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[100px_1fr_auto_72px] md:gap-6 md:px-3"
               >
                 <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-                  {sub.type === "new" ? "New tool" : "Claim"}
+                  {sub.type === "new" ? "New product" : "Claim"}
                 </span>
                 <div className="min-w-0">
                   <p className="font-heading text-[18px] leading-tight">
