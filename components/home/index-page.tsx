@@ -8,10 +8,6 @@ import { SortTabs } from "@/components/browse/sort-tabs";
 import { AppCard } from "@/components/browse/app-card";
 import { apps } from "@/lib/data/apps";
 import { applyFilters, parseFilters } from "@/lib/browse/filters";
-import { stages } from "@/lib/data/stages";
-import { capabilities } from "@/lib/data/taxonomy";
-
-const TARGET_TOTAL = 218;
 
 export async function HomeIndex({
   searchParams,
@@ -35,18 +31,10 @@ export async function HomeIndex({
         </Container>
       </div>
 
-      {/* STATS RAIL + SEARCH */}
+      {/* SEARCH + STAGE FILTER */}
       <section className="relative bg-[var(--color-canvas)]">
         <Container className="pt-8 md:pt-10">
-          <dl className="flex flex-wrap items-baseline gap-x-8 gap-y-3 border-t border-[var(--color-line-strong)] pt-6 text-[12px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-            <Stat n={apps.length} suffix={`of ${TARGET_TOTAL}`} label="Tools" />
-            <Stat n={stages.length} label="Stages" />
-            <Stat n={capabilities.length} label="Capabilities" />
-            <span className="ml-auto text-[var(--color-ink-3)]">
-              Refreshed weekly
-            </span>
-          </dl>
-          <div className="mt-8 max-w-3xl md:mt-10">
+          <div className="max-w-3xl">
             <SearchBar />
           </div>
           <div className="mt-6 md:mt-8">
@@ -104,28 +92,6 @@ export async function HomeIndex({
         </div>
       </Container>
     </article>
-  );
-}
-
-function Stat({
-  n,
-  label,
-  suffix,
-}: {
-  n: number;
-  label: string;
-  suffix?: string;
-}) {
-  return (
-    <div className="inline-flex items-baseline gap-1.5">
-      <span className="num text-[var(--color-ink)]">
-        {String(n).padStart(2, "0")}
-      </span>
-      {suffix ? (
-        <span className="num text-[var(--color-ink-3)]">{suffix}</span>
-      ) : null}
-      <span>{label}</span>
-    </div>
   );
 }
 

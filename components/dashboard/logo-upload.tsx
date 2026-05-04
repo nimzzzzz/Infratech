@@ -184,7 +184,7 @@ export function LogoUpload({
             type="text"
             value={alt}
             onChange={(e) => onAltChange(e.target.value)}
-            placeholder='e.g. "Stagecraft wordmark in coral"'
+            placeholder='e.g. "InfraTechDB wordmark in coral"'
             maxLength={100}
             className="h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
           />

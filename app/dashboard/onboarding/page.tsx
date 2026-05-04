@@ -11,7 +11,7 @@ import { getMockSession } from "@/lib/auth/mock-session";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Welcome to Stagecraft",
+  title: "Welcome to InfraTechDB",
   alternates: { canonical: "/dashboard/onboarding" },
 };
 
@@ -80,7 +80,7 @@ function NewVendorView({
         &sect; Welcome
       </p>
       <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
-        Welcome to Stagecraft, {firstName}.
+        Welcome to InfraTechDB, {firstName}.
       </h1>
       <p className="mt-5 max-w-[56ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
         We&rsquo;ve verified you with LinkedIn as{" "}

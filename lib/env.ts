@@ -12,7 +12,7 @@ const optional = (value: string | undefined): string | undefined =>
 
 export const env = {
   SITE_URL: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME ?? "Resolute Directory",
+  SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME ?? "InfraTechDB",
   HOLDING_PAGE: process.env.HOLDING_PAGE === "1",
 
   database: () => ({

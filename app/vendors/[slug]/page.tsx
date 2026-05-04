@@ -34,7 +34,7 @@ export async function generateMetadata({
     description: vendor.shortBlurb,
     alternates: { canonical: `/vendors/${vendor.slug}` },
     openGraph: {
-      title: `${vendor.name} on Stagecraft`,
+      title: `${vendor.name} on InfraTechDB`,
       description: vendor.shortBlurb,
       url: `${SITE_URL}/vendors/${vendor.slug}`,
       type: "website",

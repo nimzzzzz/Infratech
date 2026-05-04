@@ -9,7 +9,7 @@ export function Header() {
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-6 md:h-20 md:px-8">
         <Link
           href="/"
-          aria-label="Stagecraft home"
+          aria-label="InfraTechDB home"
           className="group flex items-center gap-2.5"
         >
           <span className="relative inline-flex h-2 w-2">
@@ -17,7 +17,7 @@ export function Header() {
             <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
           </span>
           <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)] md:text-[20px]">
-            Stagecraft
+            InfraTechDB
           </span>
         </Link>
 
