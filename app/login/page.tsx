@@ -1,0 +1,212 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import type { Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  LinkedinLogo,
+  ArrowLeft,
+  ArrowRight,
+} from "@phosphor-icons/react/dist/ssr";
+
+export const metadata: Metadata = {
+  title: "List your tool",
+  description:
+    "Sign in with LinkedIn to claim an existing listing or submit a new one to the directory.",
+  alternates: { canonical: "/login" },
+  robots: { index: false, follow: false },
+};
+
+function findHeroImage(): string | null {
+  for (const name of ["hero.jpg", "hero.jpeg", "hero.png", "hero.webp"]) {
+    try {
+      if (existsSync(join(process.cwd(), "public", name))) {
+        return `/${name}`;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return null;
+}
+
+export default function LoginPage() {
+  const heroImage = findHeroImage();
+
+  return (
+    <div className="grid min-h-[100dvh] grid-cols-1 bg-[var(--color-canvas)] md:grid-cols-2">
+      {/* LEFT — image panel (hidden on mobile, top banner replaces it) */}
+      <aside className="relative hidden overflow-hidden bg-[var(--color-night)] md:block">
+        <div aria-hidden className="absolute inset-0 hero-fallback" />
+        {heroImage ? (
+          <Image
+            src={heroImage}
+            alt=""
+            fill
+            priority
+            sizes="50vw"
+            className="object-cover object-center"
+          />
+        ) : null}
+
+        {/* subtle top-and-bottom scrim for overlay legibility */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(180deg, rgba(9,9,11,0.45) 0%, transparent 32%, transparent 60%, rgba(9,9,11,0.65) 100%)",
+          }}
+        />
+
+        {/* brand top-left */}
+        <Link
+          href="/"
+          aria-label="Stagecraft home"
+          className="group absolute left-8 top-8 inline-flex items-center gap-2.5 lg:left-12 lg:top-12"
+        >
+          <span className="relative inline-flex h-2 w-2">
+            <span className="absolute inset-0 rounded-full bloom" />
+            <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
+          </span>
+          <span className="font-heading text-[20px] italic leading-none tracking-tight text-white">
+            Stagecraft
+          </span>
+        </Link>
+
+        {/* editorial caption bottom-left */}
+        <div className="absolute bottom-8 left-8 right-8 max-w-md lg:bottom-12 lg:left-12 lg:right-12">
+          <p className="text-[10px] uppercase tracking-[0.32em] text-white/55">
+            &sect; Edition 01 &middot; The Index
+          </p>
+          <p className="mt-4 font-heading text-[24px] leading-tight text-white md:text-[28px] lg:text-[34px]">
+            Get your tool seen by the people who run the projects.
+          </p>
+        </div>
+      </aside>
+
+      {/* RIGHT — form column */}
+      <main className="relative flex flex-col px-6 py-10 sm:px-10 md:px-12 md:py-12 lg:px-20">
+        {/* mobile-only image banner — sits above the form on small viewports */}
+        {heroImage ? (
+          <figure className="relative -mx-6 -mt-10 mb-8 h-40 overflow-hidden bg-[var(--color-night)] sm:-mx-10 md:hidden">
+            <div aria-hidden className="absolute inset-0 hero-fallback" />
+            <Image
+              src={heroImage}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage:
+                  "linear-gradient(180deg, rgba(9,9,11,0.4) 0%, transparent 50%, rgba(9,9,11,0.5) 100%)",
+              }}
+            />
+            <Link
+              href="/"
+              className="absolute left-5 top-5 inline-flex items-center gap-2"
+            >
+              <span className="inline-block h-2 w-2 rounded-full bloom" />
+              <span className="font-heading text-[18px] italic leading-none text-white">
+                Stagecraft
+              </span>
+            </Link>
+          </figure>
+        ) : null}
+
+        {/* desktop back link, top of form column */}
+        <div className="hidden md:block">
+          <Link
+            href="/"
+            className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
+          >
+            <ArrowLeft
+              size={12}
+              weight="bold"
+              className="transition-transform duration-300 group-hover:-translate-x-0.5"
+            />
+            Back to the index
+          </Link>
+        </div>
+
+        {/* centered form content */}
+        <div className="flex flex-1 items-center">
+          <div className="w-full max-w-md">
+            <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+              &sect; For vendors
+            </p>
+            <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
+              List your tool.
+            </h1>
+            <p className="mt-5 max-w-[44ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
+              Sign in with LinkedIn to claim an existing listing or submit a new
+              one. We use LinkedIn to verify you represent the company before a
+              listing goes live.
+            </p>
+
+            <Link
+              href="/dashboard/onboarding"
+              className="group mt-10 inline-flex h-12 w-full items-center justify-center gap-2.5 bg-[#0A66C2] px-5 text-[14px] font-medium text-white transition-colors hover:bg-[#0959AB] active:translate-y-[1px] sm:h-14 sm:text-[15px]"
+            >
+              <LinkedinLogo size={20} weight="fill" />
+              <span>Continue with LinkedIn</span>
+              <ArrowRight
+                size={14}
+                weight="bold"
+                className="transition-transform duration-300 group-hover:translate-x-0.5"
+              />
+            </Link>
+
+            {/* explainer */}
+            <div className="mt-6 border-t border-[var(--color-line)] pt-6">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+                Why LinkedIn?
+              </p>
+              <p className="mt-2 max-w-[52ch] text-[13px] leading-relaxed text-[var(--color-ink-2)]">
+                Tool listings are tied to verified vendor companies &mdash; no
+                anonymous claims, no astroturfing. LinkedIn lets us confirm you
+                actually work where you say without asking for documents.
+              </p>
+            </div>
+
+            {/* legal */}
+            <p className="mt-8 max-w-[44ch] text-[11px] leading-relaxed text-[var(--color-ink-3)]">
+              By continuing, you agree to our{" "}
+              <Link
+                href="/legal/vendor-terms"
+                className="underline underline-offset-4 hover:text-[var(--color-ink)]"
+              >
+                vendor terms
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/legal/privacy"
+                className="underline underline-offset-4 hover:text-[var(--color-ink)]"
+              >
+                privacy policy
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+
+        {/* alternative path — bottom of form column */}
+        <p className="mt-12 max-w-[60ch] text-[11px] leading-relaxed text-[var(--color-ink-3)] md:mt-0">
+          Don&rsquo;t represent the tool you want to recommend?{" "}
+          <Link
+            href="/suggest"
+            className="underline underline-offset-4 hover:text-[var(--color-ink)]"
+          >
+            Use the public suggestion form
+          </Link>{" "}
+          instead.
+        </p>
+      </main>
+    </div>
+  );
+}

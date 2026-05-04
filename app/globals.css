@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+@theme {
+  /* surfaces */
+  --color-canvas: #FAFAF7;
+  --color-canvas-warm: #F1ECE2;
+  --color-surface: #FFFFFF;
+  --color-line: #ECEAE4;
+  --color-line-strong: #D9D6CE;
+
+  /* ink — "no pure black", per taste-skill */
+  --color-ink: #0F0F12;
+  --color-ink-2: #4A4A52;
+  --color-ink-3: #8B8B92;
+
+  /* night surfaces — dark hero panel, footer */
+  --color-night: #09090B;
+  --color-night-2: #14141A;
+  --color-night-3: #22222A;
+
+  /* brand — pink→orange used as a single gradient gesture */
+  --color-magenta: #D6336C;
+  --color-magenta-deep: #B0265A;
+  --color-coral: #F97316;
+  --color-coral-deep: #DC5818;
+  --color-bloom-soft: #F4A07C;
+
+  /* fonts wired via next/font CSS variables */
+  --font-heading: var(--font-alike), ui-serif, Georgia, serif;
+  --font-body: var(--font-pavanam), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+  /* radii — generous per taste-skill bento spec */
+  --radius-xs: 0.5rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2.5rem;
+
+  /* shadow — diffusion shadow, taste-skill §9 */
+  --shadow-diffuse: 0 20px 40px -15px rgba(15, 15, 18, 0.06), 0 4px 12px -4px rgba(15, 15, 18, 0.04);
+  --shadow-diffuse-lg: 0 30px 60px -20px rgba(15, 15, 18, 0.1), 0 8px 20px -6px rgba(15, 15, 18, 0.05);
+}
+
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+  }
+  ::selection {
+    background: var(--color-magenta);
+    color: #fff;
+  }
+  /* tabular numerals on data, per CLAUDE.md §12 */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+/* shared brand gradient — pink→orange as a single accent gesture */
+.bloom {
+  background: linear-gradient(115deg, var(--color-magenta) 0%, var(--color-coral) 100%);
+}
+.bloom-text {
+  background: linear-gradient(115deg, var(--color-magenta) 0%, var(--color-coral) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* fixed grain overlay — pointer-events-none, isolated from scroll, per taste-skill §5 */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");
+  mix-blend-mode: overlay;
+  opacity: 0.18;
+}
+
+/* hero gradient fallback — approximates the pink/orange wave image while public/hero.jpg is missing */
+.hero-fallback {
+  background-color: var(--color-night);
+  background-image:
+    radial-gradient(60% 80% at 28% 50%, rgba(214, 51, 108, 0.55), transparent 65%),
+    radial-gradient(55% 70% at 72% 42%, rgba(249, 115, 22, 0.5), transparent 60%),
+    radial-gradient(40% 60% at 50% 80%, rgba(244, 160, 124, 0.25), transparent 70%);
+}
+
+/* gentle right-bob — used as a "swipe me" affordance on mobile scrollers */
+@keyframes bob-right {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+.bob-right {
+  animation: bob-right 1.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* infinite marquee — taste-skill §8 kinetic typography */
+@keyframes marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+.marquee-track {
+  animation: marquee 38s linear infinite;
+  will-change: transform;
+}
+
+/* shimmer — used on skeleton/feature accents */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background-image: linear-gradient(90deg, transparent 0%, rgba(214, 51, 108, 0.18) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.6s linear infinite;
+}
+
+/* focus ring — keyboard-accessible, single source */
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--color-magenta);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
