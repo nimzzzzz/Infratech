@@ -21,17 +21,25 @@ export function Header() {
           </span>
         </Link>
 
-        <Link
-          href="/login"
-          className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] sm:h-10 sm:px-4 sm:text-[11px]"
-        >
-          <span>List your product</span>
-          <ArrowUpRight
-            size={11}
-            weight="bold"
-            className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-          />
-        </Link>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link
+            href="/login"
+            className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)] sm:text-[11px]"
+          >
+            Login
+          </Link>
+          <Link
+            href="/login"
+            className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] sm:h-10 sm:px-4 sm:text-[11px]"
+          >
+            <span>List your product</span>
+            <ArrowUpRight
+              size={11}
+              weight="bold"
+              className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+            />
+          </Link>
+        </div>
       </div>
     </header>
   );
