@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "./container";
 
 const columns: { title: string; links: { href: string; label: string }[] }[] = [
@@ -41,26 +42,32 @@ export function Footer() {
         }}
       />
       <Container className="relative grid gap-14 py-20 md:grid-cols-[1.4fr_3fr] md:py-24">
-        <div className="max-w-md">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bloom" />
-            <span className="font-heading text-xl leading-none tracking-tight text-white">
-              Resolute<span className="text-white/40">/</span>Directory
-            </span>
+        {/* Logo + attribution side-by-side; both top-aligned to match the
+            column headers in the right column. */}
+        <div className="flex max-w-md items-start gap-4">
+          <Link
+            href="/about"
+            aria-label="Resolute Management Consultancy"
+            className="shrink-0"
+          >
+            <Image
+              src="/resolute-logo.png"
+              alt="Resolute Management Consultancy"
+              width={56}
+              height={56}
+              className="h-12 w-auto"
+              priority={false}
+            />
           </Link>
-          <p className="mt-5 text-[15px] leading-relaxed text-white/65">
-            An independent reference of project management and infrastructure
-            software, organised by the stages of a project lifecycle. Inclusion
-            on this site is not an endorsement.
-          </p>
-          <p className="mt-6 text-[13px] uppercase tracking-[0.18em] text-white/40">
-            Curated by{" "}
+          <p className="text-[14px] leading-relaxed text-white/70">
+            A free community service of the Digital &amp; AI Practice of{" "}
             <Link
               href="/about"
               className="bloom-text underline-offset-4 transition hover:underline"
             >
               Resolute Management Consultancy
             </Link>
+            .
           </p>
         </div>
 

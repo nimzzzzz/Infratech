@@ -3,9 +3,12 @@ import { cn } from "@/lib/utils";
 export function LetterAvatar({
   name,
   className,
+  letterClassName,
 }: {
   name: string;
   className?: string;
+  /** Override the default text-[24px] italic letter sizing (e.g. for larger avatars). */
+  letterClassName?: string;
 }) {
   const letter = name.trim().charAt(0);
   // lowercase letters look more academic / library-card-like
@@ -18,7 +21,12 @@ export function LetterAvatar({
         className,
       )}
     >
-      <span className="font-heading text-[24px] italic leading-none text-[var(--color-ink)]">
+      <span
+        className={cn(
+          "font-heading text-[24px] italic leading-none text-[var(--color-ink)]",
+          letterClassName,
+        )}
+      >
         {display}
       </span>
     </span>

@@ -77,18 +77,13 @@ export async function HomeIndex({
             <EmptyState />
           ) : (
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {results.map((app, i) => (
+              {results.map((app) => (
                 <li key={app.slug}>
-                  <AppCard app={app} index={i + 1} />
+                  <AppCard app={app} />
                 </li>
               ))}
             </ul>
           )}
-
-          <p className="mt-12 max-w-[60ch] text-[12px] leading-relaxed text-[var(--color-ink-3)]">
-            Listed for reference. Inclusion is not an endorsement by Resolute
-            Management Consultancy.
-          </p>
         </div>
       </Container>
     </article>

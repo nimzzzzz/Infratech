@@ -14,7 +14,6 @@ import { AppCard } from "@/components/browse/app-card";
 import { apps, type App } from "@/lib/data/apps";
 import { stages, stageNameMap } from "@/lib/data/stages";
 import { lookups } from "@/lib/data/taxonomy";
-import { relativeDays } from "@/lib/browse/dates";
 import { cn } from "@/lib/utils";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -75,28 +74,33 @@ export default async function AppDetailPage({
         <Container className="relative">
           <Breadcrumb appName={app.name} />
 
-          <div className="mt-8 grid gap-10 md:grid-cols-[7fr_5fr] md:gap-14">
+          {/* LOGO BANNER — full-width hero panel above the title.
+              Real vendor-uploaded logos drop in here at this scale in Phase 2. */}
+          <div className="mt-8 flex h-[200px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] md:h-[260px]">
+            <LetterAvatar
+              name={app.name}
+              className="h-24 w-24 md:h-32 md:w-32"
+              letterClassName="text-[56px] md:text-[72px]"
+            />
+          </div>
+
+          <div className="mt-10 grid gap-10 md:grid-cols-[7fr_5fr] md:gap-14">
             {/* Title block */}
             <div className="flex flex-col">
-              <div className="flex items-start gap-5">
-                <LetterAvatar name={app.name} className="h-14 w-14 shrink-0" />
-                <div className="min-w-0">
-                  <Link
-                    href={`/vendors/${app.vendorSlug}`}
-                    className="group inline-flex items-center gap-1 text-[12px] uppercase tracking-[0.22em] text-[var(--color-coral)] underline-offset-4 transition-colors hover:underline"
-                  >
-                    <span>{app.vendor}</span>
-                    <ArrowUpRight
-                      size={11}
-                      weight="bold"
-                      className="opacity-60 transition-opacity group-hover:opacity-100"
-                    />
-                  </Link>
-                  <h1 className="mt-2 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
-                    {app.name}
-                  </h1>
-                </div>
-              </div>
+              <Link
+                href={`/vendors/${app.vendorSlug}`}
+                className="group inline-flex items-center gap-1 self-start text-[12px] uppercase tracking-[0.22em] text-[var(--color-coral)] underline-offset-4 transition-colors hover:underline"
+              >
+                <span>{app.vendor}</span>
+                <ArrowUpRight
+                  size={11}
+                  weight="bold"
+                  className="opacity-60 transition-opacity group-hover:opacity-100"
+                />
+              </Link>
+              <h1 className="mt-3 font-heading text-[44px] leading-[1.02] tracking-tight md:text-[64px]">
+                {app.name}
+              </h1>
               <p className="mt-6 max-w-[60ch] text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
                 {app.blurb}
               </p>
@@ -118,15 +122,13 @@ export default async function AppDetailPage({
                     className="pointer-events-none absolute inset-0 -translate-x-[120%] bg-[var(--color-magenta)] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0"
                   />
                 </a>
-                <button
-                  type="button"
-                  disabled
-                  title="Vendor messaging lands when Resend is wired"
-                  className="group inline-flex h-12 items-center gap-2 border border-[var(--color-line-strong)] bg-transparent px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-ink-2)] transition-colors disabled:cursor-not-allowed"
+                <Link
+                  href={`/apps/${app.slug}/contact`}
+                  className="group inline-flex h-12 items-center gap-2 border border-[var(--color-line-strong)] bg-transparent px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
                 >
                   <ChatCircleText size={13} weight="regular" />
                   <span>Contact vendor</span>
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -159,20 +161,11 @@ export default async function AppDetailPage({
                   }
                 />
               </dl>
-              <div className="mt-6 border-t border-[var(--color-line)] pt-5 text-[12px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-                Listed{" "}
-                <span className="num">
-                  {relativeDays(app.addedAt).label}
-                </span>
-                {app.featured ? (
-                  <>
-                    {" "}&middot;{" "}
-                    <span className="text-[var(--color-coral)]">
-                      Editor&rsquo;s pick
-                    </span>
-                  </>
-                ) : null}
-              </div>
+              {app.featured ? (
+                <div className="mt-6 border-t border-[var(--color-line)] pt-5 text-[12px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+                  Editor&rsquo;s pick
+                </div>
+              ) : null}
             </aside>
           </div>
         </Container>
@@ -335,9 +328,9 @@ export default async function AppDetailPage({
               </Link>
             </div>
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {related.map((r, i) => (
+              {related.map((r) => (
                 <li key={r.slug}>
-                  <AppCard app={r} index={i + 1} />
+                  <AppCard app={r} />
                 </li>
               ))}
             </ul>

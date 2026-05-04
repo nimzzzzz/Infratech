@@ -197,9 +197,9 @@ export default async function VendorDetailPage({
             </p>
           ) : (
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {tools.map((t, i) => (
+              {tools.map((t) => (
                 <li key={t.slug}>
-                  <AppCard app={t} index={i + 1} />
+                  <AppCard app={t} />
                 </li>
               ))}
             </ul>

@@ -1,27 +1,89 @@
+"use client";
+
 import Link from "next/link";
-import { SignOut, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { usePathname } from "next/navigation";
+import { SignOut } from "@phosphor-icons/react";
 import { getMockSession } from "@/lib/auth/mock-session";
+import { unreadCount } from "@/lib/data/messages";
+import { cn } from "@/lib/utils";
+
+const VENDOR_SLUG = "arctus"; // mocked — comes from auth().vendor in Phase 2
+
+const nav = [
+  {
+    href: "/dashboard",
+    label: "Overview",
+    match: (p: string) => p === "/dashboard",
+  },
+  {
+    href: "/dashboard/messages",
+    label: "Messages",
+    match: (p: string) => p.startsWith("/dashboard/messages"),
+  },
+];
 
 export function DashboardHeader() {
+  const pathname = usePathname();
   const { user, company } = getMockSession();
+  const unread = unreadCount(VENDOR_SLUG);
+
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-6 md:h-18 md:px-8">
-        {/* brand */}
-        <Link href="/" className="group flex items-center gap-2.5">
-          <span className="relative inline-flex h-2 w-2">
-            <span className="absolute inset-0 rounded-full bloom" />
-            <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
-          </span>
-          <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)]">
-            InfraTechDB
-          </span>
-          <span className="ml-1 text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-            / Vendor
-          </span>
-        </Link>
+        {/* brand + nav */}
+        <div className="flex items-center gap-5">
+          <Link href="/dashboard" className="group flex items-center gap-2.5">
+            <span className="relative inline-flex h-2 w-2">
+              <span className="absolute inset-0 rounded-full bloom" />
+              <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
+            </span>
+            <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)]">
+              InfraTechDB
+            </span>
+            <span className="ml-1 text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+              / Vendor
+            </span>
+          </Link>
 
-        {/* user pill + sign-out */}
+          <nav aria-label="Dashboard sections" className="hidden md:block">
+            <ul className="ml-2 flex items-center">
+              {nav.map((item) => {
+                const active = item.match(pathname);
+                const showBadge = item.href === "/dashboard/messages" && unread > 0;
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "relative inline-flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors",
+                        active
+                          ? "text-[var(--color-ink)]"
+                          : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
+                      )}
+                    >
+                      <span className="relative">
+                        {item.label}
+                        {active ? (
+                          <span
+                            aria-hidden
+                            className="absolute -bottom-1.5 left-0 right-0 h-px bloom"
+                          />
+                        ) : null}
+                      </span>
+                      {showBadge ? (
+                        <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[10px] font-medium text-white">
+                          {unread}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </div>
+
+        {/* user pill + sign out */}
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-2.5 sm:flex">
             <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-canvas-warm)] text-[11px] font-medium uppercase tracking-wider text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">
@@ -45,6 +107,47 @@ export function DashboardHeader() {
           </Link>
         </div>
       </div>
+
+      {/* mobile nav row */}
+      <nav
+        aria-label="Dashboard sections"
+        className="border-t border-[var(--color-line)] bg-[var(--color-canvas)]/85 md:hidden"
+      >
+        <ul className="mx-auto flex w-full max-w-6xl items-center gap-0 px-5 sm:px-6">
+          {nav.map((item) => {
+            const active = item.match(pathname);
+            const showBadge = item.href === "/dashboard/messages" && unread > 0;
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "relative inline-flex items-center gap-1.5 px-3 py-3 text-[12px] font-medium transition-colors",
+                    active
+                      ? "text-[var(--color-ink)]"
+                      : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
+                  )}
+                >
+                  <span className="relative">
+                    {item.label}
+                    {active ? (
+                      <span
+                        aria-hidden
+                        className="absolute -bottom-2 left-0 right-0 h-px bloom"
+                      />
+                    ) : null}
+                  </span>
+                  {showBadge ? (
+                    <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[10px] font-medium text-white">
+                      {unread}
+                    </span>
+                  ) : null}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
     </header>
   );
 }
