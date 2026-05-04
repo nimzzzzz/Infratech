@@ -110,6 +110,56 @@ export function SubmitWizard({
     initialState(prefill.vendor, prefill.domain),
   );
   const [submitting, setSubmitting] = useState(false);
+  // Where to scroll on the next step change. Reset after each effect run.
+  const scrollTargetRef = useRef<string | null>(null);
+  // Suppress browser-back popstate handling once after we sync state from it.
+  const skipPopRef = useRef(false);
+
+  // Push a history entry per step so the browser Back button steps back
+  // through the wizard instead of navigating to the page we came from.
+  // We tag entries with { wizardStep } so popstate can restore the right step.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (skipPopRef.current) {
+      skipPopRef.current = false;
+      return;
+    }
+    const current = window.history.state as { wizardStep?: number } | null;
+    if (current?.wizardStep === step) return;
+    if (current?.wizardStep == null) {
+      window.history.replaceState({ wizardStep: step }, "");
+    } else {
+      window.history.pushState({ wizardStep: step }, "");
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onPop = (e: PopStateEvent) => {
+      const next = (e.state as { wizardStep?: number } | null)?.wizardStep;
+      if (typeof next === "number" && next >= minStep && next <= TOTAL_STEPS) {
+        skipPopRef.current = true;
+        setStep(next);
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [minStep]);
+
+  // Scroll to top (or a specific section) AFTER the new step has rendered.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const target = scrollTargetRef.current;
+    scrollTargetRef.current = null;
+    if (target) {
+      document.getElementById(target)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+    }
+  }, [step]);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setData((d) => ({ ...d, [key]: value }));
@@ -178,31 +228,17 @@ export function SubmitWizard({
 
   const next = () => {
     if (!stepValid()) return;
+    scrollTargetRef.current = null;
     setStep((s) => Math.min(TOTAL_STEPS, s + 1));
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
   };
   const prev = () => {
+    scrollTargetRef.current = null;
     setStep((s) => Math.max(minStep, s - 1));
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
   };
 
   const jumpToStep = (targetStep: number, sectionId?: string) => {
+    scrollTargetRef.current = sectionId ?? null;
     setStep(targetStep);
-    if (typeof window === "undefined") return;
-    if (sectionId) {
-      setTimeout(() => {
-        document.getElementById(sectionId)?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }, 0);
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
   };
 
   const handleSubmit = () => {
@@ -530,6 +566,7 @@ function SinglePageSubmit({
   onSubmit: () => void;
 }) {
   const [view, setView] = useState<"edit" | "review">("edit");
+  const scrollTargetRef = useRef<string | null>(null);
 
   const basicsOk =
     Boolean(data.name && data.url) &&
@@ -543,15 +580,23 @@ function SinglePageSubmit({
     pricingValid();
   const allValid = basicsOk && descOk && taxonomyOk && industryPricingOk;
 
-  const editAt = (sectionId: string) => {
-    setView("edit");
-    // Defer scroll until edit DOM is mounted.
-    setTimeout(() => {
-      document.getElementById(sectionId)?.scrollIntoView({
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const target = scrollTargetRef.current;
+    scrollTargetRef.current = null;
+    if (target) {
+      document.getElementById(target)?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
-    }, 0);
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+    }
+  }, [view]);
+
+  const editAt = (sectionId: string) => {
+    scrollTargetRef.current = sectionId;
+    setView("edit");
   };
 
   if (view === "review") {
@@ -644,7 +689,10 @@ function SinglePageSubmit({
         <div className="mt-12 flex items-center justify-between border-t border-[var(--color-line)] pt-6">
           <button
             type="button"
-            onClick={() => setView("edit")}
+            onClick={() => {
+              scrollTargetRef.current = null;
+              setView("edit");
+            }}
             className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
           >
             <ArrowLeft
@@ -736,8 +784,8 @@ function SinglePageSubmit({
         <button
           type="button"
           onClick={() => {
+            scrollTargetRef.current = null;
             setView("review");
-            window.scrollTo({ top: 0, behavior: "smooth" });
           }}
           disabled={!allValid}
           className={cn(
