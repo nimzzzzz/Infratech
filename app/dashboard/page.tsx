@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   ArrowRight,
   EnvelopeSimple,
@@ -37,7 +38,27 @@ const mockListings = [
   },
 ];
 
-export default function DashboardOverviewPage() {
+export default async function DashboardOverviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+
+  // Demo override — `?as=new` simulates a brand-new vendor with zero listings,
+  // which forces the gating redirect below. In real auth the listings array
+  // comes from the DB by vendorSlug; if the array is empty, the gate fires
+  // automatically with no override needed.
+  const listings = sp.as === "new" ? [] : mockListings;
+
+  // ── GATING ──────────────────────────────────────────────────────────
+  // Vendors with no listings shouldn't see the dashboard yet — they're
+  // mid-onboarding. Send them back to the onboarding landing to claim or
+  // submit a tool first.
+  if (listings.length === 0) {
+    redirect("/dashboard/onboarding");
+  }
+
   const { user, company } = getMockSession();
   const firstName = user.name.split(" ")[0];
   const allMessages = messagesForVendor(VENDOR_SLUG);
@@ -72,13 +93,13 @@ export default function DashboardOverviewPage() {
         <StatCard
           icon={Stack}
           label="Listed tools"
-          value={mockListings.filter((l) => l.status === "live").length}
+          value={listings.filter((l) => l.status === "live").length}
           href="#listings"
         />
         <StatCard
           icon={UserCircle}
           label="In review"
-          value={mockListings.filter((l) => l.status === "in-review").length}
+          value={listings.filter((l) => l.status === "in-review").length}
           href="#listings"
         />
       </ul>
@@ -171,7 +192,7 @@ export default function DashboardOverviewPage() {
         </header>
 
         <ul className="divide-y divide-[var(--color-line)]">
-          {mockListings.map((listing) => (
+          {listings.map((listing) => (
             <li
               key={listing.slug}
               className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-5 md:gap-6 md:px-3"

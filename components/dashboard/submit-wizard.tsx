@@ -88,11 +88,8 @@ const initialState = (companyName: string, domain: string): FormState => ({
 
 const steps = [
   { n: 1, label: "Your company", scope: "company" as const },
-  { n: 2, label: "Tool basics", scope: "tool" as const },
-  { n: 3, label: "Tool description", scope: "tool" as const },
-  { n: 4, label: "Stages & capabilities", scope: "tool" as const },
-  { n: 5, label: "Industries & pricing", scope: "tool" as const },
-  { n: 6, label: "Review", scope: "review" as const },
+  { n: 2, label: "Tool details", scope: "tool" as const },
+  { n: 3, label: "Review", scope: "review" as const },
 ];
 
 const TOTAL_STEPS = steps.length;
@@ -164,28 +161,49 @@ export function SubmitWizard({
       return baseOk && logoOk;
     }
     if (step === 2) {
-      const baseOk = Boolean(data.name && data.url);
-      const logoOk = !data.logoFile || data.logoAlt.trim().length > 0;
-      return baseOk && logoOk;
-    }
-    if (step === 3)
-      return Boolean(data.tagline && data.description);
-    if (step === 4)
-      return (
+      const basicsOk =
+        Boolean(data.name && data.url) &&
+        (!data.logoFile || data.logoAlt.trim().length > 0);
+      const descOk = Boolean(data.tagline && data.description);
+      const taxonomyOk =
         data.stages.length > 0 &&
-        (data.capabilities.length > 0 || data.customCapabilities.length > 0)
-      );
-    if (step === 5)
-      return (
+        (data.capabilities.length > 0 || data.customCapabilities.length > 0);
+      const industryPricingOk =
         (data.industries.length > 0 || data.customIndustries.length > 0) &&
-        pricingValid()
-      );
+        pricingValid();
+      return basicsOk && descOk && taxonomyOk && industryPricingOk;
+    }
     return true;
   };
 
-  const next = () =>
-    stepValid() && setStep((s) => Math.min(TOTAL_STEPS, s + 1));
-  const prev = () => setStep((s) => Math.max(minStep, s - 1));
+  const next = () => {
+    if (!stepValid()) return;
+    setStep((s) => Math.min(TOTAL_STEPS, s + 1));
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+  const prev = () => {
+    setStep((s) => Math.max(minStep, s - 1));
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const jumpToStep = (targetStep: number, sectionId?: string) => {
+    setStep(targetStep);
+    if (typeof window === "undefined") return;
+    if (sectionId) {
+      setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 0);
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const handleSubmit = () => {
     setSubmitting(true);
@@ -196,32 +214,71 @@ export function SubmitWizard({
     setTimeout(() => router.push("/dashboard/onboarding/complete"), 400);
   };
 
+  // Returning vendors already have a company profile — render the entire
+  // submission as one scrollable page, then a separate review summary.
+  if (skipCompanyStep) {
+    return (
+      <SinglePageSubmit
+        data={data}
+        update={update}
+        toggle={toggle}
+        addCustom={addCustom}
+        removeCustom={removeCustom}
+        pricingValid={pricingValid}
+        submitting={submitting}
+        onSubmit={handleSubmit}
+      />
+    );
+  }
+
   return (
     <div className="mt-8">
       <ProgressRail step={step} skipCompanyStep={skipCompanyStep} />
 
       <div className="mt-10">
         {step === 1 ? <CompanyStep data={data} update={update} /> : null}
-        {step === 2 ? <ToolBasicsStep data={data} update={update} /> : null}
-        {step === 3 ? <ToolDescStep data={data} update={update} /> : null}
-        {step === 4 ? (
-          <TaxonomyStep
+        {step === 2 ? (
+          <div className="space-y-14">
+            <div id="section-basics" className="scroll-mt-24">
+              <Section title="Tool basics" n={1}>
+                <ToolBasicsStep data={data} update={update} />
+              </Section>
+            </div>
+            <div id="section-description" className="scroll-mt-24">
+              <Section title="Tool description" n={2}>
+                <ToolDescStep data={data} update={update} />
+              </Section>
+            </div>
+            <div id="section-taxonomy" className="scroll-mt-24">
+              <Section title="Stages & capabilities" n={3}>
+                <TaxonomyStep
+                  data={data}
+                  toggle={toggle}
+                  addCustom={addCustom}
+                  removeCustom={removeCustom}
+                />
+              </Section>
+            </div>
+            <div id="section-industries" className="scroll-mt-24">
+              <Section title="Industries & pricing" n={4}>
+                <IndustryPricingStep
+                  data={data}
+                  toggle={toggle}
+                  update={update}
+                  addCustom={addCustom}
+                  removeCustom={removeCustom}
+                />
+              </Section>
+            </div>
+          </div>
+        ) : null}
+        {step === 3 ? (
+          <FullReviewView
             data={data}
-            toggle={toggle}
-            addCustom={addCustom}
-            removeCustom={removeCustom}
+            onEditCompany={() => jumpToStep(1)}
+            onEditSection={(sectionId) => jumpToStep(2, sectionId)}
           />
         ) : null}
-        {step === 5 ? (
-          <IndustryPricingStep
-            data={data}
-            toggle={toggle}
-            update={update}
-            addCustom={addCustom}
-            removeCustom={removeCustom}
-          />
-        ) : null}
-        {step === 6 ? <ReviewStep data={data} jumpTo={setStep} /> : null}
       </div>
 
       {/* navigation */}
@@ -302,10 +359,7 @@ function ProgressRail({
   const headlineFor = (n: number): string => {
     switch (n) {
       case 1: return "First, about your company.";
-      case 2: return "Tell us about the new tool.";
-      case 3: return "Describe what the tool does.";
-      case 4: return "Where does it fit in the lifecycle?";
-      case 5: return "Who uses it, and how do they buy?";
+      case 2: return "Now, the tool itself.";
       default: return "Look it over before submitting.";
     }
   };
@@ -329,10 +383,10 @@ function ProgressRail({
         {headlineFor(step)}
       </h1>
       <div
-        className={cn(
-          "mt-7 grid gap-1.5",
-          skipCompanyStep ? "grid-cols-5" : "grid-cols-6",
-        )}
+        className="mt-7 grid gap-1.5"
+        style={{
+          gridTemplateColumns: `repeat(${totalVisible}, minmax(0, 1fr))`,
+        }}
       >
         {visibleSteps.map((s) => (
           <span
@@ -350,6 +404,382 @@ function ProgressRail({
         ))}
       </div>
     </div>
+  );
+}
+
+function FullReviewView({
+  data,
+  onEditCompany,
+  onEditSection,
+}: {
+  data: FormState;
+  onEditCompany: () => void;
+  onEditSection: (sectionId: string) => void;
+}) {
+  return (
+    <div className="space-y-8 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
+      <ReviewBlock title="Your company" onEdit={onEditCompany}>
+        <ReviewRow label="Name" value={data.companyName} />
+        <ReviewRow label="Website" value={data.companyWebsite} />
+        <ReviewRow label="Founded" value={data.companyFounded} />
+        <ReviewRow label="Team size" value={data.companySize} />
+        <ReviewRow label="HQ" value={data.companyHeadquarters} />
+        <ReviewRow
+          label="Description"
+          value={data.companyDescription}
+          multiline
+        />
+        {data.companyLogoFile ? (
+          <ReviewLogo
+            label="Company logo"
+            file={data.companyLogoFile}
+            alt={data.companyLogoAlt}
+          />
+        ) : null}
+      </ReviewBlock>
+
+      <ReviewBlock
+        title="Tool basics"
+        onEdit={() => onEditSection("section-basics")}
+      >
+        <ReviewRow label="Tool" value={data.name} />
+        <ReviewRow label="Website" value={data.url} />
+        {data.founded ? (
+          <ReviewRow label="Launched" value={data.founded} />
+        ) : null}
+        {data.logoFile ? (
+          <ReviewLogo
+            label="Tool logo"
+            file={data.logoFile}
+            alt={data.logoAlt}
+          />
+        ) : null}
+      </ReviewBlock>
+
+      <ReviewBlock
+        title="Tool description"
+        onEdit={() => onEditSection("section-description")}
+      >
+        <ReviewRow label="Tagline" value={data.tagline} />
+        <ReviewRow label="What it does" value={data.description} multiline />
+      </ReviewBlock>
+
+      <ReviewBlock
+        title="Stages & capabilities"
+        onEdit={() => onEditSection("section-taxonomy")}
+      >
+        <ReviewRow
+          label="Stages"
+          value={data.stages
+            .map((s) => stages.find((x) => x.slug === s)?.name ?? s)
+            .join(", ")}
+        />
+        <ReviewTaxonomyRow
+          label="Capabilities"
+          canonical={data.capabilities.map(
+            (c) => capabilities.find((x) => x.slug === c)?.name ?? c,
+          )}
+          proposed={data.customCapabilities}
+        />
+      </ReviewBlock>
+
+      <ReviewBlock
+        title="Industries & pricing"
+        onEdit={() => onEditSection("section-industries")}
+      >
+        <ReviewTaxonomyRow
+          label="Industries"
+          canonical={data.industries.map(
+            (i) => industries.find((x) => x.slug === i)?.name ?? i,
+          )}
+          proposed={data.customIndustries}
+        />
+        <ReviewRow
+          label="Pricing"
+          value={
+            data.pricing === CUSTOM_PRICING_SLUG
+              ? `${data.customPricing} (proposed)`
+              : pricingModels.find((p) => p.slug === data.pricing)?.name ?? ""
+          }
+        />
+      </ReviewBlock>
+    </div>
+  );
+}
+
+function SinglePageSubmit({
+  data,
+  update,
+  toggle,
+  addCustom,
+  removeCustom,
+  pricingValid,
+  submitting,
+  onSubmit,
+}: {
+  data: FormState;
+  update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  toggle: (
+    key: "stages" | "capabilities" | "industries",
+    slug: string,
+  ) => void;
+  addCustom: (key: CustomKey, value: string) => void;
+  removeCustom: (key: CustomKey, value: string) => void;
+  pricingValid: () => boolean;
+  submitting: boolean;
+  onSubmit: () => void;
+}) {
+  const [view, setView] = useState<"edit" | "review">("edit");
+
+  const basicsOk =
+    Boolean(data.name && data.url) &&
+    (!data.logoFile || data.logoAlt.trim().length > 0);
+  const descOk = Boolean(data.tagline && data.description);
+  const taxonomyOk =
+    data.stages.length > 0 &&
+    (data.capabilities.length > 0 || data.customCapabilities.length > 0);
+  const industryPricingOk =
+    (data.industries.length > 0 || data.customIndustries.length > 0) &&
+    pricingValid();
+  const allValid = basicsOk && descOk && taxonomyOk && industryPricingOk;
+
+  const editAt = (sectionId: string) => {
+    setView("edit");
+    // Defer scroll until edit DOM is mounted.
+    setTimeout(() => {
+      document.getElementById(sectionId)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
+  };
+
+  if (view === "review") {
+    return (
+      <div className="mt-8">
+        <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+          &sect; Add a tool &middot; Review
+        </p>
+        <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
+          Look it over before submitting.
+        </h1>
+        <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
+          Edit any block to jump back. Editorial review usually takes two
+          business days &mdash; we&rsquo;ll email you when it&rsquo;s live.
+        </p>
+
+        <div className="mt-10 space-y-8 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
+          <ReviewBlock
+            title="Tool basics"
+            onEdit={() => editAt("section-basics")}
+          >
+            <ReviewRow label="Tool" value={data.name} />
+            <ReviewRow label="Website" value={data.url} />
+            {data.founded ? (
+              <ReviewRow label="Launched" value={data.founded} />
+            ) : null}
+            {data.logoFile ? (
+              <ReviewLogo
+                label="Tool logo"
+                file={data.logoFile}
+                alt={data.logoAlt}
+              />
+            ) : null}
+          </ReviewBlock>
+
+          <ReviewBlock
+            title="Tool description"
+            onEdit={() => editAt("section-description")}
+          >
+            <ReviewRow label="Tagline" value={data.tagline} />
+            <ReviewRow
+              label="What it does"
+              value={data.description}
+              multiline
+            />
+          </ReviewBlock>
+
+          <ReviewBlock
+            title="Stages & capabilities"
+            onEdit={() => editAt("section-taxonomy")}
+          >
+            <ReviewRow
+              label="Stages"
+              value={data.stages
+                .map((s) => stages.find((x) => x.slug === s)?.name ?? s)
+                .join(", ")}
+            />
+            <ReviewTaxonomyRow
+              label="Capabilities"
+              canonical={data.capabilities.map(
+                (c) => capabilities.find((x) => x.slug === c)?.name ?? c,
+              )}
+              proposed={data.customCapabilities}
+            />
+          </ReviewBlock>
+
+          <ReviewBlock
+            title="Industries & pricing"
+            onEdit={() => editAt("section-industries")}
+          >
+            <ReviewTaxonomyRow
+              label="Industries"
+              canonical={data.industries.map(
+                (i) => industries.find((x) => x.slug === i)?.name ?? i,
+              )}
+              proposed={data.customIndustries}
+            />
+            <ReviewRow
+              label="Pricing"
+              value={
+                data.pricing === CUSTOM_PRICING_SLUG
+                  ? `${data.customPricing} (proposed)`
+                  : pricingModels.find((p) => p.slug === data.pricing)?.name ??
+                    ""
+              }
+            />
+          </ReviewBlock>
+        </div>
+
+        <div className="mt-12 flex items-center justify-between border-t border-[var(--color-line)] pt-6">
+          <button
+            type="button"
+            onClick={() => setView("edit")}
+            className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
+          >
+            <ArrowLeft
+              size={12}
+              weight="bold"
+              className="transition-transform duration-300 group-hover:-translate-x-0.5"
+            />
+            Back to edit
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={submitting}
+            className={cn(
+              "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition active:translate-y-[1px]",
+              submitting ? "bg-[var(--color-coral)]/80" : "bloom",
+            )}
+          >
+            {submitting ? (
+              <>
+                <Check size={13} weight="bold" />
+                Submitting…
+              </>
+            ) : (
+              <>
+                <PaperPlaneTilt size={13} weight="regular" />
+                Submit for review
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-8">
+      <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+        &sect; Add a tool
+      </p>
+      <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
+        Tell us about the new tool.
+      </h1>
+      <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
+        Fill everything in on this page, then review before submitting.
+        Editorial review usually takes two business days.
+      </p>
+
+      <div className="mt-12 space-y-14">
+        <div id="section-basics" className="scroll-mt-24">
+          <Section title="Tool basics" n={1}>
+            <ToolBasicsStep data={data} update={update} />
+          </Section>
+        </div>
+        <div id="section-description" className="scroll-mt-24">
+          <Section title="Tool description" n={2}>
+            <ToolDescStep data={data} update={update} />
+          </Section>
+        </div>
+        <div id="section-taxonomy" className="scroll-mt-24">
+          <Section title="Stages & capabilities" n={3}>
+            <TaxonomyStep
+              data={data}
+              toggle={toggle}
+              addCustom={addCustom}
+              removeCustom={removeCustom}
+            />
+          </Section>
+        </div>
+        <div id="section-industries" className="scroll-mt-24">
+          <Section title="Industries & pricing" n={4}>
+            <IndustryPricingStep
+              data={data}
+              toggle={toggle}
+              update={update}
+              addCustom={addCustom}
+              removeCustom={removeCustom}
+            />
+          </Section>
+        </div>
+      </div>
+
+      <div className="mt-12 flex flex-col gap-3 border-t border-[var(--color-line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-[12px] text-[var(--color-ink-3)]">
+          {allValid
+            ? "All set. Continue to review your submission."
+            : "Fill the required fields above to continue."}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setView("review");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          disabled={!allValid}
+          className={cn(
+            "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.2em] transition active:translate-y-[1px]",
+            allValid
+              ? "bg-[var(--color-ink)] text-[var(--color-canvas)]"
+              : "cursor-not-allowed bg-[var(--color-line)] text-[var(--color-ink-3)]",
+          )}
+        >
+          Continue to review
+          <ArrowRight
+            size={13}
+            weight="bold"
+            className="transition-transform duration-300 group-hover:translate-x-0.5"
+          />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  n,
+  children,
+}: {
+  title: string;
+  n: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <header className="flex items-baseline gap-3 border-b border-[var(--color-line-strong)] pb-3">
+        <span className="num text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+          {String(n).padStart(2, "0")}
+        </span>
+        <h2 className="font-heading text-[22px] leading-tight tracking-tight md:text-[26px]">
+          {title}
+        </h2>
+      </header>
+      <div className="mt-6">{children}</div>
+    </section>
   );
 }
 
@@ -837,96 +1267,6 @@ function PricingCard({
         ) : null}
       </span>
     </button>
-  );
-}
-
-// ──────────────────────────────────────────────────────────────────────
-// STEP 6 — Review
-// ──────────────────────────────────────────────────────────────────────
-
-function ReviewStep({
-  data,
-  jumpTo,
-}: {
-  data: FormState;
-  jumpTo: (n: number) => void;
-}) {
-  return (
-    <div className="space-y-8 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
-      <ReviewBlock title="Your company" onEdit={() => jumpTo(1)}>
-        <ReviewRow label="Name" value={data.companyName} />
-        <ReviewRow label="Website" value={data.companyWebsite} />
-        <ReviewRow label="Founded" value={data.companyFounded} />
-        <ReviewRow label="Team size" value={data.companySize} />
-        <ReviewRow label="HQ" value={data.companyHeadquarters} />
-        <ReviewRow
-          label="Description"
-          value={data.companyDescription}
-          multiline
-        />
-        {data.companyLogoFile ? (
-          <ReviewLogo
-            label="Company logo"
-            file={data.companyLogoFile}
-            alt={data.companyLogoAlt}
-          />
-        ) : null}
-      </ReviewBlock>
-
-      <ReviewBlock title="Tool basics" onEdit={() => jumpTo(2)}>
-        <ReviewRow label="Tool" value={data.name} />
-        <ReviewRow label="Website" value={data.url} />
-        {data.founded ? (
-          <ReviewRow label="Launched" value={data.founded} />
-        ) : null}
-        {data.logoFile ? (
-          <ReviewLogo
-            label="Tool logo"
-            file={data.logoFile}
-            alt={data.logoAlt}
-          />
-        ) : null}
-      </ReviewBlock>
-
-      <ReviewBlock title="Tool description" onEdit={() => jumpTo(3)}>
-        <ReviewRow label="Tagline" value={data.tagline} />
-        <ReviewRow label="What it does" value={data.description} multiline />
-      </ReviewBlock>
-
-      <ReviewBlock title="Categorisation" onEdit={() => jumpTo(4)}>
-        <ReviewRow
-          label="Stages"
-          value={data.stages
-            .map((s) => stages.find((x) => x.slug === s)?.name ?? s)
-            .join(", ")}
-        />
-        <ReviewTaxonomyRow
-          label="Capabilities"
-          canonical={data.capabilities.map(
-            (c) => capabilities.find((x) => x.slug === c)?.name ?? c,
-          )}
-          proposed={data.customCapabilities}
-        />
-      </ReviewBlock>
-
-      <ReviewBlock title="Industries & pricing" onEdit={() => jumpTo(5)}>
-        <ReviewTaxonomyRow
-          label="Industries"
-          canonical={data.industries.map(
-            (i) => industries.find((x) => x.slug === i)?.name ?? i,
-          )}
-          proposed={data.customIndustries}
-        />
-        <ReviewRow
-          label="Pricing"
-          value={
-            data.pricing === CUSTOM_PRICING_SLUG
-              ? `${data.customPricing} (proposed)`
-              : pricingModels.find((p) => p.slug === data.pricing)?.name ?? ""
-          }
-        />
-      </ReviewBlock>
-    </div>
   );
 }
 

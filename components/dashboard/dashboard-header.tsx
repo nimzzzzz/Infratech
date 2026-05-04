@@ -26,6 +26,7 @@ export function DashboardHeader() {
   const pathname = usePathname();
   const { user, company } = getMockSession();
   const unread = unreadCount(VENDOR_SLUG);
+  const isOnboarding = pathname.startsWith("/dashboard/onboarding");
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
@@ -45,6 +46,7 @@ export function DashboardHeader() {
             </span>
           </Link>
 
+          {!isOnboarding && (
           <nav aria-label="Dashboard sections" className="hidden md:block">
             <ul className="ml-2 flex items-center">
               {nav.map((item) => {
@@ -81,6 +83,7 @@ export function DashboardHeader() {
               })}
             </ul>
           </nav>
+          )}
         </div>
 
         {/* user pill + sign out */}
@@ -109,6 +112,7 @@ export function DashboardHeader() {
       </div>
 
       {/* mobile nav row */}
+      {!isOnboarding && (
       <nav
         aria-label="Dashboard sections"
         className="border-t border-[var(--color-line)] bg-[var(--color-canvas)]/85 md:hidden"
@@ -148,6 +152,7 @@ export function DashboardHeader() {
           })}
         </ul>
       </nav>
+      )}
     </header>
   );
 }

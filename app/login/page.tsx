@@ -150,7 +150,7 @@ export default function LoginPage() {
             </p>
 
             <Link
-              href="/dashboard/onboarding"
+              href="/dashboard?as=new"
               className="group mt-10 inline-flex h-12 w-full items-center justify-center gap-2.5 bg-[#0A66C2] px-5 text-[14px] font-medium text-white transition-colors hover:bg-[#0959AB] active:translate-y-[1px] sm:h-14 sm:text-[15px]"
             >
               <LinkedinLogo size={20} weight="fill" />
@@ -161,6 +161,40 @@ export default function LoginPage() {
                 className="transition-transform duration-300 group-hover:translate-x-0.5"
               />
             </Link>
+
+            {/* demo-mode toggle — pre-wiring real auth, lets you preview both flows */}
+            <div className="mt-5 border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-3.5">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+                &sect; Demo mode
+              </p>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-[var(--color-ink-2)]">
+                Real LinkedIn auth lands in Phase 2. Pick a flow to preview:
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Link
+                  href="/dashboard?as=new"
+                  className="group inline-flex h-10 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[11px] uppercase tracking-[0.16em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)]"
+                >
+                  New vendor
+                  <ArrowRight
+                    size={11}
+                    weight="bold"
+                    className="transition-transform duration-300 group-hover:translate-x-0.5"
+                  />
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="group inline-flex h-10 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[11px] uppercase tracking-[0.16em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)]"
+                >
+                  Returning vendor
+                  <ArrowRight
+                    size={11}
+                    weight="bold"
+                    className="transition-transform duration-300 group-hover:translate-x-0.5"
+                  />
+                </Link>
+              </div>
+            </div>
 
             {/* explainer */}
             <div className="mt-6 border-t border-[var(--color-line)] pt-6">
