@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { Webhook } from "svix";
 import { clerkClient } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
@@ -131,10 +130,9 @@ async function syncRoleToClerk(
 
 async function verifyAndParse(req: Request): Promise<ClerkEvent> {
   const { webhookSigningSecret } = env.clerk();
-  const h = await headers();
-  const svixId = h.get("svix-id");
-  const svixTimestamp = h.get("svix-timestamp");
-  const svixSignature = h.get("svix-signature");
+  const svixId = req.headers.get("svix-id");
+  const svixTimestamp = req.headers.get("svix-timestamp");
+  const svixSignature = req.headers.get("svix-signature");
 
   if (!svixId || !svixTimestamp || !svixSignature) {
     throw new Error("Missing svix headers");

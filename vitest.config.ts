@@ -8,6 +8,11 @@ export default defineConfig({
     },
   },
   test: {
+    // Neon EU + per-test TLS handshake + v8 coverage instrumentation
+    // pushes individual cases past the 5s default. 30s is generous;
+    // a real-data slowdown would still surface as a failure.
+    testTimeout: 30000,
+    hookTimeout: 30000,
     projects: [
       {
         extends: true,

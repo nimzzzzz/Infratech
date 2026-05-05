@@ -37,6 +37,20 @@ vi.mock("@/lib/db/client", () => ({
             `[db-tx] db.${String(prop)} accessed before beforeEach ran`,
           );
         }
+        // CRITICAL: postgres.js doesn't auto-savepoint nested transactions —
+        // a db.transaction(...) inside our test BEGIN issues an inner
+        // BEGIN/COMMIT that commits BOTH transactions, defeating the
+        // afterEach ROLLBACK. Replace transaction() with a flat
+        // pass-through: the production code's atomic-write intent is
+        // preserved (all writes happen serially against the test outer
+        // tx) while no inner commit ever fires.
+        if (prop === "transaction") {
+          return async (
+            callback: (
+              tx: PostgresJsDatabase<typeof schema>,
+            ) => Promise<unknown>,
+          ) => callback(testDb!);
+        }
         const value = (testDb as unknown as Record<string | symbol, unknown>)[
           prop
         ];
