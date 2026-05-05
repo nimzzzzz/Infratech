@@ -1,38 +1,25 @@
 import { NextResponse } from "next/server";
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { admins } from "@/lib/db/schema";
+import {
+  decideRoute,
+  type ClaimedRole,
+} from "@/lib/auth/middleware-decision";
 
 /**
  * Auth + role enforcement.
  *
- *   • Public routes (/, /apps/**, /vendors/**, /stages/**, /capabilities/**,
- *     /legal/**, /sitemap.xml, /robots.txt, /api/webhooks/**, /login,
- *     /admin/login, /admin/2fa-setup) are open.
- *   • /dashboard/** requires any authenticated Clerk session. The
- *     onboarding gate (vendor.onboarded === false → /dashboard/onboarding)
- *     runs at page level via getVendorSession({ requireOnboarded: true }).
- *   • /admin/** requires role === "admin" AND
- *     sessionClaims.twoFactorEnabled === true. Role is checked first
- *     against publicMetadata.role; if missing (e.g. metadata sync failed
- *     after first sign-in), we fall back to a DB lookup against the
- *     admins table — DB is the source of truth. Missing role → "/";
- *     missing 2FA → /admin/2fa-setup.
+ * The decision logic lives in lib/auth/middleware-decision.ts as a pure
+ * function so it's unit-testable without the Clerk runtime. This file
+ * is the thin shell that adapts clerkMiddleware to that function.
  *
- * Runs in Node runtime so we can use postgres.js for the DB fallback.
+ * Runtime: nodejs (so postgres.js works for the DB fallback).
  *
- * In DEMO_MODE (NEXT_PUBLIC_DEMO_MODE=true and not production) the
- * middleware bypasses all auth checks; pages short-circuit through
- * their session resolvers to seeded data.
+ * In DEMO_MODE the middleware short-circuits — pages handle their own
+ * fallbacks via getVendorSession / getAdminSession against seeded data.
  */
-
-const isDashboardRoute = createRouteMatcher(["/dashboard(.*)"]);
-const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
-const isAdminAuthRoute = createRouteMatcher([
-  "/admin/login",
-  "/admin/2fa-setup",
-]);
 
 const demoMode =
   process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
@@ -53,47 +40,26 @@ async function isAdminInDb(clerkUserId: string): Promise<boolean> {
 }
 
 export default clerkMiddleware(async (auth, req) => {
-  if (demoMode) return NextResponse.next();
+  const { userId, sessionClaims } = await auth();
+  const role = (
+    sessionClaims?.publicMetadata as { role?: ClaimedRole } | undefined
+  )?.role;
+  const has2FA =
+    (sessionClaims as { twoFactorEnabled?: boolean } | undefined)
+      ?.twoFactorEnabled === true;
 
-  if (isAdminRoute(req) && !isAdminAuthRoute(req)) {
-    const { userId, sessionClaims } = await auth();
-    if (!userId) {
-      return NextResponse.redirect(new URL("/admin/login", req.url));
-    }
+  const decision = await decideRoute({
+    pathname: req.nextUrl.pathname,
+    userId: userId ?? null,
+    role,
+    has2FA,
+    isAdminInDb: () => (userId ? isAdminInDb(userId) : Promise.resolve(false)),
+    demoMode,
+  });
 
-    const claimedRole = (
-      sessionClaims?.publicMetadata as { role?: string } | undefined
-    )?.role;
-
-    let isAdmin = claimedRole === "admin";
-    // Source-of-truth fallback when the JWT claim is missing — happens
-    // briefly between webhook DB insert and Clerk metadata propagation.
-    if (!isAdmin && !claimedRole) {
-      isAdmin = await isAdminInDb(userId);
-    }
-
-    if (!isAdmin) {
-      const url = new URL("/", req.url);
-      url.searchParams.set("error", "forbidden");
-      return NextResponse.redirect(url);
-    }
-
-    const has2FA =
-      (sessionClaims as { twoFactorEnabled?: boolean } | undefined)
-        ?.twoFactorEnabled === true;
-    if (!has2FA) {
-      return NextResponse.redirect(new URL("/admin/2fa-setup", req.url));
-    }
-    return NextResponse.next();
+  if (decision.kind === "redirect") {
+    return NextResponse.redirect(new URL(decision.to, req.url));
   }
-
-  if (isDashboardRoute(req)) {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
-  }
-
   return NextResponse.next();
 });
 
