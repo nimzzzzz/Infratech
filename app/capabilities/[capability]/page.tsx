@@ -12,9 +12,16 @@ import { listAppsByCapability } from "@/lib/queries/apps";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
-  const caps = await listCapabilities();
-  return caps.map((c) => ({ capability: c.slug }));
+  try {
+    const caps = await listCapabilities();
+    return caps.map((c) => ({ capability: c.slug }));
+  } catch (err) {
+    console.warn("[capabilities/[capability]] generateStaticParams skipped:", err);
+    return [];
+  }
 }
 
 export async function generateMetadata({

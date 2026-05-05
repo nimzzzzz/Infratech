@@ -7,9 +7,16 @@ import { LetterAvatar } from "@/components/browse/letter-avatar";
 import { ContactForm } from "@/components/site/contact-vendor-form";
 import { getAppBySlug, listAllAppSlugs } from "@/lib/queries/apps";
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
-  const slugs = await listAllAppSlugs();
-  return slugs.map((slug) => ({ slug }));
+  try {
+    const slugs = await listAllAppSlugs();
+    return slugs.map((slug) => ({ slug }));
+  } catch (err) {
+    console.warn("[apps/[slug]/contact] generateStaticParams skipped:", err);
+    return [];
+  }
 }
 
 export async function generateMetadata({

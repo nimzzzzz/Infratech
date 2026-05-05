@@ -22,9 +22,17 @@ import { cn } from "@/lib/utils";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
-  const slugs = await listAllAppSlugs();
-  return slugs.map((slug) => ({ slug }));
+  try {
+    const slugs = await listAllAppSlugs();
+    return slugs.map((slug) => ({ slug }));
+  } catch (err) {
+    // DB unreachable at build time — let ISR populate pages on first request.
+    console.warn("[apps/[slug]] generateStaticParams skipped:", err);
+    return [];
+  }
 }
 
 export async function generateMetadata({

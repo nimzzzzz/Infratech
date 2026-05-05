@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+// Featured + latest matter — re-render every 10 minutes.
+export const revalidate = 600;
+
 export default async function HomePage() {
   return <HomeIndex />;
 }

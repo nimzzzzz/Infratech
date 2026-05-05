@@ -5,6 +5,8 @@ import { listAllVendorSlugs } from "@/lib/queries/vendors";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const staticPaths = [
@@ -23,12 +25,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: p === "" ? 1 : 0.7,
   }));
 
-  const [stages, capabilities, appSlugs, vendorSlugs] = await Promise.all([
-    listStages(),
-    listCapabilities(),
-    listAllAppSlugs(),
-    listAllVendorSlugs(),
-  ]);
+  // DB unreachable at build time → emit just the static paths and let ISR
+  // fill in the dynamic ones on the first post-deploy request.
+  let stages: { slug: string }[] = [];
+  let capabilities: { slug: string }[] = [];
+  let appSlugs: string[] = [];
+  let vendorSlugs: string[] = [];
+  try {
+    [stages, capabilities, appSlugs, vendorSlugs] = await Promise.all([
+      listStages(),
+      listCapabilities(),
+      listAllAppSlugs(),
+      listAllVendorSlugs(),
+    ]);
+  } catch (err) {
+    console.warn("[sitemap] DB unreachable; emitting static paths only:", err);
+  }
 
   const stagePaths = stages.map((s) => ({
     url: `${SITE_URL}/stages/${s.slug}`,

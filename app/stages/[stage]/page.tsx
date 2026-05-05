@@ -9,9 +9,16 @@ import { listAppsByStage } from "@/lib/queries/apps";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
-  const stages = await listStages();
-  return stages.map((s) => ({ stage: s.slug }));
+  try {
+    const stages = await listStages();
+    return stages.map((s) => ({ stage: s.slug }));
+  } catch (err) {
+    console.warn("[stages/[stage]] generateStaticParams skipped:", err);
+    return [];
+  }
 }
 
 export async function generateMetadata({

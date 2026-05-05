@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Star } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
@@ -24,12 +25,22 @@ import { listStagesWithCounts } from "@/lib/queries/taxonomy";
  * above the fold. (Stage 2 plan Q1.)
  */
 export async function HomeIndex() {
-  const [featured, recent, stagesWithCounts, allApps] = await Promise.all([
-    getFeaturedApps(8),
-    listRecentlyAddedApps(6),
-    listStagesWithCounts(),
-    listApps({ status: "published" }),
-  ]);
+  // DB unreachable at build → render the page empty rather than failing
+  // the build. ISR will repopulate on the first post-deploy request.
+  let featured: Awaited<ReturnType<typeof getFeaturedApps>> = [];
+  let recent: Awaited<ReturnType<typeof listRecentlyAddedApps>> = [];
+  let stagesWithCounts: Awaited<ReturnType<typeof listStagesWithCounts>> = [];
+  let allApps: Awaited<ReturnType<typeof listApps>> = [];
+  try {
+    [featured, recent, stagesWithCounts, allApps] = await Promise.all([
+      getFeaturedApps(8),
+      listRecentlyAddedApps(6),
+      listStagesWithCounts(),
+      listApps({ status: "published" }),
+    ]);
+  } catch (err) {
+    console.warn("[home] DB unreachable; rendering empty:", err);
+  }
   const totalCount = allApps.length;
 
   return (
@@ -62,7 +73,9 @@ export async function HomeIndex() {
           </p>
 
           <div className="mt-8 max-w-3xl">
-            <SearchBar />
+            <Suspense fallback={<div className="h-12 bg-[var(--color-surface)]" />}>
+              <SearchBar />
+            </Suspense>
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
