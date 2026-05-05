@@ -5,10 +5,11 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
 import { ContactForm } from "@/components/site/contact-vendor-form";
-import { apps } from "@/lib/data/apps";
+import { getAppBySlug, listAllAppSlugs } from "@/lib/queries/apps";
 
 export async function generateStaticParams() {
-  return apps.map((a) => ({ slug: a.slug }));
+  const slugs = await listAllAppSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -17,10 +18,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const app = apps.find((a) => a.slug === slug);
+  const app = await getAppBySlug(slug);
   if (!app) return { title: "App not found" };
   return {
-    title: `Contact ${app.vendor} about ${app.name}`,
+    title: `Contact ${app.vendor.name} about ${app.name}`,
     // Reachable only from the tool detail "Contact vendor" button — keep it
     // out of search results and out of the sitemap.
     robots: { index: false, follow: false },
@@ -34,7 +35,7 @@ export default async function ContactVendorPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const app = apps.find((a) => a.slug === slug);
+  const app = await getAppBySlug(slug);
   if (!app) notFound();
 
   return (
@@ -58,7 +59,7 @@ export default async function ContactVendorPage({
           <LetterAvatar name={app.name} className="h-14 w-14 shrink-0" />
           <div>
             <p className="text-[12px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
-              {app.vendor}
+              {app.vendor.name}
             </p>
             <h1 className="mt-2 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[44px]">
               Contact about {app.name}.
@@ -67,16 +68,16 @@ export default async function ContactVendorPage({
         </div>
 
         <p className="mt-6 max-w-[58ch] text-[15px] leading-relaxed text-[var(--color-ink-2)] md:text-[16px]">
-          Your message goes directly to the {app.vendor} team. We don&rsquo;t
-          publish their email address &mdash; you&rsquo;ll get a confirmation
-          from us, then they reply directly to your inbox.
+          Your message goes directly to the {app.vendor.name} team. We
+          don&rsquo;t publish their email address &mdash; you&rsquo;ll get a
+          confirmation from us, then they reply directly to your inbox.
         </p>
 
         <div className="mt-10">
           <ContactForm
             appSlug={app.slug}
             appName={app.name}
-            vendorName={app.vendor}
+            vendorName={app.vendor.name}
           />
         </div>
       </Container>

@@ -12,13 +12,18 @@ import {
 import { Container } from "@/components/site/container";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
 import { AppCard } from "@/components/browse/app-card";
-import { vendors, type Vendor } from "@/lib/data/vendors";
-import { appsByVendor } from "@/lib/data/apps";
+import {
+  getVendorBySlug,
+  listAllVendorSlugs,
+} from "@/lib/queries/vendors";
+import { listAppsByVendorSlug } from "@/lib/queries/apps";
+import type { Vendor } from "@/lib/db/schema";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export async function generateStaticParams() {
-  return vendors.map((v) => ({ slug: v.slug }));
+  const slugs = await listAllVendorSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -27,15 +32,15 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const vendor = vendors.find((v) => v.slug === slug);
+  const vendor = await getVendorBySlug(slug);
   if (!vendor) return { title: "Vendor not found" };
   return {
     title: `${vendor.name} — Vendor profile`,
-    description: vendor.shortBlurb,
+    description: vendor.shortBlurb ?? undefined,
     alternates: { canonical: `/vendors/${vendor.slug}` },
     openGraph: {
       title: `${vendor.name} on InfraTechDB`,
-      description: vendor.shortBlurb,
+      description: vendor.shortBlurb ?? undefined,
       url: `${SITE_URL}/vendors/${vendor.slug}`,
       type: "website",
     },
@@ -48,11 +53,11 @@ export default async function VendorDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const vendor = vendors.find((v) => v.slug === slug);
+  const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
 
-  const tools = appsByVendor(vendor.slug);
-  const paragraphs = vendor.description
+  const tools = await listAppsByVendorSlug(vendor.slug);
+  const paragraphs = (vendor.description ?? "")
     .split(/\n\n+/)
     .filter((p) => p.trim().length > 0);
 
@@ -102,7 +107,7 @@ export default async function VendorDetailPage({
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
-                  href={vendor.websiteUrl}
+                  href={vendor.websiteUrl ?? "#"}
                   target="_blank"
                   rel="nofollow noopener"
                   className="group relative inline-flex h-12 items-center gap-2 overflow-hidden bg-[var(--color-coral)] px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-transform active:translate-y-[1px]"
@@ -136,21 +141,29 @@ export default async function VendorDetailPage({
                 At a glance
               </p>
               <dl className="mt-5 space-y-4">
-                <FactRow
-                  icon={Calendar}
-                  label="Founded"
-                  value={<span className="num">{vendor.founded}</span>}
-                />
-                <FactRow
-                  icon={UsersThree}
-                  label="Team size"
-                  value={vendor.employeeBand}
-                />
-                <FactRow
-                  icon={MapPin}
-                  label="Headquarters"
-                  value={vendor.headquarters}
-                />
+                {vendor.foundedYear ? (
+                  <FactRow
+                    icon={Calendar}
+                    label="Founded"
+                    value={
+                      <span className="num">{String(vendor.foundedYear)}</span>
+                    }
+                  />
+                ) : null}
+                {vendor.employeeBand ? (
+                  <FactRow
+                    icon={UsersThree}
+                    label="Team size"
+                    value={vendor.employeeBand}
+                  />
+                ) : null}
+                {vendor.hqCountry ? (
+                  <FactRow
+                    icon={MapPin}
+                    label="Headquarters"
+                    value={vendor.hqCountry}
+                  />
+                ) : null}
                 <FactRow
                   icon={Buildings}
                   label="Products listed"
@@ -303,9 +316,9 @@ function JsonLd({ vendor, toolCount }: { vendor: Vendor; toolCount: number }) {
     name: vendor.name,
     description: vendor.shortBlurb,
     url: vendor.websiteUrl,
-    foundingDate: String(vendor.founded),
-    address: vendor.headquarters,
-    numberOfEmployees: vendor.employeeBand,
+    foundingDate: vendor.foundedYear ? String(vendor.foundedYear) : undefined,
+    address: vendor.hqCountry ?? undefined,
+    numberOfEmployees: vendor.employeeBand ?? undefined,
     makesOffer: toolCount,
   };
   return (

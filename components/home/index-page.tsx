@@ -1,25 +1,26 @@
 import { Container } from "@/components/site/container";
 import { SearchBar } from "@/components/browse/search-bar";
-import { FilterSidebar } from "@/components/browse/filter-sidebar";
-import { FilterDrawer } from "@/components/browse/filter-drawer";
 import { StageQuickFilter } from "@/components/browse/stage-quick-filter";
-import { ActiveFilters } from "@/components/browse/active-filters";
-import { SortTabs } from "@/components/browse/sort-tabs";
 import { AppCard } from "@/components/browse/app-card";
-import { apps } from "@/lib/data/apps";
-import { applyFilters, parseFilters } from "@/lib/browse/filters";
+import { listApps } from "@/lib/queries/apps";
 
+/**
+ * Home / browse-index. Stage 1 wires this up to the DB but deliberately
+ * skips the FilterSidebar + applyFilters logic — those live in
+ * lib/browse/filters.ts which still operates on the legacy mock-data
+ * shape. The /browse page in Stage 2 will refactor filtering against
+ * AppCard (slim DB shape) and re-introduce the sidebar, drawer, sort
+ * tabs, and active-filter chips at that point.
+ */
 export async function HomeIndex({
-  searchParams,
+  searchParams: _searchParams,
 }: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const state = parseFilters(searchParams);
-  const results = applyFilters(apps, state);
+  const apps = await listApps({ status: "published" });
 
   return (
     <article className="bg-[var(--color-canvas)]">
-      {/* SLIM MASTHEAD — single-line strip under the header */}
       <div className="bg-[var(--color-night)]">
         <Container className="py-3 md:py-3.5">
           <h1 className="font-heading text-[14px] leading-tight text-white md:text-[16px]">
@@ -31,7 +32,6 @@ export async function HomeIndex({
         </Container>
       </div>
 
-      {/* SEARCH + STAGE FILTER */}
       <section className="relative bg-[var(--color-canvas)]">
         <Container className="pt-8 md:pt-10">
           <div className="max-w-3xl">
@@ -43,48 +43,26 @@ export async function HomeIndex({
         </Container>
       </section>
 
-      {/* INDEX */}
-      <Container className="grid gap-10 border-t border-[var(--color-line)] py-10 md:grid-cols-[260px_1fr] md:gap-12 md:py-12">
-        {/* Desktop sidebar */}
-        <div className="hidden md:block">
-          <FilterSidebar searchParams={searchParams} />
-        </div>
+      <Container className="border-t border-[var(--color-line)] py-10 md:py-12">
+        <header className="flex flex-col gap-4 pb-6 md:flex-row md:items-center md:justify-between">
+          <p className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
+            Showing all{" "}
+            <span className="num text-[var(--color-ink)]">{apps.length}</span>{" "}
+            published products
+          </p>
+        </header>
 
-        <div className="min-w-0">
-          {/* Mobile drawer (sticky trigger + slide-in panel). Hidden above md. */}
-          <FilterDrawer
-            resultCount={results.length}
-            totalCount={apps.length}
-          >
-            <FilterSidebar searchParams={searchParams} />
-          </FilterDrawer>
-
-          <header className="flex flex-col gap-4 pb-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-col gap-3">
-              <ActiveFilters />
-              <p className="hidden text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] md:block">
-                Showing{" "}
-                <span className="num text-[var(--color-ink)]">
-                  {results.length}
-                </span>{" "}
-                of <span className="num">{apps.length}</span> products
-              </p>
-            </div>
-            <SortTabs />
-          </header>
-
-          {results.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {results.map((app) => (
-                <li key={app.slug}>
-                  <AppCard app={app} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {apps.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {apps.map((app) => (
+              <li key={app.slug}>
+                <AppCard app={app} />
+              </li>
+            ))}
+          </ul>
+        )}
       </Container>
     </article>
   );
@@ -97,8 +75,8 @@ function EmptyState() {
         No matches
       </p>
       <p className="mt-3 max-w-[40ch] mx-auto text-[15px] text-[var(--color-ink-2)]">
-        No products match the current combination of filters. Try removing one, or
-        clearing all filters above.
+        No products are published yet. Once vendors finish onboarding, their
+        listings appear here.
       </p>
     </div>
   );

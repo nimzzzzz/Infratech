@@ -4,10 +4,11 @@ import Link from "next/link";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import { InnerHero } from "@/components/site/inner-hero";
-import { stages } from "@/lib/data/stages";
-import { apps as allApps } from "@/lib/data/apps";
+import { listStages, getStageBySlug } from "@/lib/queries/taxonomy";
+import { listAppsByStage } from "@/lib/queries/apps";
 
 export async function generateStaticParams() {
+  const stages = await listStages();
   return stages.map((s) => ({ stage: s.slug }));
 }
 
@@ -17,11 +18,11 @@ export async function generateMetadata({
   params: Promise<{ stage: string }>;
 }): Promise<Metadata> {
   const { stage } = await params;
-  const found = stages.find((s) => s.slug === stage);
+  const found = await getStageBySlug(stage);
   if (!found) return { title: "Stage not found" };
   return {
     title: `${found.name} software`,
-    description: `Project management and infrastructure software used during the ${found.name.toLowerCase()} stage. ${found.short}`,
+    description: `Project management and infrastructure software used during the ${found.name.toLowerCase()} stage. ${found.shortDescription ?? ""}`,
     alternates: { canonical: `/stages/${found.slug}` },
   };
 }
@@ -32,17 +33,22 @@ export default async function StagePage({
   params: Promise<{ stage: string }>;
 }) {
   const { stage } = await params;
-  const data = stages.find((s) => s.slug === stage);
+  const data = await getStageBySlug(stage);
   if (!data) notFound();
 
-  const apps = allApps.filter((a) => a.stages.includes(data.slug));
+  const apps = await listAppsByStage(data.slug);
 
   return (
     <>
       <InnerHero
-        eyebrow={`Stage ${data.index} · ${data.name}`}
+        eyebrow={`Stage ${String(data.position + 1).padStart(2, "0")} · ${data.name}`}
         title={<>{data.name} software.</>}
-        body={<p>{data.short} &mdash; the products teams reach for in this phase.</p>}
+        body={
+          <p>
+            {data.shortDescription ?? ""} &mdash; the products teams reach for
+            in this phase.
+          </p>
+        }
       />
       <section className="bg-[var(--color-canvas)] pb-24 md:pb-32">
         <Container>
@@ -60,14 +66,14 @@ export default async function StagePage({
                   >
                     <div>
                       <p className="text-[12px] uppercase tracking-[0.16em] text-[var(--color-ink-3)]">
-                        {app.vendor}
+                        {app.vendor.name}
                       </p>
                       <p className="font-heading text-[22px] leading-tight">
                         {app.name}
                       </p>
                     </div>
                     <p className="max-w-[60ch] text-[15px] leading-relaxed text-[var(--color-ink-2)]">
-                      {app.blurb}
+                      {app.tagline}
                     </p>
                     <ArrowUpRight
                       size={20}

@@ -11,15 +11,20 @@ import {
 import { Container } from "@/components/site/container";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
 import { AppCard } from "@/components/browse/app-card";
-import { apps, type App } from "@/lib/data/apps";
-import { stages, stageNameMap } from "@/lib/data/stages";
-import { lookups } from "@/lib/data/taxonomy";
+import {
+  getAppBySlug,
+  listAllAppSlugs,
+  listRelatedApps,
+  type AppDetail,
+} from "@/lib/queries/apps";
+import { listStages } from "@/lib/queries/taxonomy";
 import { cn } from "@/lib/utils";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export async function generateStaticParams() {
-  return apps.map((a) => ({ slug: a.slug }));
+  const slugs = await listAllAppSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -28,15 +33,15 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const app = apps.find((a) => a.slug === slug);
+  const app = await getAppBySlug(slug);
   if (!app) return { title: "App not found" };
   return {
-    title: `${app.name} — ${app.vendor}`,
-    description: app.blurb,
+    title: `${app.name} — ${app.vendor.name}`,
+    description: app.tagline ?? undefined,
     alternates: { canonical: `/apps/${app.slug}` },
     openGraph: {
-      title: `${app.name} — ${app.vendor}`,
-      description: app.blurb,
+      title: `${app.name} — ${app.vendor.name}`,
+      description: app.tagline ?? undefined,
       url: `${SITE_URL}/apps/${app.slug}`,
       type: "website",
     },
@@ -49,19 +54,23 @@ export default async function AppDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const app = apps.find((a) => a.slug === slug);
+  const app = await getAppBySlug(slug);
   if (!app) notFound();
 
-  const related = relatedApps(app);
-  const paragraphs = app.description
+  const [related, allStages] = await Promise.all([
+    listRelatedApps(app.id, 3),
+    listStages(),
+  ]);
+  const paragraphs = (app.description ?? "")
     .split(/\n\n+/)
     .filter((p) => p.trim().length > 0);
+
+  const supportedStageSlugs = new Set(app.stages.map((s) => s.slug));
 
   return (
     <article className="bg-[var(--color-canvas)]">
       <JsonLd app={app} />
 
-      {/* HERO */}
       <section className="relative overflow-hidden border-b border-[var(--color-line)] pt-10 md:pt-14">
         <div
           aria-hidden
@@ -74,8 +83,6 @@ export default async function AppDetailPage({
         <Container className="relative">
           <Breadcrumb appName={app.name} />
 
-          {/* LOGO BANNER — full-width hero panel above the title.
-              Real vendor-uploaded logos drop in here at this scale in Phase 2. */}
           <div className="mt-8 flex h-[200px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] md:h-[260px]">
             <LetterAvatar
               name={app.name}
@@ -85,13 +92,12 @@ export default async function AppDetailPage({
           </div>
 
           <div className="mt-10 grid gap-10 md:grid-cols-[7fr_5fr] md:gap-14">
-            {/* Title block */}
             <div className="flex flex-col">
               <Link
-                href={`/vendors/${app.vendorSlug}`}
+                href={`/vendors/${app.vendor.slug}`}
                 className="group inline-flex items-center gap-1 self-start text-[12px] uppercase tracking-[0.22em] text-[var(--color-coral)] underline-offset-4 transition-colors hover:underline"
               >
-                <span>{app.vendor}</span>
+                <span>{app.vendor.name}</span>
                 <ArrowUpRight
                   size={11}
                   weight="bold"
@@ -102,7 +108,7 @@ export default async function AppDetailPage({
                 {app.name}
               </h1>
               <p className="mt-6 max-w-[60ch] text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
-                {app.blurb}
+                {app.tagline}
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
@@ -132,31 +138,36 @@ export default async function AppDetailPage({
               </div>
             </div>
 
-            {/* Facts panel */}
             <aside className="border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
               <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
                 At a glance
               </p>
               <dl className="mt-5 space-y-4">
-                <FactRow
-                  icon={Calendar}
-                  label="Founded"
-                  value={<span className="num">{app.founded}</span>}
-                />
-                <FactRow
-                  icon={Tag}
-                  label="Pricing model"
-                  value={lookups.pricing.get(app.pricing) ?? app.pricing}
-                />
+                {app.foundedYear ? (
+                  <FactRow
+                    icon={Calendar}
+                    label="Founded"
+                    value={
+                      <span className="num">{String(app.foundedYear)}</span>
+                    }
+                  />
+                ) : null}
+                {app.pricing ? (
+                  <FactRow
+                    icon={Tag}
+                    label="Pricing model"
+                    value={app.pricing.name}
+                  />
+                ) : null}
                 <FactRow
                   icon={Buildings}
                   label="Vendor"
                   value={
                     <Link
-                      href={`/vendors/${app.vendorSlug}`}
+                      href={`/vendors/${app.vendor.slug}`}
                       className="underline-offset-4 hover:underline"
                     >
-                      {app.vendor}
+                      {app.vendor.name}
                     </Link>
                   }
                 />
@@ -171,10 +182,8 @@ export default async function AppDetailPage({
         </Container>
       </section>
 
-      {/* BODY */}
       <Container className="py-14 md:py-20">
         <div className="space-y-12 md:max-w-[60ch]">
-          {/* What it does — strictly tool-focused; company narrative lives on /vendors/[slug] */}
           <Section eyebrow="What it does">
             <div className="space-y-5 text-[17px] leading-relaxed text-[var(--color-ink)] md:text-[18px]">
               {paragraphs.map((p, i) => (
@@ -182,9 +191,10 @@ export default async function AppDetailPage({
               ))}
             </div>
             <p className="mt-6 text-[13px] text-[var(--color-ink-3)]">
-              For {app.vendor}&rsquo;s company background and other listings,{" "}
+              For {app.vendor.name}&rsquo;s company background and other
+              listings,{" "}
               <Link
-                href={`/vendors/${app.vendorSlug}`}
+                href={`/vendors/${app.vendor.slug}`}
                 className="underline underline-offset-4 hover:text-[var(--color-ink)]"
               >
                 see the vendor profile
@@ -193,15 +203,14 @@ export default async function AppDetailPage({
             </p>
           </Section>
 
-          {/* Lifecycle fit — visual */}
           <Section eyebrow="Lifecycle fit">
             <p className="text-[16px] leading-relaxed text-[var(--color-ink-2)]">
               Where {app.name} actively supports work across the project
               lifecycle.
             </p>
             <ul className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-3">
-              {stages.map((stage) => {
-                const supported = app.stages.includes(stage.slug);
+              {allStages.map((stage, idx) => {
+                const supported = supportedStageSlugs.has(stage.slug);
                 return (
                   <li key={stage.slug}>
                     <div
@@ -220,7 +229,7 @@ export default async function AppDetailPage({
                             : "text-[var(--color-ink-3)]",
                         )}
                       >
-                        {stage.index}
+                        {String(idx + 1).padStart(2, "0")}
                       </span>
                       <span
                         className={cn(
@@ -239,48 +248,48 @@ export default async function AppDetailPage({
             </ul>
           </Section>
 
-          {/* Capabilities */}
           <Section eyebrow="Capabilities">
             <ul className="flex flex-wrap gap-2">
               {app.capabilities.map((c) => (
-                <li key={c}>
+                <li key={c.slug}>
                   <Link
-                    href={`/capabilities/${c}`}
+                    href={`/capabilities/${c.slug}`}
                     className="inline-flex items-center border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-4 py-2 text-[15px] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)]"
                   >
-                    {lookups.capability.get(c) ?? c}
+                    {c.name}
                   </Link>
                 </li>
               ))}
             </ul>
           </Section>
 
-          {/* Industries */}
-          <Section eyebrow="Industries">
-            <ul className="flex flex-wrap gap-2">
-              {app.industries.map((i) => (
-                <li key={i}>
-                  <span className="inline-flex items-center border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-4 py-2 text-[15px] text-[var(--color-ink)]">
-                    {lookups.industry.get(i) ?? i}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Section>
+          {app.industries.length > 0 ? (
+            <Section eyebrow="Industries">
+              <ul className="flex flex-wrap gap-2">
+                {app.industries.map((i) => (
+                  <li key={i.slug}>
+                    <span className="inline-flex items-center border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-4 py-2 text-[15px] text-[var(--color-ink)]">
+                      {i.name}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          ) : null}
 
-          {/* Pricing */}
-          <Section eyebrow="Pricing">
-            <p className="font-heading text-[28px] leading-tight">
-              {lookups.pricing.get(app.pricing) ?? app.pricing}
-            </p>
-            <p className="mt-3 text-[16px] leading-relaxed text-[var(--color-ink-2)]">
-              The directory describes how vendors charge. We don&rsquo;t
-              publish actual prices &mdash; those vary by project size, region,
-              and procurement vehicle.
-            </p>
-          </Section>
+          {app.pricing ? (
+            <Section eyebrow="Pricing">
+              <p className="font-heading text-[28px] leading-tight">
+                {app.pricing.name}
+              </p>
+              <p className="mt-3 text-[16px] leading-relaxed text-[var(--color-ink-2)]">
+                The directory describes how vendors charge. We don&rsquo;t
+                publish actual prices &mdash; those vary by project size,
+                region, and procurement vehicle.
+              </p>
+            </Section>
+          ) : null}
 
-          {/* Editor's note */}
           {app.editorNote ? (
             <Section eyebrow="Editor's note">
               <blockquote className="border-l-2 border-[var(--color-coral)] pl-5 font-heading text-[20px] italic leading-snug text-[var(--color-ink)] md:text-[24px]">
@@ -302,7 +311,6 @@ export default async function AppDetailPage({
         </div>
       </Container>
 
-      {/* RELATED */}
       {related.length > 0 ? (
         <section className="border-t border-[var(--color-line)] bg-[var(--color-canvas)] py-16 md:py-24">
           <Container>
@@ -400,48 +408,30 @@ function FactRow({
   );
 }
 
-function relatedApps(current: App): App[] {
-  const sharedScore = (other: App): number => {
-    if (other.slug === current.slug) return -1;
-    const sharedStages = other.stages.filter((s) =>
-      current.stages.includes(s),
-    ).length;
-    const sharedCaps = other.capabilities.filter((c) =>
-      current.capabilities.includes(c),
-    ).length;
-    if (sharedStages === 0 || sharedCaps === 0) return 0;
-    return sharedStages * 2 + sharedCaps;
-  };
-  return apps
-    .map((a) => ({ app: a, score: sharedScore(a) }))
-    .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
-    .map((x) => x.app);
-}
-
-function JsonLd({ app }: { app: App }) {
+function JsonLd({ app }: { app: AppDetail }) {
   const data = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     name: app.name,
-    description: app.blurb,
+    description: app.tagline,
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     url: `${SITE_URL}/apps/${app.slug}`,
     publisher: {
       "@type": "Organization",
-      name: app.vendor,
-      url: app.websiteUrl,
+      name: app.vendor.name,
+      url: app.vendor.websiteUrl,
     },
-    offers: {
-      "@type": "Offer",
-      url: app.websiteUrl,
-      priceSpecification: {
-        "@type": "PriceSpecification",
-        description: lookups.pricing.get(app.pricing) ?? app.pricing,
-      },
-    },
+    offers: app.pricing
+      ? {
+          "@type": "Offer",
+          url: app.websiteUrl,
+          priceSpecification: {
+            "@type": "PriceSpecification",
+            description: app.pricing.name,
+          },
+        }
+      : undefined,
   };
   return (
     <script
