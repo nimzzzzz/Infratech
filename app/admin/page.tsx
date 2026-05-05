@@ -7,28 +7,56 @@ import {
   ChartLineUp,
   ClipboardText,
 } from "@phosphor-icons/react/dist/ssr";
+import { eq, sql } from "drizzle-orm";
 import { Container } from "@/components/site/container";
 import { StatusPill } from "@/components/admin/status-pill";
-import { getMockAdmin } from "@/lib/auth/mock-admin";
-import {
-  queue,
-  pendingCount,
-  inReviewCount,
-  publishedAppsCount,
-} from "@/lib/data/admin-queue";
+import { getAdminSession } from "@/lib/auth/admin-session";
+import { db } from "@/lib/db/client";
+import { apps, submissions, vendors } from "@/lib/db/schema";
+import { listSubmissions } from "@/lib/queries/submissions";
 import { relativeDays } from "@/lib/browse/dates";
+import type { Submission as MockSubmission } from "@/lib/data/admin-queue";
 
 export const metadata: Metadata = {
   title: "Admin · Overview",
   alternates: { canonical: "/admin" },
 };
 
-export default function AdminOverviewPage() {
-  const admin = getMockAdmin();
-  const firstName = admin.name.split(" ")[0];
-  const recent = [...queue]
-    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
-    .slice(0, 6);
+export default async function AdminOverviewPage() {
+  const { user } = await getAdminSession();
+  const firstName = user.name.split(" ")[0];
+
+  const [pendingRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(submissions)
+    .where(eq(submissions.status, "pending"));
+  const [inReviewRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(submissions)
+    .where(eq(submissions.status, "in_review"));
+  const [publishedAppsRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(apps)
+    .where(eq(apps.status, "published"));
+  const [vendorsRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(vendors)
+    .where(eq(vendors.suspended, false));
+
+  const pending = pendingRow?.n ?? 0;
+  const inReview = inReviewRow?.n ?? 0;
+  const publishedAppsCount = publishedAppsRow?.n ?? 0;
+  const activeVendors = vendorsRow?.n ?? 0;
+
+  const recentSubs = await listSubmissions();
+  const recent = recentSubs.slice(0, 6);
+
+  // Pull payload for each visible row so we can show the title (mock-shape
+  // until Stage 5's queue-list refactor).
+  const payloads = await db
+    .select({ id: submissions.id, payload: submissions.payload })
+    .from(submissions);
+  const payloadById = new Map(payloads.map((p) => [p.id, p.payload]));
 
   return (
     <Container className="max-w-6xl py-12 md:py-16">
@@ -39,8 +67,8 @@ export default function AdminOverviewPage() {
         Good {timeOfDay()}, {firstName}.
       </h1>
       <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
-        <span className="num text-[var(--color-ink)]">{pendingCount()}</span>{" "}
-        new submissions waiting on you.{" "}
+        <span className="num text-[var(--color-ink)]">{pending}</span> new
+        submissions waiting on you.{" "}
         <Link
           href="/admin/queue"
           className="underline underline-offset-4 hover:text-[var(--color-ink)]"
@@ -49,36 +77,33 @@ export default function AdminOverviewPage() {
         </Link>
       </p>
 
-      {/* stats */}
       <ul className="mt-10 grid grid-cols-2 gap-px border border-[var(--color-line-strong)] bg-[var(--color-line-strong)] md:grid-cols-4">
         <StatCard
           icon={Tray}
           label="Pending"
-          value={pendingCount()}
+          value={pending}
           href="/admin/queue?status=pending"
         />
         <StatCard
           icon={ClipboardText}
           label="In review"
-          value={inReviewCount()}
+          value={inReview}
           href="/admin/queue?status=in-review"
         />
         <StatCard
           icon={Stack}
           label="Published apps"
-          value={publishedAppsCount()}
+          value={publishedAppsCount}
           href="/admin/apps"
         />
         <StatCard
           icon={ChartLineUp}
           label="Active vendors"
-          value={3}
+          value={activeVendors}
           href="/admin/apps"
-          muted
         />
       </ul>
 
-      {/* recent activity */}
       <section className="mt-14">
         <header className="flex items-end justify-between gap-4 border-b border-[var(--color-line-strong)] pb-3">
           <h2 className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
@@ -98,34 +123,58 @@ export default function AdminOverviewPage() {
         </header>
 
         <ul className="divide-y divide-[var(--color-line)]">
-          {recent.map((sub) => (
-            <li key={sub.id}>
-              <Link
-                href={`/admin/queue#${sub.id}`}
-                className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[100px_1fr_auto_72px] md:gap-6 md:px-3"
-              >
-                <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-                  {sub.type === "new" ? "New product" : "Claim"}
-                </span>
-                <div className="min-w-0">
-                  <p className="font-heading text-[18px] leading-tight">
-                    {sub.type === "new" ? sub.app.name : sub.claimAppName}
-                  </p>
-                  <p className="mt-0.5 truncate text-[12px] text-[var(--color-ink-3)]">
-                    {sub.submitter.name} &middot; {sub.submitter.companyName}
-                  </p>
-                </div>
-                <StatusPill status={sub.status} className="hidden md:inline-flex" />
-                <span className="num text-right text-[12px] text-[var(--color-ink-3)]">
-                  {relativeDays(sub.submittedAt.slice(0, 10)).label}
-                </span>
-              </Link>
-            </li>
-          ))}
+          {recent.map((sub) => {
+            const p = payloadById.get(sub.id) as MockSubmission | undefined;
+            const title =
+              p?.type === "new"
+                ? p.app.name
+                : p?.type === "claim"
+                  ? p.claimAppName
+                  : "—";
+            const company = p?.submitter.companyName ?? sub.submitterName ?? "—";
+            return (
+              <li key={sub.id}>
+                <Link
+                  href={`/admin/queue#${sub.id}`}
+                  className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[100px_1fr_auto_72px] md:gap-6 md:px-3"
+                >
+                  <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+                    {sub.type === "new" ? "New product" : "Claim"}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-heading text-[18px] leading-tight">
+                      {title}
+                    </p>
+                    <p className="mt-0.5 truncate text-[12px] text-[var(--color-ink-3)]">
+                      {p?.submitter.name ?? "—"} &middot; {company}
+                    </p>
+                  </div>
+                  <StatusPill
+                    status={mapStatusForPill(sub.status)}
+                    className="hidden md:inline-flex"
+                  />
+                  <span className="num text-right text-[12px] text-[var(--color-ink-3)]">
+                    {
+                      relativeDays(sub.submittedAt.toISOString().slice(0, 10))
+                        .label
+                    }
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </section>
     </Container>
   );
+}
+
+function mapStatusForPill(
+  s: "pending" | "in_review" | "changes_requested" | "approved" | "rejected",
+): "pending" | "in-review" | "changes-requested" | "approved" | "rejected" {
+  if (s === "in_review") return "in-review";
+  if (s === "changes_requested") return "changes-requested";
+  return s;
 }
 
 function StatCard({
@@ -133,7 +182,6 @@ function StatCard({
   label,
   value,
   href,
-  muted,
 }: {
   icon: React.ComponentType<{
     size?: number;
@@ -143,7 +191,6 @@ function StatCard({
   label: string;
   value: number;
   href: string;
-  muted?: boolean;
 }) {
   return (
     <li>
@@ -169,7 +216,6 @@ function StatCard({
           </p>
           <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
             {label}
-            {muted ? " (mocked)" : ""}
           </p>
         </div>
       </Link>

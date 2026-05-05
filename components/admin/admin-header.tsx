@@ -3,8 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOut, ShieldCheck } from "@phosphor-icons/react";
-import { getMockAdmin } from "@/lib/auth/mock-admin";
 import { cn } from "@/lib/utils";
+
+export type AdminHeaderProps = {
+  name: string;
+  initials: string;
+  email: string;
+};
 
 const nav = [
   { href: "/admin", label: "Overview", match: (p: string) => p === "/admin" },
@@ -20,9 +25,8 @@ const nav = [
   },
 ];
 
-export function AdminHeader() {
+export function AdminHeader({ name, initials, email }: AdminHeaderProps) {
   const pathname = usePathname();
-  const admin = getMockAdmin();
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
@@ -80,14 +84,14 @@ export function AdminHeader() {
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-2.5 sm:flex">
             <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-canvas-warm)] text-[11px] font-medium uppercase tracking-wider text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">
-              {admin.initials}
+              {initials}
             </span>
             <div className="flex flex-col leading-tight">
               <span className="text-[13px] text-[var(--color-ink)]">
-                {admin.name}
+                {name}
               </span>
               <span className="text-[11px] text-[var(--color-ink-3)]">
-                {admin.title}
+                {email}
               </span>
             </div>
           </div>

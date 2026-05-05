@@ -245,6 +245,15 @@ async function main() {
     console.log(
       `  messages: 0 (mock references demo 'arctus' vendor not in seed)`,
     );
+
+    // 6. Seed demo admin so /admin renders in DEMO_MODE.
+    await tx.insert(schema.admins).values({
+      clerkUserId: "demo_admin_seed",
+      name: "Sara Pellegrini",
+      email: "sara@resolute.example",
+      role: "admin",
+    });
+    console.log(`  admins: 1 (demo)`);
   });
 
   console.log("Seed complete.");

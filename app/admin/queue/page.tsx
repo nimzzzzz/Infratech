@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/site/container";
 import { QueueList } from "@/components/admin/queue-list";
-import { queue } from "@/lib/data/admin-queue";
+import { getAdminSession } from "@/lib/auth/admin-session";
+import { db } from "@/lib/db/client";
+import { submissions } from "@/lib/db/schema";
+import type { Submission as MockSubmission } from "@/lib/data/admin-queue";
 
 export const metadata: Metadata = {
   title: "Admin · Queue",
@@ -10,9 +13,22 @@ export const metadata: Metadata = {
 
 const TARGET_REVIEW_DAYS = 2;
 
-export default function AdminQueuePage() {
+export default async function AdminQueuePage() {
+  await getAdminSession();
+
+  // Pull payloads — Stage 5 will replace this with a typed query that
+  // returns DB-shaped submissions and update the QueueList component.
+  // For now, the seed put the original mock objects into payload jsonb,
+  // so we cast back to the legacy shape the existing component reads.
+  const rows = await db.select().from(submissions).orderBy(submissions.submittedAt);
+  const queue = rows.map((r) => ({
+    ...(r.payload as MockSubmission),
+    id: String(r.id),
+  }));
+
   const total = queue.length;
   const pending = queue.filter((s) => s.status === "pending").length;
+
   return (
     <Container className="max-w-6xl py-10 md:py-14">
       <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">

@@ -8,9 +8,8 @@ import {
 import { Container } from "@/components/site/container";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
 import { StatusPill } from "@/components/admin/status-pill";
-import { apps } from "@/lib/data/apps";
-import { stageNameMap } from "@/lib/data/stages";
-import { lookups } from "@/lib/data/taxonomy";
+import { getAdminSession } from "@/lib/auth/admin-session";
+import { listApps } from "@/lib/queries/apps";
 import { relativeDays } from "@/lib/browse/dates";
 
 export const metadata: Metadata = {
@@ -18,8 +17,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/admin/apps" },
 };
 
-export default function AdminAppsPage() {
-  const sorted = [...apps].sort((a, b) => a.name.localeCompare(b.name));
+export default async function AdminAppsPage() {
+  await getAdminSession();
+  const sorted = await listApps({ status: "published" });
+  const featuredCount = sorted.filter((a) => a.featured).length;
+
   return (
     <Container className="max-w-6xl py-10 md:py-14">
       <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
@@ -29,20 +31,18 @@ export default function AdminAppsPage() {
         Published apps.
       </h1>
       <p className="mt-3 max-w-[60ch] text-[13px] leading-relaxed text-[var(--color-ink-2)] md:text-[14px]">
-        <span className="num text-[var(--color-ink)]">{apps.length}</span>{" "}
+        <span className="num text-[var(--color-ink)]">{sorted.length}</span>{" "}
         listings live in the directory.{" "}
-        {apps.filter((a) => a.featured).length > 0 ? (
+        {featuredCount > 0 ? (
           <>
-            <span className="num text-[var(--color-ink)]">
-              {apps.filter((a) => a.featured).length}
-            </span>{" "}
+            <span className="num text-[var(--color-ink)]">{featuredCount}</span>{" "}
             currently featured on the home page.
           </>
         ) : null}
       </p>
 
       <ul className="mt-10 border-y border-[var(--color-line-strong)] divide-y divide-[var(--color-line)]">
-        <li className="hidden grid-cols-[40px_minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1fr)_72px_auto] items-center gap-4 px-3 py-3 md:grid">
+        <li className="hidden grid-cols-[40px_minmax(0,2fr)_minmax(0,1.4fr)_72px_auto] items-center gap-4 px-3 py-3 md:grid">
           <span aria-hidden />
           <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
             Product
@@ -50,11 +50,8 @@ export default function AdminAppsPage() {
           <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
             Stages
           </span>
-          <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-            Pricing
-          </span>
           <span className="text-right text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-            Added
+            Status
           </span>
           <span className="text-right text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
             Actions
@@ -63,7 +60,7 @@ export default function AdminAppsPage() {
         {sorted.map((app) => (
           <li
             key={app.slug}
-            className="grid grid-cols-[40px_1fr_auto] items-center gap-3 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/30 md:grid-cols-[40px_minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1fr)_72px_auto] md:gap-4 md:px-3 md:py-4"
+            className="grid grid-cols-[40px_1fr_auto] items-center gap-3 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/30 md:grid-cols-[40px_minmax(0,2fr)_minmax(0,1.4fr)_72px_auto] md:gap-4 md:px-3 md:py-4"
           >
             <LetterAvatar name={app.name} className="h-9 w-9" />
 
@@ -80,22 +77,16 @@ export default function AdminAppsPage() {
                     aria-label="Featured"
                   />
                 ) : null}
-                <StatusPill status="live" className="hidden md:inline-flex" />
               </div>
               <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.18em] text-[var(--color-coral)]">
-                {app.vendor}
+                {app.vendor.name}
               </p>
             </div>
 
             <p className="hidden truncate text-[12px] text-[var(--color-ink-2)] md:block">
-              {app.stages.map((s) => stageNameMap.get(s) ?? s).join(" · ")}
+              {app.stages.map((s) => s.name).join(" · ")}
             </p>
-            <p className="hidden truncate text-[12px] text-[var(--color-ink-2)] md:block">
-              {lookups.pricing.get(app.pricing) ?? app.pricing}
-            </p>
-            <p className="num hidden text-right text-[11px] text-[var(--color-ink-3)] md:block">
-              {relativeDays(app.addedAt).label}
-            </p>
+            <StatusPill status="live" className="hidden md:inline-flex" />
 
             <div className="flex items-center gap-1.5 md:justify-end">
               <Link
