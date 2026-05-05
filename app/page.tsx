@@ -8,13 +8,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export const dynamic = "force-dynamic";
-
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
-  return <HomeIndex searchParams={sp} />;
+export default async function HomePage() {
+  return <HomeIndex />;
 }

@@ -1,38 +1,21 @@
 import { capabilities, industries, pricingModels } from "@/lib/data/taxonomy";
-import { facetCounts, parseFilters } from "@/lib/browse/filters";
-import type { AppCard } from "@/lib/queries/apps";
+import type { FacetCounts } from "@/lib/queries/facets";
 import { FilterSection } from "./filter-section";
 
+/**
+ * Stage-2 prop shape: takes pre-computed facet counts directly.
+ * The sidebar is now a pure render — all counting happens server-side
+ * via getFilterFacets(filters) on the page.
+ *
+ * Stage is promoted out to a horizontal quick-filter row above the
+ * index, so the sidebar holds the secondary axes only (capability,
+ * pricing, industry).
+ */
 export function FilterSidebar({
-  apps,
-  searchParams,
+  facets,
 }: {
-  apps: AppCard[];
-  searchParams: Record<string, string | string[] | undefined>;
+  facets: FacetCounts;
 }) {
-  const state = parseFilters(searchParams);
-
-  // Stage is promoted out to a horizontal quick-filter row above the index;
-  // the sidebar holds the secondary axes only.
-  const capabilityCounts = facetCounts(
-    apps,
-    state,
-    "capability",
-    capabilities.map((c) => c.slug),
-  );
-  const pricingCounts = facetCounts(
-    apps,
-    state,
-    "pricing",
-    pricingModels.map((p) => p.slug),
-  );
-  const industryCounts = facetCounts(
-    apps,
-    state,
-    "industry",
-    industries.map((i) => i.slug),
-  );
-
   return (
     <aside
       className="flex flex-col gap-10 md:sticky md:top-24 md:max-h-[calc(100dvh-7rem)] md:self-start md:overflow-y-auto md:border-r md:border-[var(--color-line)] md:pb-12 md:pr-8"
@@ -42,7 +25,7 @@ export function FilterSidebar({
         title="Capability"
         category="capability"
         options={capabilities}
-        counts={capabilityCounts}
+        counts={facets.capability}
         searchable
         scrollable
       />
@@ -50,13 +33,13 @@ export function FilterSidebar({
         title="Pricing"
         category="pricing"
         options={pricingModels}
-        counts={pricingCounts}
+        counts={facets.pricing}
       />
       <FilterSection
         title="Industry"
         category="industry"
         options={industries}
-        counts={industryCounts}
+        counts={facets.industry}
       />
     </aside>
   );
