@@ -11,6 +11,7 @@ import {
 import { Container } from "@/components/site/container";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
 import { AppCard } from "@/components/browse/app-card";
+import { ViewTracker } from "@/components/directory/view-tracker";
 import {
   getAppBySlug,
   listAllAppSlugs,
@@ -78,6 +79,7 @@ export default async function AppDetailPage({
   return (
     <article className="bg-[var(--color-canvas)]">
       <JsonLd app={app} />
+      <ViewTracker appId={app.id} />
 
       <section className="relative overflow-hidden border-b border-[var(--color-line)] pt-10 md:pt-14">
         <div
@@ -120,7 +122,7 @@ export default async function AppDetailPage({
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
-                  href={app.websiteUrl}
+                  href={`/api/clicks/${app.id}?to=${encodeURIComponent(app.websiteUrl)}`}
                   target="_blank"
                   rel="nofollow noopener"
                   className="group relative inline-flex h-12 items-center gap-2 overflow-hidden bg-[var(--color-coral)] px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-transform active:translate-y-[1px]"
