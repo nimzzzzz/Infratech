@@ -39,7 +39,7 @@ Full requirements live in [docs/requirements.md](docs/requirements.md). When in 
 1. **Public pages must be statically generated where possible** (`/`, `/browse`, `/stages/[stage]`, `/capabilities/[capability]`, `/apps/[slug]`, landing pages). Use on-demand revalidation when an app is published or edited. SEO is the growth channel — server-rendered HTML is non-negotiable.
 2. **Never query the database from a client component.** All DB access goes through server components, server actions, or route handlers.
 3. **All server env access goes through `lib/env.ts`** (imports `server-only`). Never read `process.env.<SECRET>` directly outside that file. Public vars (`NEXT_PUBLIC_*`) are fine to read directly.
-4. **Three role layers, three middleware tiers.** Public routes are open. `/dashboard/**` requires a vendor session (Clerk). `/admin/**` requires an admin session with 2FA enforced. Don't mix them — admin auth is a separate Clerk instance or a hard role check, not a flag toggle on the vendor session.
+4. **Three role layers, two login URLs, one Clerk app.** Public routes are open. `/dashboard/**` requires an authenticated Clerk session (any role). `/admin/**` requires `publicMetadata.role === "admin"` AND `twoFactorEnabled === true`; missing role falls back to a DB lookup against `admins.clerk_user_id` so a vendor whose Clerk metadata sync hasn't propagated yet doesn't get locked out. **Vendors sign in at `/login` (LinkedIn OAuth only).** **Admins sign in at `/admin/login` (email + password + 2FA, hidden from public navigation, bookmark-only).** No public link points at `/admin/login` — see §6 Locked Decisions.
 5. **Vendor email addresses are never rendered publicly.** "Contact this vendor" goes through a server-side form that emails via Resend. Anti-scrape is a hard requirement.
 6. **External links (vendor websites) use `rel="nofollow noopener"` and `target="_blank"`.** This is both SEO hygiene and security.
 7. **All vendor-submitted rich text is sanitised against a strict allowlist** (bold, italic, lists, links, paragraphs). No raw HTML, no `<script>`, no `<iframe>`, no inline styles. Use a server-side sanitiser before persisting — never trust the editor.
@@ -78,6 +78,13 @@ These are unresolved per [requirements §15](docs/requirements.md). Do not assum
 5. Confirm the four showcase apps (suggested: Primavera P6, Procore, nPlan, Cognite).
 6. Hosting region (Vercel global edge fine for compute; DB region matters for compliance).
 7. Budget and timeline (in-house vs contractor vs agency).
+
+### Locked decisions
+
+Decisions previously open that are now committed. Don't relitigate.
+
+- **Auth architecture (locked Stage 1, 2026-05-06).** One Clerk app, role-based separation via `publicMetadata.role`. Vendors at `/login` (LinkedIn OAuth only). Admins at `/admin/login` (email + password + 2FA enforced, no public link, admins bookmark the URL). Webhook handler at `/api/webhooks/clerk` is the source-of-truth gateway: it inserts the DB row first, then best-effort syncs role back to Clerk metadata. Middleware checks `publicMetadata.role` first, falls back to a DB lookup on `admins.clerk_user_id` if the claim is missing. Hosting region for Neon: Frankfurt (`eu-central-1`).
+- **Test database strategy (locked Stage 1, 2026-05-06).** Vitest with a transaction-rollback fixture (`tests/setup/db-tx.ts`) against the seeded Neon dev branch. The fixture flattens nested `db.transaction()` calls to a pass-through during tests because postgres.js doesn't auto-savepoint nested transactions. Hard-fail safety rail: tests refuse to run if `NODE_ENV=production` or `DATABASE_URL_UNPOOLED` host isn't `*.neon.tech`.
 
 ## 7. SEO Contract (load-bearing)
 
