@@ -317,21 +317,52 @@ function FactRow({
 }
 
 function JsonLd({ vendor, toolCount }: { vendor: Vendor; toolCount: number }) {
-  const data = {
+  const organization = {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: vendor.name,
-    description: vendor.shortBlurb,
-    url: vendor.websiteUrl,
+    description: vendor.shortBlurb ?? undefined,
+    url: vendor.websiteUrl ?? undefined,
+    sameAs: [vendor.websiteUrl, vendor.linkedinUrl].filter(
+      (u): u is string => Boolean(u),
+    ),
     foundingDate: vendor.foundedYear ? String(vendor.foundedYear) : undefined,
-    address: vendor.hqCountry ?? undefined,
+    address: vendor.hqCountry
+      ? { "@type": "PostalAddress", addressCountry: vendor.hqCountry }
+      : undefined,
     numberOfEmployees: vendor.employeeBand ?? undefined,
-    makesOffer: toolCount,
+    logo: vendor.logoUrl ?? undefined,
+    knowsAbout: `Maintains ${toolCount} ${toolCount === 1 ? "product" : "products"} in the InfraTechDB directory.`,
+  };
+  const breadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Index", item: SITE_URL },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Vendors",
+        item: `${SITE_URL}/vendors`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: vendor.name,
+        item: `${SITE_URL}/vendors/${vendor.slug}`,
+      },
+    ],
   };
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
+      />
+    </>
   );
 }

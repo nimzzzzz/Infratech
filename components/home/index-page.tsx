@@ -12,6 +12,8 @@ import {
 } from "@/lib/queries/apps";
 import { listStagesWithCounts } from "@/lib/queries/taxonomy";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 /**
  * Editorial home page.
  *
@@ -45,6 +47,7 @@ export async function HomeIndex() {
 
   return (
     <article className="bg-[var(--color-canvas)]">
+      <HomeJsonLd totalCount={totalCount} />
       {/* SLIM MASTHEAD */}
       <div className="bg-[var(--color-night)]">
         <Container className="py-3 md:py-3.5">
@@ -270,5 +273,40 @@ export async function HomeIndex() {
         </Container>
       </section>
     </article>
+  );
+}
+
+function HomeJsonLd({ totalCount }: { totalCount: number }) {
+  const organization = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "InfraTechDB",
+    url: SITE_URL,
+    description:
+      "An independent reference of project management and infrastructure software, organised by stage, capability, and industry.",
+    knowsAbout: `Tracks ${totalCount} project management & infrastructure software products across the lifecycle.`,
+  };
+  const website = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "InfraTechDB",
+    url: SITE_URL,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${SITE_URL}/browse?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }}
+      />
+    </>
   );
 }
