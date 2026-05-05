@@ -1,0 +1,306 @@
+import "server-only";
+import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import {
+  apps,
+  vendors,
+  appStages,
+  stages,
+  appCapabilities,
+  capabilities,
+  appIndustries,
+  industries,
+  appPricingModels,
+  pricingModels,
+} from "@/lib/db/schema";
+import { type AppCard } from "./apps";
+
+export type SortKey = "relevance" | "az" | "recent" | "featured";
+
+export type SearchFilters = {
+  q?: string;
+  stage?: string[];
+  capability?: string[];
+  pricing?: string[];
+  industry?: string[];
+  page?: number;
+  pageSize?: number;
+  sort?: SortKey;
+};
+
+export type SearchResult = {
+  results: AppCard[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  /** True if the SEARCH_FUZZY env flag triggered an ILIKE fallback because
+   *  tsquery returned fewer than 3 strict matches. UI can hint at this. */
+  usedFuzzyFallback: boolean;
+};
+
+const DEFAULT_PAGE_SIZE = 24;
+const FUZZY_THRESHOLD = 3;
+const fuzzyEnabled = process.env.SEARCH_FUZZY === "true";
+
+/**
+ * Translate a slug array into a subquery returning matching app_ids — used
+ * inside the AND-across-categories WHERE clause. Returns null if the
+ * filter list is empty (caller skips the predicate entirely).
+ */
+function appsMatchingTag(
+  slugs: string[],
+  joinTable: typeof appStages | typeof appCapabilities | typeof appIndustries | typeof appPricingModels,
+  tagTable: typeof stages | typeof capabilities | typeof industries | typeof pricingModels,
+  joinFk:
+    | typeof appStages.stageId
+    | typeof appCapabilities.capabilityId
+    | typeof appIndustries.industryId
+    | typeof appPricingModels.pricingModelId,
+  joinAppId:
+    | typeof appStages.appId
+    | typeof appCapabilities.appId
+    | typeof appIndustries.appId
+    | typeof appPricingModels.appId,
+): SQL | null {
+  if (slugs.length === 0) return null;
+  return inArray(
+    apps.id,
+    db
+      .select({ appId: joinAppId })
+      .from(joinTable)
+      .innerJoin(tagTable, eq(joinFk, tagTable.id))
+      .where(inArray(tagTable.slug, slugs)),
+  );
+}
+
+/**
+ * Build the shared WHERE clause used by both the result query and the
+ * COUNT query. status='published' is non-negotiable; q runs against the
+ * tsvector column with plainto_tsquery (handles stemming + tokenisation
+ * for free); each tag filter is an OR-within (slug IN list) wrapped in
+ * an AND-across composition.
+ */
+function buildConditions(filters: SearchFilters): SQL[] {
+  const conditions: SQL[] = [eq(apps.status, "published")];
+
+  if (filters.q && filters.q.trim()) {
+    conditions.push(
+      sql`${apps.searchVector} @@ plainto_tsquery('english', ${filters.q})`,
+    );
+  }
+
+  const stageCond = appsMatchingTag(
+    filters.stage ?? [],
+    appStages,
+    stages,
+    appStages.stageId,
+    appStages.appId,
+  );
+  if (stageCond) conditions.push(stageCond);
+
+  const capCond = appsMatchingTag(
+    filters.capability ?? [],
+    appCapabilities,
+    capabilities,
+    appCapabilities.capabilityId,
+    appCapabilities.appId,
+  );
+  if (capCond) conditions.push(capCond);
+
+  const indCond = appsMatchingTag(
+    filters.industry ?? [],
+    appIndustries,
+    industries,
+    appIndustries.industryId,
+    appIndustries.appId,
+  );
+  if (indCond) conditions.push(indCond);
+
+  const priCond = appsMatchingTag(
+    filters.pricing ?? [],
+    appPricingModels,
+    pricingModels,
+    appPricingModels.pricingModelId,
+    appPricingModels.appId,
+  );
+  if (priCond) conditions.push(priCond);
+
+  return conditions;
+}
+
+function orderBy(filters: SearchFilters): SQL[] {
+  const sort: SortKey =
+    filters.sort ?? (filters.q?.trim() ? "relevance" : "az");
+  if (sort === "relevance" && filters.q?.trim()) {
+    return [
+      desc(
+        sql`ts_rank(${apps.searchVector}, plainto_tsquery('english', ${filters.q}))`,
+      ),
+      asc(apps.name),
+    ];
+  }
+  if (sort === "recent")
+    return [desc(sql`${apps.publishedAt} NULLS LAST`), asc(apps.name)];
+  if (sort === "featured") return [desc(apps.featured), asc(apps.name)];
+  return [asc(apps.name)];
+}
+
+export async function searchApps(
+  filters: SearchFilters,
+): Promise<SearchResult> {
+  const page = Math.max(1, Math.floor(filters.page ?? 1));
+  const pageSize = Math.max(1, Math.min(100, filters.pageSize ?? DEFAULT_PAGE_SIZE));
+  const conditions = buildConditions(filters);
+
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(apps)
+    .where(and(...conditions));
+
+  const idRows = await db
+    .select({ id: apps.id })
+    .from(apps)
+    .where(and(...conditions))
+    .orderBy(...orderBy(filters))
+    .limit(pageSize)
+    .offset((page - 1) * pageSize);
+
+  const ids = idRows.map((r) => r.id);
+  let results = await fetchCardsInOrder(ids);
+  let usedFuzzyFallback = false;
+
+  if (
+    fuzzyEnabled &&
+    filters.q?.trim() &&
+    page === 1 &&
+    results.length < FUZZY_THRESHOLD
+  ) {
+    const remaining = pageSize - results.length;
+    if (remaining > 0) {
+      const excludedIds = new Set(ids);
+      const fuzzyConditions = buildConditions({ ...filters, q: undefined });
+      const needle = `%${filters.q.trim()}%`;
+      fuzzyConditions.push(
+        sql`(${apps.name} ILIKE ${needle} OR ${apps.tagline} ILIKE ${needle})`,
+      );
+      const fuzzyIdRows = await db
+        .select({ id: apps.id })
+        .from(apps)
+        .where(and(...fuzzyConditions))
+        .orderBy(desc(apps.featured), asc(apps.name))
+        .limit(remaining + excludedIds.size);
+      const fuzzyIds = fuzzyIdRows
+        .map((r) => r.id)
+        .filter((id) => !excludedIds.has(id))
+        .slice(0, remaining);
+      if (fuzzyIds.length > 0) {
+        const fuzzyCards = await fetchCardsInOrder(fuzzyIds);
+        results = [...results, ...fuzzyCards];
+        usedFuzzyFallback = true;
+      }
+    }
+  }
+
+  return {
+    results,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    usedFuzzyFallback,
+  };
+}
+
+/**
+ * Re-uses the shape of fetchCards from lib/queries/apps.ts but inline here
+ * to avoid an import cycle (search → apps → search). Keeping the
+ * implementations parallel — if either changes, update the other.
+ */
+async function fetchCardsInOrder(ids: number[]): Promise<AppCard[]> {
+  if (ids.length === 0) return [];
+
+  const baseRows = await db
+    .select({
+      id: apps.id,
+      slug: apps.slug,
+      name: apps.name,
+      tagline: apps.tagline,
+      logoUrl: apps.logoUrl,
+      featured: apps.featured,
+      publishedAt: apps.publishedAt,
+      vendorSlug: vendors.slug,
+      vendorName: vendors.name,
+    })
+    .from(apps)
+    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+    .where(inArray(apps.id, ids));
+
+  const stageRows = await db
+    .select({ appId: appStages.appId, slug: stages.slug, name: stages.name })
+    .from(appStages)
+    .innerJoin(stages, eq(stages.id, appStages.stageId))
+    .where(inArray(appStages.appId, ids));
+
+  const capRows = await db
+    .select({ appId: appCapabilities.appId, slug: capabilities.slug })
+    .from(appCapabilities)
+    .innerJoin(capabilities, eq(capabilities.id, appCapabilities.capabilityId))
+    .where(inArray(appCapabilities.appId, ids));
+
+  const indRows = await db
+    .select({ appId: appIndustries.appId, slug: industries.slug })
+    .from(appIndustries)
+    .innerJoin(industries, eq(industries.id, appIndustries.industryId))
+    .where(inArray(appIndustries.appId, ids));
+
+  const pricingRows = await db
+    .select({ appId: appPricingModels.appId, slug: pricingModels.slug })
+    .from(appPricingModels)
+    .innerJoin(
+      pricingModels,
+      eq(pricingModels.id, appPricingModels.pricingModelId),
+    )
+    .where(inArray(appPricingModels.appId, ids));
+
+  const stagesByApp = new Map<number, { slug: string; name: string }[]>();
+  for (const r of stageRows) {
+    const arr = stagesByApp.get(r.appId) ?? [];
+    arr.push({ slug: r.slug, name: r.name });
+    stagesByApp.set(r.appId, arr);
+  }
+  const capsByApp = new Map<number, string[]>();
+  for (const r of capRows) {
+    const arr = capsByApp.get(r.appId) ?? [];
+    arr.push(r.slug);
+    capsByApp.set(r.appId, arr);
+  }
+  const indsByApp = new Map<number, string[]>();
+  for (const r of indRows) {
+    const arr = indsByApp.get(r.appId) ?? [];
+    arr.push(r.slug);
+    indsByApp.set(r.appId, arr);
+  }
+  const pricingByApp = new Map<number, string>();
+  for (const r of pricingRows) pricingByApp.set(r.appId, r.slug);
+
+  const byId = new Map<number, AppCard>();
+  for (const b of baseRows) {
+    byId.set(b.id, {
+      id: b.id,
+      slug: b.slug,
+      name: b.name,
+      tagline: b.tagline,
+      logoUrl: b.logoUrl,
+      featured: b.featured,
+      vendor: { slug: b.vendorSlug, name: b.vendorName },
+      pricingSlug: pricingByApp.get(b.id) ?? null,
+      stages: stagesByApp.get(b.id) ?? [],
+      capabilitySlugs: capsByApp.get(b.id) ?? [],
+      industrySlugs: indsByApp.get(b.id) ?? [],
+      publishedAt: b.publishedAt,
+    });
+  }
+
+  return ids.map((id) => byId.get(id)).filter((c): c is AppCard => !!c);
+}
