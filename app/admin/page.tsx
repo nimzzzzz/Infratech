@@ -33,7 +33,7 @@ export default function AdminOverviewPage() {
   return (
     <Container className="max-w-6xl py-12 md:py-16">
       <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-        &sect; Editorial admin
+        Editorial admin
       </p>
       <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[52px]">
         Good {timeOfDay()}, {firstName}.

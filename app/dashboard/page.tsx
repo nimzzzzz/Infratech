@@ -71,7 +71,7 @@ export default async function DashboardOverviewPage({
   return (
     <Container className="max-w-6xl py-12 md:py-16">
       <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-        &sect; Vendor dashboard
+        Vendor dashboard
       </p>
       <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[52px]">
         Welcome back, {firstName}.

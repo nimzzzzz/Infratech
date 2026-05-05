@@ -26,7 +26,7 @@ export default function OnboardingLandingPage() {
   return (
     <Container className="max-w-3xl py-12 md:py-20">
       <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-        &sect; Welcome
+        Welcome
       </p>
       <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
         Welcome to InfraTechDB, {firstName}.

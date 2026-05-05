@@ -44,8 +44,20 @@ export const industries: TaxonomyItem[] = [
   { slug: "general", name: "General" },
 ];
 
+export const regions: TaxonomyItem[] = [
+  { slug: "north-america", name: "North America" },
+  { slug: "south-america", name: "South America" },
+  { slug: "europe", name: "Europe" },
+  { slug: "middle-east", name: "Middle East" },
+  { slug: "africa", name: "Africa" },
+  { slug: "asia-pacific", name: "Asia Pacific" },
+  { slug: "oceania", name: "Oceania" },
+  { slug: "global", name: "Global" },
+];
+
 export const lookups = {
   capability: new Map(capabilities.map((c) => [c.slug, c.name])),
   pricing: new Map(pricingModels.map((p) => [p.slug, p.name])),
   industry: new Map(industries.map((i) => [i.slug, i.name])),
+  region: new Map(regions.map((r) => [r.slug, r.name])),
 };

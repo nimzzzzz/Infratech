@@ -28,7 +28,7 @@ export default function ClaimPage() {
       </Link>
 
       <p className="mt-8 text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-        &sect; Path A &middot; Claim a listing
+        Path A &middot; Claim a listing
       </p>
       <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[52px]">
         Find {company.name}&rsquo;s listing.

@@ -62,7 +62,7 @@ export default async function AppDetailPage({
       <JsonLd app={app} />
 
       {/* HERO */}
-      <section className="relative overflow-hidden border-b border-[var(--color-line)] pt-28 md:pt-36">
+      <section className="relative overflow-hidden border-b border-[var(--color-line)] pt-10 md:pt-14">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-32 right-0 h-[440px] w-[440px] opacity-50 blur-3xl"
@@ -175,7 +175,7 @@ export default async function AppDetailPage({
       <Container className="py-14 md:py-20">
         <div className="space-y-12 md:max-w-[60ch]">
           {/* What it does — strictly tool-focused; company narrative lives on /vendors/[slug] */}
-          <Section eyebrow="§ What it does">
+          <Section eyebrow="What it does">
             <div className="space-y-5 text-[17px] leading-relaxed text-[var(--color-ink)] md:text-[18px]">
               {paragraphs.map((p, i) => (
                 <p key={i}>{p}</p>
@@ -194,7 +194,7 @@ export default async function AppDetailPage({
           </Section>
 
           {/* Lifecycle fit — visual */}
-          <Section eyebrow="§ Lifecycle fit">
+          <Section eyebrow="Lifecycle fit">
             <p className="text-[16px] leading-relaxed text-[var(--color-ink-2)]">
               Where {app.name} actively supports work across the project
               lifecycle.
@@ -240,7 +240,7 @@ export default async function AppDetailPage({
           </Section>
 
           {/* Capabilities */}
-          <Section eyebrow="§ Capabilities">
+          <Section eyebrow="Capabilities">
             <ul className="flex flex-wrap gap-2">
               {app.capabilities.map((c) => (
                 <li key={c}>
@@ -256,7 +256,7 @@ export default async function AppDetailPage({
           </Section>
 
           {/* Industries */}
-          <Section eyebrow="§ Industries">
+          <Section eyebrow="Industries">
             <ul className="flex flex-wrap gap-2">
               {app.industries.map((i) => (
                 <li key={i}>
@@ -269,7 +269,7 @@ export default async function AppDetailPage({
           </Section>
 
           {/* Pricing */}
-          <Section eyebrow="§ Pricing">
+          <Section eyebrow="Pricing">
             <p className="font-heading text-[28px] leading-tight">
               {lookups.pricing.get(app.pricing) ?? app.pricing}
             </p>
@@ -282,7 +282,7 @@ export default async function AppDetailPage({
 
           {/* Editor's note */}
           {app.editorNote ? (
-            <Section eyebrow="§ Editor's note">
+            <Section eyebrow="Editor's note">
               <blockquote className="border-l-2 border-[var(--color-coral)] pl-5 font-heading text-[20px] italic leading-snug text-[var(--color-ink)] md:text-[24px]">
                 &ldquo;{app.editorNote}&rdquo;
               </blockquote>
@@ -309,7 +309,7 @@ export default async function AppDetailPage({
             <div className="mb-8 flex items-end justify-between gap-4">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-                  &sect; More like this
+                  More like this
                 </p>
                 <h2 className="mt-3 font-heading text-[28px] leading-[1.05] tracking-tight md:text-[36px]">
                   Products in adjacent territory.

@@ -15,30 +15,23 @@ import {
   capabilities,
   industries,
   pricingModels,
+  regions,
 } from "@/lib/data/taxonomy";
 import { cn } from "@/lib/utils";
+import { CountrySelect } from "./country-select";
 import { LogoUpload } from "./logo-upload";
 
 const CUSTOM_PRICING_SLUG = "__custom__";
 
 type CustomKey = "capabilities" | "industries";
 
-const COMPANY_SIZES = [
-  "1-10",
-  "11-50",
-  "51-200",
-  "201-1,000",
-  "1,001-10,000",
-  "10,000+",
-];
-
 type FormState = {
   // ── Company-level ── (skipped in real flow if vendor profile already exists)
   companyName: string;
   companyWebsite: string;
   companyFounded: string;
-  companySize: string;
   companyHeadquarters: string;
+  companyRegions: string[];
   companyDescription: string;
   companyLogoFile: File | null;
   companyLogoAlt: string;
@@ -46,7 +39,6 @@ type FormState = {
   // ── Tool-level ──
   name: string;
   url: string;
-  founded: string;
   logoFile: File | null;
   logoAlt: string;
   tagline: string;
@@ -64,15 +56,14 @@ const initialState = (companyName: string, domain: string): FormState => ({
   companyName,
   companyWebsite: domain ? `https://${domain}` : "",
   companyFounded: "",
-  companySize: "",
   companyHeadquarters: "",
+  companyRegions: [],
   companyDescription: "",
   companyLogoFile: null,
   companyLogoAlt: "",
 
   name: "",
   url: "",
-  founded: "",
   logoFile: null,
   logoAlt: "",
   tagline: "",
@@ -179,7 +170,7 @@ export function SubmitWizard({
     setData((d) => ({ ...d, [key]: value }));
 
   const toggle = (
-    key: "stages" | "capabilities" | "industries",
+    key: "stages" | "capabilities" | "industries" | "companyRegions",
     slug: string,
   ) =>
     setData((d) => ({
@@ -216,8 +207,8 @@ export function SubmitWizard({
         data.companyName &&
           data.companyWebsite &&
           data.companyFounded &&
-          data.companySize &&
           data.companyHeadquarters &&
+          data.companyRegions.length > 0 &&
           data.companyDescription,
       );
       const logoOk =
@@ -292,7 +283,9 @@ export function SubmitWizard({
       <ProgressRail step={step} skipCompanyStep={skipCompanyStep} />
 
       <div className="mt-10">
-        {step === 1 ? <CompanyStep data={data} update={update} /> : null}
+        {step === 1 ? (
+          <CompanyStep data={data} update={update} toggle={toggle} />
+        ) : null}
         {step === 2 ? (
           <div className="space-y-14">
             <div id="section-basics" className="scroll-mt-24">
@@ -395,7 +388,7 @@ export function SubmitWizard({
             ) : (
               <>
                 <PaperPlaneTilt size={13} weight="regular" />
-                Submit for review
+                Submit for publishing
               </>
             )}
           </button>
@@ -429,7 +422,7 @@ function ProgressRail({
   return (
     <div>
       <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-        &sect; {eyebrowLabel} &middot; Step{" "}
+        {eyebrowLabel} &middot; Step{" "}
         <span className="num">{String(displayIndex).padStart(2, "0")}</span>{" "}
         of{" "}
         <span className="num">{String(totalVisible).padStart(2, "0")}</span>{" "}
@@ -478,8 +471,13 @@ function FullReviewView({
         <ReviewRow label="Name" value={data.companyName} />
         <ReviewRow label="Website" value={data.companyWebsite} />
         <ReviewRow label="Founded" value={data.companyFounded} />
-        <ReviewRow label="Team size" value={data.companySize} />
-        <ReviewRow label="HQ" value={data.companyHeadquarters} />
+        <ReviewRow label="HQ country" value={data.companyHeadquarters} />
+        <ReviewRow
+          label="Regions"
+          value={data.companyRegions
+            .map((s) => regions.find((r) => r.slug === s)?.name ?? s)
+            .join(", ")}
+        />
         <ReviewRow
           label="Description"
           value={data.companyDescription}
@@ -500,9 +498,6 @@ function FullReviewView({
       >
         <ReviewRow label="Product" value={data.name} />
         <ReviewRow label="Website" value={data.url} />
-        {data.founded ? (
-          <ReviewRow label="Launched" value={data.founded} />
-        ) : null}
         {data.logoFile ? (
           <ReviewLogo
             label="Product logo"
@@ -623,7 +618,7 @@ function SinglePageSubmit({
     return (
       <div className="mt-8">
         <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-          &sect; Add a product &middot; Review
+          Add a product &middot; Review
         </p>
         <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
           Look it over before submitting.
@@ -640,9 +635,6 @@ function SinglePageSubmit({
           >
             <ReviewRow label="Product" value={data.name} />
             <ReviewRow label="Website" value={data.url} />
-            {data.founded ? (
-              <ReviewRow label="Launched" value={data.founded} />
-            ) : null}
             {data.logoFile ? (
               <ReviewLogo
                 label="Product logo"
@@ -739,7 +731,7 @@ function SinglePageSubmit({
             ) : (
               <>
                 <PaperPlaneTilt size={13} weight="regular" />
-                Submit for review
+                Submit for publishing
               </>
             )}
           </button>
@@ -751,7 +743,7 @@ function SinglePageSubmit({
   return (
     <div className="mt-8">
       <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-        &sect; Add a product
+        Add a product
       </p>
       <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
         Tell us about the new product.
@@ -892,9 +884,14 @@ const inputCls =
 function CompanyStep({
   data,
   update,
+  toggle,
 }: {
   data: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  toggle: (
+    key: "stages" | "capabilities" | "industries" | "companyRegions",
+    slug: string,
+  ) => void;
 }) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -948,36 +945,29 @@ function CompanyStep({
         />
       </Field>
 
-      <Field label="Team size" htmlFor="companySize" required>
-        <select
-          id="companySize"
-          value={data.companySize}
-          onChange={(e) => update("companySize", e.target.value)}
-          className={inputCls}
-        >
-          <option value="">Pick one…</option>
-          {COMPANY_SIZES.map((s) => (
-            <option key={s} value={s}>
-              {s} employees
-            </option>
-          ))}
-        </select>
-      </Field>
       <Field
-        label="Headquarters"
+        label="Headquarters country"
         htmlFor="companyHeadquarters"
         required
-        hint="City and country."
+        hint="Where the company is legally based."
       >
-        <input
+        <CountrySelect
           id="companyHeadquarters"
-          type="text"
           value={data.companyHeadquarters}
-          onChange={(e) => update("companyHeadquarters", e.target.value)}
-          placeholder="e.g. London, United Kingdom"
-          className={inputCls}
+          onChange={(v) => update("companyHeadquarters", v)}
         />
       </Field>
+
+      <div className="md:col-span-2">
+        <ChipGroup
+          label="Regions you operate in"
+          required
+          hint="Pick every region where the company actively serves customers. Choose Global if you serve worldwide."
+          options={regions}
+          selected={data.companyRegions}
+          onToggle={(slug) => toggle("companyRegions", slug)}
+        />
+      </div>
 
       <div className="md:col-span-2">
         <Field
@@ -1037,33 +1027,18 @@ function ToolBasicsStep({
           />
         </Field>
       </div>
-      <Field label="Product website" htmlFor="url" required>
-        <input
-          id="url"
-          type="url"
-          value={data.url}
-          onChange={(e) => update("url", e.target.value)}
-          placeholder="https://"
-          className={inputCls}
-        />
-      </Field>
-      <Field
-        label="Product launched"
-        htmlFor="founded"
-        hint="Year this specific product launched (often different from the company's founding year). Optional."
-      >
-        <input
-          id="founded"
-          type="number"
-          inputMode="numeric"
-          value={data.founded}
-          onChange={(e) => update("founded", e.target.value)}
-          placeholder="e.g. 2018"
-          className={cn(inputCls, "num")}
-          min={1950}
-          max={new Date().getFullYear()}
-        />
-      </Field>
+      <div className="md:col-span-2">
+        <Field label="Product website" htmlFor="url" required>
+          <input
+            id="url"
+            type="url"
+            value={data.url}
+            onChange={(e) => update("url", e.target.value)}
+            placeholder="https://"
+            className={inputCls}
+          />
+        </Field>
+      </div>
       <div className="md:col-span-2">
         <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
           Product logo{" "}

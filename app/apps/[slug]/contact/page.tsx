@@ -38,7 +38,7 @@ export default async function ContactVendorPage({
   if (!app) notFound();
 
   return (
-    <article className="bg-[var(--color-canvas)] pt-28 md:pt-36">
+    <article className="bg-[var(--color-canvas)] pt-10 md:pt-14">
       <Container className="max-w-3xl pb-20 md:pb-28">
         {/* back link */}
         <Link

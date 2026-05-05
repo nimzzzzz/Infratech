@@ -32,7 +32,7 @@ export function ContactForm({
     email: "",
     company: "",
     role: "",
-    subject: `Inquiry about ${appName}`,
+    subject: "",
     message: "",
   });
   const [submitting, setSubmitting] = useState(false);
@@ -69,7 +69,7 @@ export function ContactForm({
           <CheckCircle size={28} weight="regular" />
         </span>
         <p className="mt-7 text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-          &sect; Message sent
+          Message sent
         </p>
         <h2 className="mt-3 font-heading text-[26px] leading-tight tracking-tight md:text-[32px]">
           Off to {vendorName}.
@@ -153,12 +153,7 @@ export function ContactForm({
         />
       </Field>
       <div className="md:col-span-2">
-        <Field
-          label="Subject"
-          htmlFor="subject"
-          required
-          hint="Pre-filled — edit or rewrite as you like."
-        >
+        <Field label="Subject" htmlFor="subject" required>
           <input
             id="subject"
             type="text"
@@ -166,6 +161,7 @@ export function ContactForm({
             value={data.subject}
             onChange={(e) => update("subject", e.target.value)}
             maxLength={140}
+            placeholder={`Inquiry about ${appName}`}
             className={inputCls}
           />
         </Field>

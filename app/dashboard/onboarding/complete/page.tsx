@@ -18,7 +18,7 @@ export default function OnboardingCompletePage() {
         <CheckCircle size={28} weight="regular" />
       </span>
       <p className="mt-8 text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-        &sect; Submitted &middot; In review
+        Submitted &middot; In review
       </p>
       <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
         Thanks. We&rsquo;ll take it from here.

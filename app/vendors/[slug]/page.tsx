@@ -61,7 +61,7 @@ export default async function VendorDetailPage({
       <JsonLd vendor={vendor} toolCount={tools.length} />
 
       {/* HERO */}
-      <section className="relative overflow-hidden border-b border-[var(--color-line)] pt-28 md:pt-36">
+      <section className="relative overflow-hidden border-b border-[var(--color-line)] pt-10 md:pt-14">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-32 right-0 h-[440px] w-[440px] opacity-50 blur-3xl"
@@ -171,7 +171,7 @@ export default async function VendorDetailPage({
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-                &sect; Products by this vendor
+                Products by this vendor
               </p>
               <h2 className="mt-3 font-heading text-[28px] leading-[1.05] tracking-tight md:text-[36px]">
                 {tools.length === 1
@@ -211,7 +211,7 @@ export default async function VendorDetailPage({
       <section className="border-t border-[var(--color-line)] bg-[var(--color-canvas)] py-14 md:py-20">
         <Container>
           <div className="md:max-w-[68ch]">
-            <Section eyebrow="§ About the company">
+            <Section eyebrow="About the company">
               <div className="space-y-5 text-[17px] leading-relaxed text-[var(--color-ink)] md:text-[18px]">
                 {paragraphs.map((p, i) => (
                   <p key={i}>{p}</p>

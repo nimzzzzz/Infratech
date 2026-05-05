@@ -106,7 +106,7 @@ export default async function LoginPage({
         {/* editorial caption bottom-left */}
         <div className="absolute bottom-8 left-8 right-8 max-w-md lg:bottom-12 lg:left-12 lg:right-12">
           <p className="text-[10px] uppercase tracking-[0.32em] text-white/55">
-            &sect; Edition 01 &middot; The Index
+            Edition 01 &middot; The Index
           </p>
           <p className="mt-4 font-heading text-[24px] leading-tight text-white md:text-[28px] lg:text-[34px]">
             {intent === "submit"
@@ -169,7 +169,7 @@ export default async function LoginPage({
         <div className="flex flex-1 items-center">
           <div className="w-full max-w-md">
             <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
-              &sect; {eyebrow}
+              {eyebrow}
             </p>
             <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
               {title}
@@ -194,7 +194,7 @@ export default async function LoginPage({
             {/* demo-mode toggle — pre-wiring real auth, lets you preview both flows */}
             <div className="mt-5 border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-3.5">
               <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
-                &sect; Demo mode
+                Demo mode
               </p>
               <p className="mt-1.5 text-[12px] leading-relaxed text-[var(--color-ink-2)]">
                 Real LinkedIn auth lands in Phase 2. Pick a flow to preview:
