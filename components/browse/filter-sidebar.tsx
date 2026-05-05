@@ -1,11 +1,13 @@
 import { capabilities, industries, pricingModels } from "@/lib/data/taxonomy";
-import { apps } from "@/lib/data/apps";
 import { facetCounts, parseFilters } from "@/lib/browse/filters";
+import type { AppCard } from "@/lib/queries/apps";
 import { FilterSection } from "./filter-section";
 
 export function FilterSidebar({
+  apps,
   searchParams,
 }: {
+  apps: AppCard[];
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const state = parseFilters(searchParams);

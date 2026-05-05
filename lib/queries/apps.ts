@@ -32,6 +32,10 @@ export type AppCard = {
   vendor: { slug: string; name: string };
   pricingSlug: string | null;
   stages: { slug: string; name: string }[];
+  /** Slug-only arrays used by the filter / sort logic. */
+  capabilitySlugs: string[];
+  industrySlugs: string[];
+  publishedAt: Date | null;
 };
 
 /** Full detail shape for /apps/[slug]. */
@@ -57,6 +61,7 @@ async function fetchCards(appIds: number[]): Promise<AppCard[]> {
       tagline: apps.tagline,
       logoUrl: apps.logoUrl,
       featured: apps.featured,
+      publishedAt: apps.publishedAt,
       vendorSlug: vendors.slug,
       vendorName: vendors.name,
     })
@@ -64,23 +69,29 @@ async function fetchCards(appIds: number[]): Promise<AppCard[]> {
     .innerJoin(vendors, eq(vendors.id, apps.vendorId))
     .where(inArray(apps.id, appIds));
 
-  // Stages, joined per-app
+  // M2M tag slugs in three small joins. With ~15-100 apps these are
+  // cheap; if catalogue grows past a few thousand we'd push these into
+  // a single CTE with json_agg per app.
   const stageRows = await db
-    .select({
-      appId: appStages.appId,
-      slug: stages.slug,
-      name: stages.name,
-    })
+    .select({ appId: appStages.appId, slug: stages.slug, name: stages.name })
     .from(appStages)
     .innerJoin(stages, eq(stages.id, appStages.stageId))
     .where(inArray(appStages.appId, appIds));
 
-  // First pricing model per app (apps usually have one)
+  const capRows = await db
+    .select({ appId: appCapabilities.appId, slug: capabilities.slug })
+    .from(appCapabilities)
+    .innerJoin(capabilities, eq(capabilities.id, appCapabilities.capabilityId))
+    .where(inArray(appCapabilities.appId, appIds));
+
+  const indRows = await db
+    .select({ appId: appIndustries.appId, slug: industries.slug })
+    .from(appIndustries)
+    .innerJoin(industries, eq(industries.id, appIndustries.industryId))
+    .where(inArray(appIndustries.appId, appIds));
+
   const pricingRows = await db
-    .select({
-      appId: appPricingModels.appId,
-      slug: pricingModels.slug,
-    })
+    .select({ appId: appPricingModels.appId, slug: pricingModels.slug })
     .from(appPricingModels)
     .innerJoin(
       pricingModels,
@@ -93,6 +104,18 @@ async function fetchCards(appIds: number[]): Promise<AppCard[]> {
     const arr = stagesByApp.get(r.appId) ?? [];
     arr.push({ slug: r.slug, name: r.name });
     stagesByApp.set(r.appId, arr);
+  }
+  const capsByApp = new Map<number, string[]>();
+  for (const r of capRows) {
+    const arr = capsByApp.get(r.appId) ?? [];
+    arr.push(r.slug);
+    capsByApp.set(r.appId, arr);
+  }
+  const indsByApp = new Map<number, string[]>();
+  for (const r of indRows) {
+    const arr = indsByApp.get(r.appId) ?? [];
+    arr.push(r.slug);
+    indsByApp.set(r.appId, arr);
   }
   const pricingByApp = new Map<number, string>();
   for (const r of pricingRows) pricingByApp.set(r.appId, r.slug);
@@ -109,6 +132,9 @@ async function fetchCards(appIds: number[]): Promise<AppCard[]> {
       vendor: { slug: b.vendorSlug, name: b.vendorName },
       pricingSlug: pricingByApp.get(b.id) ?? null,
       stages: stagesByApp.get(b.id) ?? [],
+      capabilitySlugs: capsByApp.get(b.id) ?? [],
+      industrySlugs: indsByApp.get(b.id) ?? [],
+      publishedAt: b.publishedAt,
     });
   }
 

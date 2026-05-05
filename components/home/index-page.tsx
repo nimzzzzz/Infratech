@@ -1,23 +1,22 @@
 import { Container } from "@/components/site/container";
 import { SearchBar } from "@/components/browse/search-bar";
+import { FilterSidebar } from "@/components/browse/filter-sidebar";
+import { FilterDrawer } from "@/components/browse/filter-drawer";
 import { StageQuickFilter } from "@/components/browse/stage-quick-filter";
+import { ActiveFilters } from "@/components/browse/active-filters";
+import { SortTabs } from "@/components/browse/sort-tabs";
 import { AppCard } from "@/components/browse/app-card";
 import { listApps } from "@/lib/queries/apps";
+import { applyFilters, parseFilters } from "@/lib/browse/filters";
 
-/**
- * Home / browse-index. Stage 1 wires this up to the DB but deliberately
- * skips the FilterSidebar + applyFilters logic — those live in
- * lib/browse/filters.ts which still operates on the legacy mock-data
- * shape. The /browse page in Stage 2 will refactor filtering against
- * AppCard (slim DB shape) and re-introduce the sidebar, drawer, sort
- * tabs, and active-filter chips at that point.
- */
 export async function HomeIndex({
-  searchParams: _searchParams,
+  searchParams,
 }: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const apps = await listApps({ status: "published" });
+  const allApps = await listApps({ status: "published" });
+  const state = parseFilters(searchParams);
+  const results = applyFilters(allApps, state);
 
   return (
     <article className="bg-[var(--color-canvas)]">
@@ -43,26 +42,46 @@ export async function HomeIndex({
         </Container>
       </section>
 
-      <Container className="border-t border-[var(--color-line)] py-10 md:py-12">
-        <header className="flex flex-col gap-4 pb-6 md:flex-row md:items-center md:justify-between">
-          <p className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
-            Showing all{" "}
-            <span className="num text-[var(--color-ink)]">{apps.length}</span>{" "}
-            published products
-          </p>
-        </header>
+      <Container className="grid gap-10 border-t border-[var(--color-line)] py-10 md:grid-cols-[260px_1fr] md:gap-12 md:py-12">
+        <div className="hidden md:block">
+          <FilterSidebar apps={allApps} searchParams={searchParams} />
+        </div>
 
-        {apps.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {apps.map((app) => (
-              <li key={app.slug}>
-                <AppCard app={app} />
-              </li>
-            ))}
-          </ul>
-        )}
+        <div className="min-w-0">
+          <FilterDrawer
+            resultCount={results.length}
+            totalCount={allApps.length}
+          >
+            <FilterSidebar apps={allApps} searchParams={searchParams} />
+          </FilterDrawer>
+
+          <header className="flex flex-col gap-4 pb-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3">
+              <ActiveFilters />
+              <p className="hidden text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] md:block">
+                Showing{" "}
+                <span className="num text-[var(--color-ink)]">
+                  {results.length}
+                </span>{" "}
+                of{" "}
+                <span className="num">{allApps.length}</span> products
+              </p>
+            </div>
+            <SortTabs />
+          </header>
+
+          {results.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {results.map((app) => (
+                <li key={app.slug}>
+                  <AppCard app={app} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </Container>
     </article>
   );
@@ -75,8 +94,8 @@ function EmptyState() {
         No matches
       </p>
       <p className="mt-3 max-w-[40ch] mx-auto text-[15px] text-[var(--color-ink-2)]">
-        No products are published yet. Once vendors finish onboarding, their
-        listings appear here.
+        No products match the current combination of filters. Try removing
+        one, or clearing all filters above.
       </p>
     </div>
   );

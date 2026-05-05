@@ -1,4 +1,4 @@
-import type { App } from "@/lib/data/apps";
+import type { AppCard } from "@/lib/queries/apps";
 
 export type FilterKey = "stage" | "capability" | "pricing" | "industry";
 export type SortKey = "az" | "recent" | "featured";
@@ -36,40 +36,46 @@ export function parseFilters(
   };
 }
 
-const matchesQuery = (app: App, q: string): boolean => {
+const stageSlugs = (a: AppCard): string[] => a.stages.map((s) => s.slug);
+
+const matchesQuery = (a: AppCard, q: string): boolean => {
   if (!q) return true;
   const needle = q.toLowerCase();
   return (
-    app.name.toLowerCase().includes(needle) ||
-    app.vendor.toLowerCase().includes(needle) ||
-    app.blurb.toLowerCase().includes(needle) ||
-    app.capabilities.some((c) => c.includes(needle))
+    a.name.toLowerCase().includes(needle) ||
+    a.vendor.name.toLowerCase().includes(needle) ||
+    (a.tagline ?? "").toLowerCase().includes(needle) ||
+    a.capabilitySlugs.some((c) => c.includes(needle))
   );
 };
 
 const matchesCategory = (
   selected: string[],
-  appValues: string[] | string,
+  appValues: string[] | string | null,
 ): boolean => {
   if (selected.length === 0) return true;
+  if (appValues == null) return false;
   const haystack = Array.isArray(appValues) ? appValues : [appValues];
   return selected.some((s) => haystack.includes(s));
 };
 
-export function applyFilters(apps: App[], state: FilterState): App[] {
+export function applyFilters(apps: AppCard[], state: FilterState): AppCard[] {
   const filtered = apps.filter(
-    (app) =>
-      matchesQuery(app, state.q) &&
-      matchesCategory(state.stage, app.stages) &&
-      matchesCategory(state.capability, app.capabilities) &&
-      matchesCategory(state.pricing, app.pricing) &&
-      matchesCategory(state.industry, app.industries),
+    (a) =>
+      matchesQuery(a, state.q) &&
+      matchesCategory(state.stage, stageSlugs(a)) &&
+      matchesCategory(state.capability, a.capabilitySlugs) &&
+      matchesCategory(state.pricing, a.pricingSlug) &&
+      matchesCategory(state.industry, a.industrySlugs),
   );
 
   return [...filtered].sort((a, b) => {
     if (state.sort === "az") return a.name.localeCompare(b.name);
-    if (state.sort === "recent")
-      return b.addedAt.localeCompare(a.addedAt);
+    if (state.sort === "recent") {
+      const aT = a.publishedAt?.getTime() ?? 0;
+      const bT = b.publishedAt?.getTime() ?? 0;
+      return bT - aT;
+    }
     // featured
     if (a.featured !== b.featured) return a.featured ? -1 : 1;
     return a.name.localeCompare(b.name);
@@ -78,31 +84,31 @@ export function applyFilters(apps: App[], state: FilterState): App[] {
 
 /**
  * Facet counts: for each option in a category, count apps that match every
- * OTHER active category and have this option. This is the standard library /
- * e-commerce behaviour — counts reflect "if I add this, how many results would
- * I see" rather than "how many of the current results have this property".
+ * OTHER active category. Standard library / e-commerce behaviour — counts
+ * reflect "if I add this, how many results would I see" rather than "how
+ * many of the current results have this property".
  */
 export function facetCounts(
-  apps: App[],
+  apps: AppCard[],
   state: FilterState,
   category: FilterKey,
   options: string[],
 ): Record<string, number> {
   const stateWithoutCategory: FilterState = { ...state, [category]: [] };
   const baseline = apps.filter(
-    (app) =>
-      matchesQuery(app, stateWithoutCategory.q) &&
-      matchesCategory(stateWithoutCategory.stage, app.stages) &&
-      matchesCategory(stateWithoutCategory.capability, app.capabilities) &&
-      matchesCategory(stateWithoutCategory.pricing, app.pricing) &&
-      matchesCategory(stateWithoutCategory.industry, app.industries),
+    (a) =>
+      matchesQuery(a, stateWithoutCategory.q) &&
+      matchesCategory(stateWithoutCategory.stage, stageSlugs(a)) &&
+      matchesCategory(stateWithoutCategory.capability, a.capabilitySlugs) &&
+      matchesCategory(stateWithoutCategory.pricing, a.pricingSlug) &&
+      matchesCategory(stateWithoutCategory.industry, a.industrySlugs),
   );
 
-  const accessor = (app: App): string[] => {
-    if (category === "stage") return app.stages;
-    if (category === "capability") return app.capabilities;
-    if (category === "pricing") return [app.pricing];
-    return app.industries;
+  const accessor = (a: AppCard): string[] => {
+    if (category === "stage") return stageSlugs(a);
+    if (category === "capability") return a.capabilitySlugs;
+    if (category === "pricing") return a.pricingSlug ? [a.pricingSlug] : [];
+    return a.industrySlugs;
   };
 
   const counts: Record<string, number> = {};
