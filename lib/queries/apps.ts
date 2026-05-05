@@ -262,6 +262,36 @@ export async function listAppsByVendorSlug(
   return fetchCards(ids.map((r) => r.id));
 }
 
+/**
+ * For the vendor dashboard — returns ALL of the vendor's apps regardless
+ * of status, with the status field exposed for the badge UI.
+ */
+export type OwnerAppRow = {
+  id: number;
+  slug: string;
+  name: string;
+  status: AppStatus;
+  publishedAt: Date | null;
+  createdAt: Date;
+};
+
+export async function listAppsForOwnerVendor(
+  vendorId: number,
+): Promise<OwnerAppRow[]> {
+  return db
+    .select({
+      id: apps.id,
+      slug: apps.slug,
+      name: apps.name,
+      status: apps.status,
+      publishedAt: apps.publishedAt,
+      createdAt: apps.createdAt,
+    })
+    .from(apps)
+    .where(eq(apps.vendorId, vendorId))
+    .orderBy(desc(apps.createdAt));
+}
+
 export async function listAllAppSlugs() {
   const rows = await db
     .select({ slug: apps.slug })

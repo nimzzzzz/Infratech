@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/site/container";
-import { messagesForVendor, unreadCount } from "@/lib/data/messages";
+import {
+  getVendorSession,
+  isDemoOverride,
+} from "@/lib/auth/session";
+import {
+  listMessagesForVendor,
+  countUnreadForVendor,
+} from "@/lib/queries/messages";
 import { relativeDays } from "@/lib/browse/dates";
 import { cn } from "@/lib/utils";
 
@@ -10,19 +17,23 @@ export const metadata: Metadata = {
   alternates: { canonical: "/dashboard/messages" },
 };
 
-const VENDOR_SLUG = "arctus";
-
 export default async function MessagesInboxPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
+  const asParam = Array.isArray(sp.as) ? sp.as[0] : sp.as;
+  const demoOverride = isDemoOverride(asParam) ? asParam : undefined;
   const filterParam = Array.isArray(sp.filter) ? sp.filter[0] : sp.filter;
-  const all = messagesForVendor(VENDOR_SLUG)
-    .slice()
-    .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt));
-  const unread = unreadCount(VENDOR_SLUG);
+
+  const { vendor } = await getVendorSession({
+    demoOverride,
+    requireOnboarded: true,
+  });
+
+  const all = await listMessagesForVendor(vendor.id);
+  const unread = await countUnreadForVendor(vendor.id);
   const filter = filterParam === "unread" ? "unread" : "all";
   const list = filter === "unread" ? all.filter((m) => m.status === "unread") : all;
 
@@ -90,9 +101,9 @@ export default async function MessagesInboxPage({
                     {msg.subject}
                   </p>
                   <p className="mt-1 truncate text-[12px] text-[var(--color-ink-3)]">
-                    {msg.from.name}
-                    {msg.from.company ? ` · ${msg.from.company}` : ""}
-                    {msg.from.role ? ` · ${msg.from.role}` : ""}
+                    {msg.senderName}
+                    {msg.senderCompany ? ` · ${msg.senderCompany}` : ""}
+                    {msg.senderRole ? ` · ${msg.senderRole}` : ""}
                   </p>
                 </div>
                 <p className="hidden truncate text-[12px] uppercase tracking-[0.16em] text-[var(--color-coral)] md:block">
@@ -102,7 +113,10 @@ export default async function MessagesInboxPage({
                   {snippet(msg.body)}
                 </p>
                 <span className="num text-right text-[11px] text-[var(--color-ink-3)]">
-                  {relativeDays(msg.receivedAt.slice(0, 10)).label}
+                  {
+                    relativeDays(msg.createdAt.toISOString().slice(0, 10))
+                      .label
+                  }
                 </span>
               </Link>
             </li>

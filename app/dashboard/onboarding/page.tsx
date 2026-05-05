@@ -6,7 +6,10 @@ import {
   MagnifyingGlass,
 } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
-import { getMockSession } from "@/lib/auth/mock-session";
+import {
+  getVendorSession,
+  isDemoOverride,
+} from "@/lib/auth/session";
 
 export const metadata: Metadata = {
   title: "Welcome to InfraTechDB",
@@ -19,8 +22,16 @@ export const metadata: Metadata = {
  * on /dashboard directly (with the "+ Add another tool" CTA in the listings
  * section if they want a second tool).
  */
-export default function OnboardingLandingPage() {
-  const { user, company } = getMockSession();
+export default async function OnboardingLandingPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const asParam = Array.isArray(sp.as) ? sp.as[0] : sp.as;
+  const demoOverride = isDemoOverride(asParam) ? asParam : undefined;
+
+  const { vendor, user } = await getVendorSession({ demoOverride });
   const firstName = user.name.split(" ")[0];
 
   return (
@@ -32,9 +43,9 @@ export default function OnboardingLandingPage() {
         Welcome to InfraTechDB, {firstName}.
       </h1>
       <p className="mt-5 max-w-[56ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
-        We&rsquo;ve verified you with LinkedIn as{" "}
+        We&rsquo;ve verified you with LinkedIn as part of{" "}
         <strong className="font-medium text-[var(--color-ink)]">
-          {user.title} at {company.name}
+          {vendor.name}
         </strong>
         . You&rsquo;ve got two paths from here.
       </p>

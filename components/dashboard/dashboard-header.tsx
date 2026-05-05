@@ -3,11 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOut } from "@phosphor-icons/react";
-import { getMockSession } from "@/lib/auth/mock-session";
-import { unreadCount } from "@/lib/data/messages";
 import { cn } from "@/lib/utils";
-
-const VENDOR_SLUG = "arctus"; // mocked — comes from auth().vendor in Phase 2
 
 const nav = [
   {
@@ -22,16 +18,31 @@ const nav = [
   },
 ];
 
-export function DashboardHeader() {
+export type DashboardHeaderProps = {
+  /** Vendor row name; what the header shows in the user pill. */
+  companyName: string;
+  /** Authenticated user's display name + initials. */
+  userName: string;
+  userInitials: string;
+  /** Optional title / subline (LinkedIn role, etc.). */
+  userTitle?: string | null;
+  /** Unread inquiry badge count. 0 hides the badge. */
+  unreadCount: number;
+};
+
+export function DashboardHeader({
+  companyName,
+  userName,
+  userInitials,
+  userTitle,
+  unreadCount,
+}: DashboardHeaderProps) {
   const pathname = usePathname();
-  const { user, company } = getMockSession();
-  const unread = unreadCount(VENDOR_SLUG);
   const isOnboarding = pathname.startsWith("/dashboard/onboarding");
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-6 md:h-18 md:px-8">
-        {/* brand + nav */}
         <div className="flex items-center gap-5">
           <Link href="/dashboard" className="group flex items-center gap-2.5">
             <span className="relative inline-flex h-2 w-2">
@@ -47,57 +58,58 @@ export function DashboardHeader() {
           </Link>
 
           {!isOnboarding && (
-          <nav aria-label="Dashboard sections" className="hidden md:block">
-            <ul className="ml-2 flex items-center">
-              {nav.map((item) => {
-                const active = item.match(pathname);
-                const showBadge = item.href === "/dashboard/messages" && unread > 0;
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        "relative inline-flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors",
-                        active
-                          ? "text-[var(--color-ink)]"
-                          : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
-                      )}
-                    >
-                      <span className="relative">
-                        {item.label}
-                        {active ? (
-                          <span
-                            aria-hidden
-                            className="absolute -bottom-1.5 left-0 right-0 h-px bloom"
-                          />
-                        ) : null}
-                      </span>
-                      {showBadge ? (
-                        <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[10px] font-medium text-white">
-                          {unread}
+            <nav aria-label="Dashboard sections" className="hidden md:block">
+              <ul className="ml-2 flex items-center">
+                {nav.map((item) => {
+                  const active = item.match(pathname);
+                  const showBadge =
+                    item.href === "/dashboard/messages" && unreadCount > 0;
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "relative inline-flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors",
+                          active
+                            ? "text-[var(--color-ink)]"
+                            : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
+                        )}
+                      >
+                        <span className="relative">
+                          {item.label}
+                          {active ? (
+                            <span
+                              aria-hidden
+                              className="absolute -bottom-1.5 left-0 right-0 h-px bloom"
+                            />
+                          ) : null}
                         </span>
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+                        {showBadge ? (
+                          <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[10px] font-medium text-white">
+                            {unreadCount}
+                          </span>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
           )}
         </div>
 
-        {/* user pill + sign out */}
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-2.5 sm:flex">
             <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-canvas-warm)] text-[11px] font-medium uppercase tracking-wider text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">
-              {user.initials}
+              {userInitials}
             </span>
             <div className="flex flex-col leading-tight">
               <span className="text-[13px] text-[var(--color-ink)]">
-                {user.name}
+                {userName}
               </span>
               <span className="text-[11px] text-[var(--color-ink-3)]">
-                {company.name} &middot; {user.title}
+                {companyName}
+                {userTitle ? ` · ${userTitle}` : ""}
               </span>
             </div>
           </div>
@@ -111,47 +123,47 @@ export function DashboardHeader() {
         </div>
       </div>
 
-      {/* mobile nav row */}
       {!isOnboarding && (
-      <nav
-        aria-label="Dashboard sections"
-        className="border-t border-[var(--color-line)] bg-[var(--color-canvas)]/85 md:hidden"
-      >
-        <ul className="mx-auto flex w-full max-w-6xl items-center gap-0 px-5 sm:px-6">
-          {nav.map((item) => {
-            const active = item.match(pathname);
-            const showBadge = item.href === "/dashboard/messages" && unread > 0;
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "relative inline-flex items-center gap-1.5 px-3 py-3 text-[12px] font-medium transition-colors",
-                    active
-                      ? "text-[var(--color-ink)]"
-                      : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
-                  )}
-                >
-                  <span className="relative">
-                    {item.label}
-                    {active ? (
-                      <span
-                        aria-hidden
-                        className="absolute -bottom-2 left-0 right-0 h-px bloom"
-                      />
-                    ) : null}
-                  </span>
-                  {showBadge ? (
-                    <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[10px] font-medium text-white">
-                      {unread}
+        <nav
+          aria-label="Dashboard sections"
+          className="border-t border-[var(--color-line)] bg-[var(--color-canvas)]/85 md:hidden"
+        >
+          <ul className="mx-auto flex w-full max-w-6xl items-center gap-0 px-5 sm:px-6">
+            {nav.map((item) => {
+              const active = item.match(pathname);
+              const showBadge =
+                item.href === "/dashboard/messages" && unreadCount > 0;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "relative inline-flex items-center gap-1.5 px-3 py-3 text-[12px] font-medium transition-colors",
+                      active
+                        ? "text-[var(--color-ink)]"
+                        : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
+                    )}
+                  >
+                    <span className="relative">
+                      {item.label}
+                      {active ? (
+                        <span
+                          aria-hidden
+                          className="absolute -bottom-2 left-0 right-0 h-px bloom"
+                        />
+                      ) : null}
                     </span>
-                  ) : null}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+                    {showBadge ? (
+                      <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[10px] font-medium text-white">
+                        {unreadCount}
+                      </span>
+                    ) : null}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
       )}
     </header>
   );

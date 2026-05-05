@@ -3,15 +3,25 @@ import Link from "next/link";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import { ClaimSearch } from "@/components/dashboard/claim-search";
-import { getMockSession } from "@/lib/auth/mock-session";
+import {
+  getVendorSession,
+  isDemoOverride,
+} from "@/lib/auth/session";
 
 export const metadata: Metadata = {
   title: "Claim a listing",
   alternates: { canonical: "/dashboard/onboarding/claim" },
 };
 
-export default function ClaimPage() {
-  const { company } = getMockSession();
+export default async function ClaimPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const asParam = Array.isArray(sp.as) ? sp.as[0] : sp.as;
+  const demoOverride = isDemoOverride(asParam) ? asParam : undefined;
+  const { vendor } = await getVendorSession({ demoOverride });
 
   return (
     <Container className="max-w-3xl py-12 md:py-16">
@@ -31,7 +41,7 @@ export default function ClaimPage() {
         Path A &middot; Claim a listing
       </p>
       <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[52px]">
-        Find {company.name}&rsquo;s listing.
+        Find {vendor.name}&rsquo;s listing.
       </h1>
       <p className="mt-5 max-w-[58ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
         Search the directory for your product. If we&rsquo;ve already catalogued

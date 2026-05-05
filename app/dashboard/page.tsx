@@ -10,8 +10,15 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
-import { getMockSession } from "@/lib/auth/mock-session";
-import { messagesForVendor, unreadCount } from "@/lib/data/messages";
+import {
+  getVendorSession,
+  isDemoOverride,
+} from "@/lib/auth/session";
+import { listAppsForOwnerVendor } from "@/lib/queries/apps";
+import {
+  listMessagesForVendor,
+  countUnreadForVendor,
+} from "@/lib/queries/messages";
 import { relativeDays } from "@/lib/browse/dates";
 import { cn } from "@/lib/utils";
 
@@ -20,53 +27,35 @@ export const metadata: Metadata = {
   alternates: { canonical: "/dashboard" },
 };
 
-const VENDOR_SLUG = "arctus";
-
-// Mocked vendor listings. In Phase 2, hydrate from DB by vendorSlug.
-const mockListings = [
-  {
-    slug: "arctus-field",
-    name: "Arctus Field",
-    status: "live" as const,
-    addedAt: "2026-04-12",
-  },
-  {
-    slug: "arctus-insights",
-    name: "Arctus Insights",
-    status: "in-review" as const,
-    addedAt: "2026-04-30",
-  },
-];
-
 export default async function DashboardOverviewPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
+  const asParam = Array.isArray(sp.as) ? sp.as[0] : sp.as;
+  const demoOverride = isDemoOverride(asParam) ? asParam : undefined;
 
-  // Demo override — `?as=new` simulates a brand-new vendor with zero listings,
-  // which forces the gating redirect below. In real auth the listings array
-  // comes from the DB by vendorSlug; if the array is empty, the gate fires
-  // automatically with no override needed.
-  const listings = sp.as === "new" ? [] : mockListings;
+  const { vendor, user } = await getVendorSession({
+    demoOverride,
+    requireOnboarded: true,
+  });
 
-  // ── GATING ──────────────────────────────────────────────────────────
-  // Vendors with no listings shouldn't see the dashboard yet — they're
-  // mid-onboarding. Send them back to the onboarding landing to claim or
-  // submit a tool first.
+  const listings = await listAppsForOwnerVendor(vendor.id);
+
   if (listings.length === 0) {
     redirect("/dashboard/onboarding");
   }
 
-  const { user, company } = getMockSession();
+  const allMessages = await listMessagesForVendor(vendor.id);
+  const unread = await countUnreadForVendor(vendor.id);
+  const recent = allMessages.slice(0, 4);
+
   const firstName = user.name.split(" ")[0];
-  const allMessages = messagesForVendor(VENDOR_SLUG);
-  const unread = unreadCount(VENDOR_SLUG);
-  const recent = allMessages
-    .slice()
-    .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))
-    .slice(0, 4);
+  const liveCount = listings.filter((l) => l.status === "published").length;
+  const inReviewCount = listings.filter(
+    (l) => l.status === "pending_review" || l.status === "changes_requested",
+  ).length;
 
   return (
     <Container className="max-w-6xl py-12 md:py-16">
@@ -77,11 +66,10 @@ export default async function DashboardOverviewPage({
         Welcome back, {firstName}.
       </h1>
       <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
-        {company.name}&rsquo;s account, at a glance. New inquiries and listing
+        {vendor.name}&rsquo;s account, at a glance. New inquiries and listing
         status sit here.
       </p>
 
-      {/* OVERVIEW STATS */}
       <ul className="mt-10 grid grid-cols-1 gap-px border border-[var(--color-line-strong)] bg-[var(--color-line-strong)] sm:grid-cols-3">
         <StatCard
           icon={EnvelopeSimple}
@@ -93,18 +81,17 @@ export default async function DashboardOverviewPage({
         <StatCard
           icon={Stack}
           label="Listed products"
-          value={listings.filter((l) => l.status === "live").length}
+          value={liveCount}
           href="#listings"
         />
         <StatCard
           icon={UserCircle}
           label="In review"
-          value={listings.filter((l) => l.status === "in-review").length}
+          value={inReviewCount}
           href="#listings"
         />
       </ul>
 
-      {/* RECENT MESSAGES */}
       <section className="mt-14">
         <header className="flex items-end justify-between gap-4 border-b border-[var(--color-line-strong)] pb-3">
           <h2 className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
@@ -156,18 +143,21 @@ export default async function DashboardOverviewPage({
                       {msg.subject}
                     </p>
                     <p className="mt-0.5 truncate text-[12px] text-[var(--color-ink-3)]">
-                      {msg.from.name}
-                      {msg.from.company ? ` · ${msg.from.company}` : ""} ·{" "}
+                      {msg.senderName}
+                      {msg.senderCompany ? ` · ${msg.senderCompany}` : ""} ·{" "}
                       <span className="text-[var(--color-coral)]">
                         {msg.appName}
                       </span>
                     </p>
                   </div>
                   <span className="hidden text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] md:inline">
-                    {msg.from.role ?? ""}
+                    {msg.senderRole ?? ""}
                   </span>
                   <span className="num text-right text-[11px] text-[var(--color-ink-3)]">
-                    {relativeDays(msg.receivedAt.slice(0, 10)).label}
+                    {
+                      relativeDays(msg.createdAt.toISOString().slice(0, 10))
+                        .label
+                    }
                   </span>
                 </Link>
               </li>
@@ -176,7 +166,6 @@ export default async function DashboardOverviewPage({
         )}
       </section>
 
-      {/* LISTINGS */}
       <section id="listings" className="mt-14 scroll-mt-24">
         <header className="flex items-end justify-between gap-4 border-b border-[var(--color-line-strong)] pb-3">
           <h2 className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
@@ -205,7 +194,13 @@ export default async function DashboardOverviewPage({
                 <p className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
                   Listed{" "}
                   <span className="num">
-                    {relativeDays(listing.addedAt).label}
+                    {
+                      relativeDays(
+                        (listing.publishedAt ?? listing.createdAt)
+                          .toISOString()
+                          .slice(0, 10),
+                      ).label
+                    }
                   </span>
                 </p>
               </div>
@@ -273,18 +268,47 @@ function StatCard({
   );
 }
 
-function StatusBadge({ status }: { status: "live" | "in-review" }) {
-  const config = {
-    live: {
+function StatusBadge({
+  status,
+}: {
+  status:
+    | "draft"
+    | "pending_review"
+    | "published"
+    | "changes_requested"
+    | "rejected"
+    | "unpublished";
+}) {
+  const config: Record<
+    typeof status,
+    { label: string; className: string }
+  > = {
+    published: {
       label: "Live",
       className: "bg-emerald-50 text-emerald-700 ring-emerald-300",
     },
-    "in-review": {
+    pending_review: {
       label: "In review",
       className:
         "bg-[var(--color-coral)]/10 text-[var(--color-coral)] ring-[var(--color-coral)]/40",
     },
-  } as const;
+    changes_requested: {
+      label: "Changes requested",
+      className: "bg-amber-50 text-amber-700 ring-amber-300",
+    },
+    draft: {
+      label: "Draft",
+      className: "bg-[var(--color-canvas-warm)] text-[var(--color-ink-2)] ring-[var(--color-line-strong)]",
+    },
+    rejected: {
+      label: "Rejected",
+      className: "bg-rose-50 text-rose-700 ring-rose-300",
+    },
+    unpublished: {
+      label: "Unpublished",
+      className: "bg-slate-50 text-slate-600 ring-slate-300",
+    },
+  };
   const c = config[status];
   return (
     <span

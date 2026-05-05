@@ -10,7 +10,14 @@ import {
   Briefcase,
 } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
-import { messageById } from "@/lib/data/messages";
+import {
+  getVendorSession,
+  isDemoOverride,
+} from "@/lib/auth/session";
+import {
+  getMessageByIdForVendor,
+  type VendorMessageListItem,
+} from "@/lib/queries/messages";
 import { relativeDays } from "@/lib/browse/dates";
 
 export async function generateMetadata({
@@ -19,20 +26,34 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const msg = messageById(id);
   return {
-    title: msg ? `${msg.subject} — Inbox` : "Message",
+    title: `Inbox · ${id}`,
     alternates: { canonical: `/dashboard/messages/${id}` },
+    robots: { index: false, follow: false },
   };
 }
 
 export default async function MessageDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
-  const msg = messageById(id);
+  const sp = await searchParams;
+  const asParam = Array.isArray(sp.as) ? sp.as[0] : sp.as;
+  const demoOverride = isDemoOverride(asParam) ? asParam : undefined;
+
+  const numericId = Number(id);
+  if (!Number.isFinite(numericId)) notFound();
+
+  const { vendor } = await getVendorSession({
+    demoOverride,
+    requireOnboarded: true,
+  });
+
+  const msg = await getMessageByIdForVendor(numericId, vendor.id);
   if (!msg) notFound();
 
   const mailto = buildReplyMailto(msg);
@@ -52,7 +73,6 @@ export default async function MessageDetailPage({
         Back to inbox
       </Link>
 
-      {/* header */}
       <div className="mt-8 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
@@ -69,32 +89,31 @@ export default async function MessageDetailPage({
           </h1>
         </div>
         <p className="num shrink-0 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
-          {relativeDays(msg.receivedAt.slice(0, 10)).label}
+          {relativeDays(msg.createdAt.toISOString().slice(0, 10)).label}
         </p>
       </div>
 
-      {/* sender card */}
       <div className="mt-8 grid gap-6 border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-5 md:grid-cols-[1fr_auto] md:items-center md:p-6">
         <dl className="grid gap-3 text-[13px] sm:grid-cols-[auto_1fr] sm:gap-x-6">
           <Row icon={At} label="From">
             <span className="font-medium text-[var(--color-ink)]">
-              {msg.from.name}
+              {msg.senderName}
             </span>{" "}
             <a
-              href={`mailto:${msg.from.email}`}
+              href={`mailto:${msg.senderEmail}`}
               className="text-[var(--color-coral)] underline-offset-4 hover:underline"
             >
-              &lt;{msg.from.email}&gt;
+              &lt;{msg.senderEmail}&gt;
             </a>
           </Row>
-          {msg.from.company ? (
+          {msg.senderCompany ? (
             <Row icon={Buildings} label="Company">
-              {msg.from.company}
+              {msg.senderCompany}
             </Row>
           ) : null}
-          {msg.from.role ? (
+          {msg.senderRole ? (
             <Row icon={Briefcase} label="Role">
-              {msg.from.role}
+              {msg.senderRole}
             </Row>
           ) : null}
         </dl>
@@ -112,7 +131,6 @@ export default async function MessageDetailPage({
         </a>
       </div>
 
-      {/* body */}
       <article className="mt-10 space-y-5 border-l border-[var(--color-line)] pl-6 text-[16px] leading-relaxed text-[var(--color-ink)] md:text-[17px]">
         {paragraphs.map((p, i) => (
           <p key={i} className="whitespace-pre-line">
@@ -121,12 +139,9 @@ export default async function MessageDetailPage({
         ))}
       </article>
 
-      {/* footer note */}
       <p className="mt-12 max-w-[60ch] text-[12px] leading-relaxed text-[var(--color-ink-3)]">
         Replying via email opens your default mail client with{" "}
-        <span className="text-[var(--color-ink-2)]">
-          {msg.from.email}
-        </span>{" "}
+        <span className="text-[var(--color-ink-2)]">{msg.senderEmail}</span>{" "}
         pre-filled. The visitor will see the reply land directly in their
         inbox &mdash; the platform doesn&rsquo;t track responses sent this way.
       </p>
@@ -158,17 +173,15 @@ function Row({
   );
 }
 
-function buildReplyMailto(msg: ReturnType<typeof messageById>): string {
-  if (!msg) return "#";
+function buildReplyMailto(msg: VendorMessageListItem): string {
   const subject = encodeURIComponent(`Re: ${msg.subject}`);
-  const greeting = `Hi ${msg.from.name.split(" ")[0]},\n\n`;
-  // quote the original message
+  const greeting = `Hi ${msg.senderName.split(" ")[0]},\n\n`;
   const quoted = msg.body
     .split("\n")
     .map((l) => `> ${l}`)
     .join("\n");
   const body = encodeURIComponent(
-    `${greeting}\n\n— On ${new Date(msg.receivedAt).toDateString()}, ${msg.from.name} wrote:\n${quoted}`,
+    `${greeting}\n\n— On ${msg.createdAt.toDateString()}, ${msg.senderName} wrote:\n${quoted}`,
   );
-  return `mailto:${msg.from.email}?subject=${subject}&body=${body}`;
+  return `mailto:${msg.senderEmail}?subject=${subject}&body=${body}`;
 }
