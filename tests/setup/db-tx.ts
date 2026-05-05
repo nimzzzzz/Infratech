@@ -22,6 +22,11 @@ import * as schema from "@/lib/db/schema";
 let sql: ReturnType<typeof postgres> | null = null;
 let testDb: PostgresJsDatabase<typeof schema> | null = null;
 
+// Test environment is not the React module graph, so the "server-only"
+// guard in query / auth modules throws on import. Mock it to a no-op in
+// tests while keeping the real fence in production builds.
+vi.mock("server-only", () => ({}));
+
 vi.mock("@/lib/db/client", () => ({
   db: new Proxy(
     {},
