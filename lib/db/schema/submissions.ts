@@ -10,6 +10,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { vendors } from "./vendors";
 import { apps } from "./apps";
+import { admins } from "./audit";
 
 /**
  * Submissions are the moderation queue. Two flavours via the `type` enum:
@@ -47,8 +48,9 @@ export const submissions = pgTable(
       .references(() => vendors.id, { onDelete: "cascade" }),
     /** Set on approval (new) or chosen at submit-time (claim). */
     appId: integer("app_id").references(() => apps.id, { onDelete: "set null" }),
-    /** FK to admins.id wired in the audit/admins commit. */
-    reviewerAdminId: integer("reviewer_admin_id"),
+    reviewerAdminId: integer("reviewer_admin_id").references(() => admins.id, {
+      onDelete: "set null",
+    }),
     payload: jsonb("payload").notNull(),
     reviewNotes: text("review_notes"),
     submittedAt: timestamp("submitted_at", { withTimezone: true })
