@@ -1,0 +1,316 @@
+import "server-only";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import {
+  apps,
+  vendors,
+  stages,
+  capabilities,
+  industries,
+  pricingModels,
+  appStages,
+  appCapabilities,
+  appIndustries,
+  appPricingModels,
+  appScreenshots,
+  type App,
+  type AppStatus,
+  type AppScreenshot,
+} from "@/lib/db/schema";
+
+/**
+ * Card shape — what `<AppCard>` and the home/stage/capability lists need.
+ * Drops description and other heavy fields so the row stays small.
+ */
+export type AppCard = {
+  id: number;
+  slug: string;
+  name: string;
+  tagline: string | null;
+  logoUrl: string | null;
+  featured: boolean;
+  vendor: { slug: string; name: string };
+  pricingSlug: string | null;
+  stages: { slug: string; name: string }[];
+};
+
+/** Full detail shape for /apps/[slug]. */
+export type AppDetail = App & {
+  vendor: { slug: string; name: string; websiteUrl: string | null };
+  stages: { slug: string; name: string }[];
+  capabilities: { slug: string; name: string }[];
+  industries: { slug: string; name: string }[];
+  pricing: { slug: string; name: string } | null;
+  screenshots: AppScreenshot[];
+};
+
+/** Single SQL roundtrip → array of cards in stable order. */
+async function fetchCards(appIds: number[]): Promise<AppCard[]> {
+  if (appIds.length === 0) return [];
+
+  // Pull the base app rows + vendor in one join
+  const baseRows = await db
+    .select({
+      id: apps.id,
+      slug: apps.slug,
+      name: apps.name,
+      tagline: apps.tagline,
+      logoUrl: apps.logoUrl,
+      featured: apps.featured,
+      vendorSlug: vendors.slug,
+      vendorName: vendors.name,
+    })
+    .from(apps)
+    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+    .where(inArray(apps.id, appIds));
+
+  // Stages, joined per-app
+  const stageRows = await db
+    .select({
+      appId: appStages.appId,
+      slug: stages.slug,
+      name: stages.name,
+    })
+    .from(appStages)
+    .innerJoin(stages, eq(stages.id, appStages.stageId))
+    .where(inArray(appStages.appId, appIds));
+
+  // First pricing model per app (apps usually have one)
+  const pricingRows = await db
+    .select({
+      appId: appPricingModels.appId,
+      slug: pricingModels.slug,
+    })
+    .from(appPricingModels)
+    .innerJoin(
+      pricingModels,
+      eq(pricingModels.id, appPricingModels.pricingModelId),
+    )
+    .where(inArray(appPricingModels.appId, appIds));
+
+  const stagesByApp = new Map<number, { slug: string; name: string }[]>();
+  for (const r of stageRows) {
+    const arr = stagesByApp.get(r.appId) ?? [];
+    arr.push({ slug: r.slug, name: r.name });
+    stagesByApp.set(r.appId, arr);
+  }
+  const pricingByApp = new Map<number, string>();
+  for (const r of pricingRows) pricingByApp.set(r.appId, r.slug);
+
+  const byId = new Map<number, AppCard>();
+  for (const b of baseRows) {
+    byId.set(b.id, {
+      id: b.id,
+      slug: b.slug,
+      name: b.name,
+      tagline: b.tagline,
+      logoUrl: b.logoUrl,
+      featured: b.featured,
+      vendor: { slug: b.vendorSlug, name: b.vendorName },
+      pricingSlug: pricingByApp.get(b.id) ?? null,
+      stages: stagesByApp.get(b.id) ?? [],
+    });
+  }
+
+  // Preserve the input order
+  return appIds.map((id) => byId.get(id)).filter((c): c is AppCard => !!c);
+}
+
+/** Resolve an app slug to id + verify it's published. */
+async function getPublishedAppIdBySlug(slug: string) {
+  const [row] = await db
+    .select({ id: apps.id })
+    .from(apps)
+    .where(and(eq(apps.slug, slug), eq(apps.status, "published")))
+    .limit(1);
+  return row?.id ?? null;
+}
+
+export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
+  const [base] = await db
+    .select({
+      app: apps,
+      vendor: { slug: vendors.slug, name: vendors.name, websiteUrl: vendors.websiteUrl },
+    })
+    .from(apps)
+    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+    .where(and(eq(apps.slug, slug), eq(apps.status, "published")))
+    .limit(1);
+  if (!base) return null;
+
+  const [stageRows, capRows, indRows, pricingRow, screenshots] =
+    await Promise.all([
+      db
+        .select({ slug: stages.slug, name: stages.name })
+        .from(appStages)
+        .innerJoin(stages, eq(stages.id, appStages.stageId))
+        .where(eq(appStages.appId, base.app.id)),
+      db
+        .select({ slug: capabilities.slug, name: capabilities.name })
+        .from(appCapabilities)
+        .innerJoin(
+          capabilities,
+          eq(capabilities.id, appCapabilities.capabilityId),
+        )
+        .where(eq(appCapabilities.appId, base.app.id)),
+      db
+        .select({ slug: industries.slug, name: industries.name })
+        .from(appIndustries)
+        .innerJoin(industries, eq(industries.id, appIndustries.industryId))
+        .where(eq(appIndustries.appId, base.app.id)),
+      db
+        .select({ slug: pricingModels.slug, name: pricingModels.name })
+        .from(appPricingModels)
+        .innerJoin(
+          pricingModels,
+          eq(pricingModels.id, appPricingModels.pricingModelId),
+        )
+        .where(eq(appPricingModels.appId, base.app.id))
+        .limit(1)
+        .then((rows) => rows[0] ?? null),
+      db
+        .select()
+        .from(appScreenshots)
+        .where(eq(appScreenshots.appId, base.app.id))
+        .orderBy(appScreenshots.position),
+    ]);
+
+  return {
+    ...base.app,
+    vendor: base.vendor,
+    stages: stageRows,
+    capabilities: capRows,
+    industries: indRows,
+    pricing: pricingRow,
+    screenshots,
+  };
+}
+
+export async function listApps(opts?: {
+  status?: AppStatus;
+  featured?: boolean;
+  limit?: number;
+}): Promise<AppCard[]> {
+  const status = opts?.status ?? "published";
+  const conditions = [eq(apps.status, status)];
+  if (opts?.featured !== undefined)
+    conditions.push(eq(apps.featured, opts.featured));
+
+  const rows = await db
+    .select({ id: apps.id })
+    .from(apps)
+    .where(and(...conditions))
+    .orderBy(apps.name)
+    .limit(opts?.limit ?? 1000);
+
+  return fetchCards(rows.map((r) => r.id));
+}
+
+export async function listAppsByStage(stageSlug: string): Promise<AppCard[]> {
+  const ids = await db
+    .select({ id: apps.id })
+    .from(apps)
+    .innerJoin(appStages, eq(appStages.appId, apps.id))
+    .innerJoin(stages, eq(stages.id, appStages.stageId))
+    .where(and(eq(stages.slug, stageSlug), eq(apps.status, "published")))
+    .orderBy(apps.name);
+  return fetchCards(ids.map((r) => r.id));
+}
+
+export async function listAppsByCapability(
+  capabilitySlug: string,
+): Promise<AppCard[]> {
+  const ids = await db
+    .select({ id: apps.id })
+    .from(apps)
+    .innerJoin(appCapabilities, eq(appCapabilities.appId, apps.id))
+    .innerJoin(
+      capabilities,
+      eq(capabilities.id, appCapabilities.capabilityId),
+    )
+    .where(
+      and(eq(capabilities.slug, capabilitySlug), eq(apps.status, "published")),
+    )
+    .orderBy(apps.name);
+  return fetchCards(ids.map((r) => r.id));
+}
+
+export async function listAppsByIndustry(
+  industrySlug: string,
+): Promise<AppCard[]> {
+  const ids = await db
+    .select({ id: apps.id })
+    .from(apps)
+    .innerJoin(appIndustries, eq(appIndustries.appId, apps.id))
+    .innerJoin(industries, eq(industries.id, appIndustries.industryId))
+    .where(
+      and(eq(industries.slug, industrySlug), eq(apps.status, "published")),
+    )
+    .orderBy(apps.name);
+  return fetchCards(ids.map((r) => r.id));
+}
+
+export async function listAppsByVendorSlug(
+  vendorSlug: string,
+): Promise<AppCard[]> {
+  const ids = await db
+    .select({ id: apps.id })
+    .from(apps)
+    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+    .where(and(eq(vendors.slug, vendorSlug), eq(apps.status, "published")))
+    .orderBy(apps.name);
+  return fetchCards(ids.map((r) => r.id));
+}
+
+export async function listAllAppSlugs() {
+  const rows = await db
+    .select({ slug: apps.slug })
+    .from(apps)
+    .where(eq(apps.status, "published"));
+  return rows.map((r) => r.slug);
+}
+
+export async function getFeaturedApps(limit = 8): Promise<AppCard[]> {
+  return listApps({ featured: true, limit });
+}
+
+export async function listRecentlyAddedApps(limit = 6): Promise<AppCard[]> {
+  const rows = await db
+    .select({ id: apps.id })
+    .from(apps)
+    .where(eq(apps.status, "published"))
+    .orderBy(desc(apps.publishedAt))
+    .limit(limit);
+  return fetchCards(rows.map((r) => r.id));
+}
+
+/**
+ * Apps sharing one or more stages with the given app. Excludes the source
+ * app itself. Ordered by overlap count desc, then name.
+ */
+export async function listRelatedApps(
+  appId: number,
+  limit = 4,
+): Promise<AppCard[]> {
+  const rows = await db
+    .select({ id: apps.id, overlap: sql<number>`count(*)`.as("overlap") })
+    .from(apps)
+    .innerJoin(appStages, eq(appStages.appId, apps.id))
+    .where(
+      and(
+        eq(apps.status, "published"),
+        ne(apps.id, appId),
+        inArray(
+          appStages.stageId,
+          db
+            .select({ stageId: appStages.stageId })
+            .from(appStages)
+            .where(eq(appStages.appId, appId)),
+        ),
+      ),
+    )
+    .groupBy(apps.id)
+    .orderBy(desc(sql`count(*)`), apps.name)
+    .limit(limit);
+  return fetchCards(rows.map((r) => r.id));
+}
