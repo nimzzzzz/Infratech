@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Alike, Pavanam } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { MainChrome } from "@/components/site/main-chrome";
 import "./globals.css";
 
@@ -49,16 +50,18 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${alike.variable} ${pavanam.variable}`}>
-      <body className="min-h-[100dvh] antialiased">
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-[var(--color-ink)] focus:px-3 focus:py-2 focus:text-sm focus:text-white"
-        >
-          Skip to content
-        </a>
-        <MainChrome>{children}</MainChrome>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={`${alike.variable} ${pavanam.variable}`}>
+        <body className="min-h-[100dvh] antialiased">
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-[var(--color-ink)] focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+          >
+            Skip to content
+          </a>
+          <MainChrome>{children}</MainChrome>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

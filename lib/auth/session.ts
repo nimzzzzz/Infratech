@@ -41,8 +41,12 @@ export async function getVendorSession(opts?: {
 }): Promise<VendorSession> {
   const requireOnboarded = opts?.requireOnboarded ?? false;
 
-  if (env.DEMO_MODE && opts?.demoOverride !== undefined) {
-    const wantOnboarded = opts.demoOverride === "returning";
+  if (env.DEMO_MODE) {
+    // In demo mode the middleware doesn't enforce Clerk auth — short-circuit
+    // to a deterministic seeded vendor. ?as=new picks the first non-onboarded
+    // vendor (lets us preview the onboarding gate); anything else picks the
+    // first onboarded one.
+    const wantOnboarded = opts?.demoOverride !== "new";
     const [vendor] = await db
       .select()
       .from(vendors)
