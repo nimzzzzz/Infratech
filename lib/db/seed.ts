@@ -17,6 +17,7 @@ import {
 import { vendors as mockVendors } from "@/lib/data/vendors";
 import { apps as mockApps } from "@/lib/data/apps";
 import { queue as mockSubmissions } from "@/lib/data/admin-queue";
+import { stageIntros, capabilityIntros } from "@/lib/data/landing-copy";
 
 /**
  * Seed script.
@@ -87,6 +88,7 @@ async function main() {
           slug: s.slug,
           name: s.name,
           shortDescription: s.short,
+          introMd: stageIntros[s.slug] ?? null,
           position: i,
         })),
       )
@@ -95,7 +97,13 @@ async function main() {
 
     const capRows = await tx
       .insert(schema.capabilities)
-      .values(mockCapabilities.map((c) => ({ slug: c.slug, name: c.name })))
+      .values(
+        mockCapabilities.map((c) => ({
+          slug: c.slug,
+          name: c.name,
+          introMd: capabilityIntros[c.slug] ?? null,
+        })),
+      )
       .returning({ id: schema.capabilities.id, slug: schema.capabilities.slug });
     const capIdBySlug = new Map(capRows.map((r) => [r.slug, r.id]));
 
