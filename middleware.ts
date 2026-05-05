@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { admins } from "@/lib/db/schema";
 
 /**
  * Auth + role enforcement.
@@ -10,15 +13,18 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
  *   • /dashboard/** requires any authenticated Clerk session. The
  *     onboarding gate (vendor.onboarded === false → /dashboard/onboarding)
  *     runs at page level via getVendorSession({ requireOnboarded: true }).
- *   • /admin/** requires publicMetadata.role === "admin" AND
- *     sessionClaims.twoFactorEnabled === true. Missing role redirects to
- *     /; missing 2FA redirects to /admin/2fa-setup so the admin can set
- *     it up before continuing.
+ *   • /admin/** requires role === "admin" AND
+ *     sessionClaims.twoFactorEnabled === true. Role is checked first
+ *     against publicMetadata.role; if missing (e.g. metadata sync failed
+ *     after first sign-in), we fall back to a DB lookup against the
+ *     admins table — DB is the source of truth. Missing role → "/";
+ *     missing 2FA → /admin/2fa-setup.
+ *
+ * Runs in Node runtime so we can use postgres.js for the DB fallback.
  *
  * In DEMO_MODE (NEXT_PUBLIC_DEMO_MODE=true and not production) the
- * middleware bypasses all auth checks; pages short-circuit through their
- * session resolvers to seeded vendor/admin rows. Set DEMO_MODE=false
- * locally to test the real Clerk flow.
+ * middleware bypasses all auth checks; pages short-circuit through
+ * their session resolvers to seeded data.
  */
 
 const isDashboardRoute = createRouteMatcher(["/dashboard(.*)"]);
@@ -32,24 +38,46 @@ const demoMode =
   process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
   process.env.NODE_ENV !== "production";
 
+async function isAdminInDb(clerkUserId: string): Promise<boolean> {
+  try {
+    const [row] = await db
+      .select({ id: admins.id })
+      .from(admins)
+      .where(eq(admins.clerkUserId, clerkUserId))
+      .limit(1);
+    return !!row;
+  } catch (err) {
+    console.error("[middleware] DB fallback lookup failed", err);
+    return false;
+  }
+}
+
 export default clerkMiddleware(async (auth, req) => {
   if (demoMode) return NextResponse.next();
 
-  // Admin first — admin routes never fall through to the vendor gate.
   if (isAdminRoute(req) && !isAdminAuthRoute(req)) {
     const { userId, sessionClaims } = await auth();
     if (!userId) {
-      const url = new URL("/admin/login", req.url);
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(new URL("/admin/login", req.url));
     }
-    const role = (
+
+    const claimedRole = (
       sessionClaims?.publicMetadata as { role?: string } | undefined
     )?.role;
-    if (role !== "admin") {
+
+    let isAdmin = claimedRole === "admin";
+    // Source-of-truth fallback when the JWT claim is missing — happens
+    // briefly between webhook DB insert and Clerk metadata propagation.
+    if (!isAdmin && !claimedRole) {
+      isAdmin = await isAdminInDb(userId);
+    }
+
+    if (!isAdmin) {
       const url = new URL("/", req.url);
       url.searchParams.set("error", "forbidden");
       return NextResponse.redirect(url);
     }
+
     const has2FA =
       (sessionClaims as { twoFactorEnabled?: boolean } | undefined)
         ?.twoFactorEnabled === true;
@@ -70,8 +98,8 @@ export default clerkMiddleware(async (auth, req) => {
 });
 
 export const config = {
+  runtime: "nodejs",
   matcher: [
-    // Run on every page except static assets and Next.js internals.
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|woff2?)).*)",
     "/(api|trpc)(.*)",
   ],
