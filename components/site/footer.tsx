@@ -4,25 +4,21 @@ import { Container } from "./container";
 
 const columns: { title: string; links: { href: string; label: string }[] }[] = [
   {
-    title: "Directory",
-    links: [
-      { href: "/", label: "Browse the index" },
-    ],
+    title: "Vendors",
+    links: [{ href: "/login?intent=submit", label: "List your product" }],
   },
   {
-    title: "For vendors",
+    title: "Legal",
     links: [
-      { href: "/login", label: "List your product" },
-      { href: "/legal/vendor-terms", label: "Vendor terms" },
+      { href: "/legal/terms", label: "Terms and Services" },
+      { href: "/legal/privacy", label: "Cookies & Privacy Policy" },
     ],
   },
   {
     title: "About",
     links: [
-      { href: "/about", label: "About this directory" },
-      { href: "/legal/terms", label: "Terms" },
-      { href: "/legal/privacy", label: "Privacy" },
-      { href: "/legal/cookies", label: "Cookies" },
+      { href: "/about", label: "Purpose" },
+      { href: "/about#contact", label: "Contact Resolute" },
     ],
   },
 ];
