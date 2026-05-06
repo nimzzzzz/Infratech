@@ -91,7 +91,7 @@ export default async function LoginPage({
         {/* brand top-left */}
         <Link
           href="/"
-          aria-label="InfraTechDB home"
+          aria-label="InfratechDatabase home"
           className="group absolute left-8 top-8 inline-flex items-center gap-2.5 lg:left-12 lg:top-12"
         >
           <span className="relative inline-flex h-2 w-2">
@@ -99,7 +99,7 @@ export default async function LoginPage({
             <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
           </span>
           <span className="font-heading text-[20px] italic leading-none tracking-tight text-white">
-            InfraTechDB
+            InfratechDatabase
           </span>
         </Link>
 
@@ -144,7 +144,7 @@ export default async function LoginPage({
             >
               <span className="inline-block h-2 w-2 rounded-full bloom" />
               <span className="font-heading text-[18px] italic leading-none text-white">
-                InfraTechDB
+                InfratechDatabase
               </span>
             </Link>
           </figure>

@@ -50,7 +50,7 @@ export function DashboardHeader({
               <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
             </span>
             <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)]">
-              InfraTechDB
+              InfratechDatabase
             </span>
             <span className="ml-1 text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
               / Vendor

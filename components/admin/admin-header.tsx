@@ -39,7 +39,7 @@ export function AdminHeader({ name, initials, email }: AdminHeaderProps) {
               <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
             </span>
             <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)]">
-              InfraTechDB
+              InfratechDatabase
             </span>
             <span className="ml-1 inline-flex items-center gap-1 border border-[var(--color-magenta)]/40 bg-[var(--color-canvas-warm)] px-1.5 py-0.5 text-[9px] uppercase tracking-[0.22em] text-[var(--color-magenta)]">
               <ShieldCheck size={10} weight="fill" />

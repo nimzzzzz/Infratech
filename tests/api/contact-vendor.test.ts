@@ -131,11 +131,21 @@ describe("POST /api/contact-vendor — happy path", () => {
     await POST(makeRequest(validBody()));
     await afterCallbacks[0]();
 
-    const calls = resendMock.send.mock.calls;
+    // resendMock.send is vi.fn(async () => ...) with no type args; its
+    // mock.calls is typed as [][] which strict TS treats as empty tuples.
+    // Cast once to the SDK's send-input shape so the assertions read clean.
+    type SendArgs = {
+      to: string;
+      bcc?: string;
+      replyTo?: string;
+      subject: string;
+      html: string;
+    };
+    const calls = resendMock.send.mock.calls as unknown as Array<[SendArgs]>;
     expect(calls.length).toBe(2);
 
     // The vendor inquiry has a Reply-To set; the visitor confirmation does not.
-    const vendorCall = calls.find((c) => c[0].replyTo)?.[0];
+    const vendorCall = calls.find((c) => c[0].replyTo)![0];
     expect(vendorCall).toBeDefined();
     expect(vendorCall.to).toBe(ctx.vendorEmail);
     expect(vendorCall.replyTo).toBe("hannah@example.com");
@@ -158,8 +168,14 @@ describe("POST /api/contact-vendor — happy path", () => {
     await POST(makeRequest(validBody()));
     await afterCallbacks[0]();
 
-    const calls = resendMock.send.mock.calls;
-    const visitorCall = calls.find((c) => !c[0].replyTo)?.[0];
+    type SendArgs = {
+      to: string;
+      replyTo?: string;
+      subject: string;
+      html: string;
+    };
+    const calls = resendMock.send.mock.calls as unknown as Array<[SendArgs]>;
+    const visitorCall = calls.find((c) => !c[0].replyTo)![0];
     expect(visitorCall).toBeDefined();
     expect(visitorCall.to).toBe("hannah@example.com");
     expect(visitorCall.subject).toBe("Your message to Oracle was sent");

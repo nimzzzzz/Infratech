@@ -6,18 +6,17 @@ import { ArrowUpRight } from "@phosphor-icons/react";
 export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--color-canvas)]/65">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-6 md:h-20 md:px-8">
+      <div className="mx-auto flex h-auto w-full max-w-7xl items-center justify-between px-5 py-3 sm:px-6 md:px-8 md:py-4">
         <Link
           href="/"
-          aria-label="InfraTechDB home"
-          className="group flex items-center gap-2.5"
+          aria-label="InfratechDatabase home"
+          className="group flex flex-col leading-none"
         >
-          <span className="relative inline-flex h-2 w-2">
-            <span className="absolute inset-0 rounded-full bloom" />
-            <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
-          </span>
           <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)] md:text-[20px]">
-            InfraTechDB
+            InfratechDatabase
+          </span>
+          <span className="mt-1.5 text-[12px] leading-snug text-[var(--color-ink-3)] md:text-[13px]">
+            A repository of infrastructure technology products and companies
           </span>
         </Link>
 

@@ -50,18 +50,6 @@ export async function HomeIndex({
 
   return (
     <article className="bg-[var(--color-canvas)]">
-      {/* SLIM MASTHEAD */}
-      <div className="bg-[var(--color-night)]">
-        <Container className="py-3 md:py-3.5">
-          <h1 className="font-heading text-[14px] leading-tight text-white md:text-[16px]">
-            An index of{" "}
-            <span className="italic text-[var(--color-magenta)]">every</span>{" "}
-            <span className="italic text-[var(--color-coral)]">project</span>{" "}
-            product.
-          </h1>
-        </Container>
-      </div>
-
       {/* SEARCH + STAGE QUICK FILTER */}
       <section className="relative bg-[var(--color-canvas)]">
         <Container className="pt-8 md:pt-10">
