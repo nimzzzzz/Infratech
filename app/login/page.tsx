@@ -258,17 +258,6 @@ export default async function LoginPage({
           </div>
         </div>
 
-        {/* alternative path — bottom of form column */}
-        <p className="mt-12 max-w-[60ch] text-[11px] leading-relaxed text-[var(--color-ink-3)] md:mt-0">
-          Don&rsquo;t represent the product you want to recommend?{" "}
-          <Link
-            href="/suggest"
-            className="underline underline-offset-4 hover:text-[var(--color-ink)]"
-          >
-            Use the public suggestion form
-          </Link>{" "}
-          instead.
-        </p>
       </main>
     </div>
   );
