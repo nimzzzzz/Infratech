@@ -1,0 +1,7 @@
+/* Override the global :focus-visible magenta outline for THIS input only.
+   The global rule in app/globals.css stays intact for every other element. */
+.input:focus,
+.input:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+}

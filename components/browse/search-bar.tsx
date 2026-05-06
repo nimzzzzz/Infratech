@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { buildHref, parseFilters } from "@/lib/browse/filters";
+import styles from "./search-bar.module.css";
 
 export function SearchBar() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export function SearchBar() {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Search by name, capability, or vendor…"
-        className="h-full w-full bg-transparent px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:[outline:none] focus-visible:[outline:none] focus-visible:[outline-offset:0]"
+        className={`${styles.input} h-full w-full bg-transparent px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)]`}
         aria-label="Search the directory"
       />
       <kbd className="num mr-3 hidden shrink-0 items-center gap-1 border border-[var(--color-line-strong)] px-2 py-0.5 text-[11px] text-[var(--color-ink-3)] sm:inline-flex">
