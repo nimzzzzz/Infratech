@@ -72,18 +72,62 @@ function appsMatchingTag(
 }
 
 /**
+ * Sanitise user search input into a Postgres tsquery expression suitable
+ * for prefix matching. The indexed search_vector stores Porter-stemmed
+ * tokens (e.g. "scheduling" → "schedul"), so naïve plainto_tsquery on
+ * partial input like "sched" returns no matches because "sched" isn't
+ * a recognised English stem. Adding the :* suffix makes each token a
+ * prefix match — "sched:*" matches the indexed token "schedul".
+ *
+ * Rules:
+ *   - Lowercase, then strip anything that isn't a-z / 0-9 / whitespace.
+ *     This kills tsquery operators (& | ( ) ! ' " : *) which would
+ *     otherwise crash to_tsquery with a syntax error.
+ *   - Split on whitespace, drop tokens shorter than 2 chars.
+ *     2-char minimum: a single-char prefix like "a:*" matches every
+ *     word starting with "a" — too noisy to be useful, especially when
+ *     every keystroke fires a query.
+ *   - Each remaining token gets ":*" appended; tokens joined with " & "
+ *     (AND across all terms).
+ *   - Returns null when the result would be empty — caller skips the
+ *     q condition entirely so empty / whitespace / sub-2-char input
+ *     yields the unfiltered result set.
+ *
+ * Examples:
+ *   "sched"     → "sched:*"             matches scheduling, schedule, …
+ *   "risk man"  → "risk:* & man:*"      matches "risk management"
+ *   "ai"        → "ai:*"
+ *   ""          → null                  no q filter
+ *   "a"         → null                  single char, dropped
+ *   "a b c"     → null                  every token < 2 chars
+ *   "&|()"      → null                  all chars stripped
+ *   "ai agents" → "ai:* & agents:*"
+ */
+function buildPrefixTsquery(q: string | undefined | null): string | null {
+  if (!q) return null;
+  const tokens = q
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((t) => t.length >= 2);
+  if (tokens.length === 0) return null;
+  return tokens.map((t) => `${t}:*`).join(" & ");
+}
+
+/**
  * Build the shared WHERE clause used by both the result query and the
  * COUNT query. status='published' is non-negotiable; q runs against the
- * tsvector column with plainto_tsquery (handles stemming + tokenisation
- * for free); each tag filter is an OR-within (slug IN list) wrapped in
- * an AND-across composition.
+ * tsvector column with a sanitised prefix tsquery (see buildPrefixTsquery
+ * for the rationale); each tag filter is an OR-within (slug IN list)
+ * wrapped in an AND-across composition.
  */
 function buildConditions(filters: SearchFilters): SQL[] {
   const conditions: SQL[] = [eq(apps.status, "published")];
 
-  if (filters.q && filters.q.trim()) {
+  const prefixTsquery = buildPrefixTsquery(filters.q);
+  if (prefixTsquery) {
     conditions.push(
-      sql`${apps.searchVector} @@ plainto_tsquery('english', ${filters.q})`,
+      sql`${apps.searchVector} @@ to_tsquery('english', ${prefixTsquery})`,
     );
   }
 
@@ -127,12 +171,16 @@ function buildConditions(filters: SearchFilters): SQL[] {
 }
 
 function orderBy(filters: SearchFilters): SQL[] {
+  const prefixTsquery = buildPrefixTsquery(filters.q);
+  // Default sort: relevance only when there's an actual q filter applied
+  // (so "a" or whitespace-only input falls back to alphabetical, since
+  // there's no q to rank against).
   const sort: SortKey =
-    filters.sort ?? (filters.q?.trim() ? "relevance" : "az");
-  if (sort === "relevance" && filters.q?.trim()) {
+    filters.sort ?? (prefixTsquery ? "relevance" : "az");
+  if (sort === "relevance" && prefixTsquery) {
     return [
       desc(
-        sql`ts_rank(${apps.searchVector}, plainto_tsquery('english', ${filters.q}))`,
+        sql`ts_rank(${apps.searchVector}, to_tsquery('english', ${prefixTsquery}))`,
       ),
       asc(apps.name),
     ];
