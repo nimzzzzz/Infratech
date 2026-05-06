@@ -40,34 +40,10 @@ export function Footer() {
         }}
       />
       <Container className="relative grid gap-14 py-20 md:grid-cols-[1.4fr_3fr] md:py-24">
-        {/* Logo + attribution side-by-side; both top-aligned to match the
-            column headers in the right column. */}
-        <div className="flex max-w-md items-start gap-4">
-          <Link
-            href="/about"
-            aria-label="Resolute Management Consultancy"
-            className="shrink-0"
-          >
-            <Image
-              src="/resolute-logo.png"
-              alt="Resolute Management Consultancy"
-              width={56}
-              height={56}
-              className="h-12 w-auto"
-              priority={false}
-            />
-          </Link>
-          <p className="text-[14px] leading-relaxed text-white/70">
-            A free community service of the Digital &amp; AI Practice of{" "}
-            <Link
-              href="/about"
-              className="bloom-text underline-offset-4 transition hover:underline"
-            >
-              Resolute Management Consultancy
-            </Link>
-            .
-          </p>
-        </div>
+        {/* Left column intentionally empty on desktop — the R logo + attribution
+            now live in the bottom bar. Kept as a grid placeholder so the right
+            column's link grid keeps its existing 1.4fr / 3fr proportions. */}
+        <div className="hidden md:block" />
 
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
           {columns.map((col) => (
@@ -93,13 +69,31 @@ export function Footer() {
       </Container>
 
       <div className="relative border-t border-white/10">
-        <Container className="flex flex-col gap-3 py-6 text-[13px] text-white/45 md:flex-row md:items-center md:justify-between">
-          <p>
-            &copy; {new Date().getFullYear()} Resolute Management Consultancy.
-            All product names belong to their respective owners.
-          </p>
-          <p className="num">
-            v0.1 · pre-launch
+        <Container className="flex flex-col items-start gap-4 py-6 text-[13px] text-white/45 md:flex-row md:items-center">
+          <Link
+            href="/about"
+            aria-label="Resolute Management Consultancy"
+            className="shrink-0"
+          >
+            <Image
+              src="/resolute-logo.png"
+              alt="Resolute Management Consultancy"
+              width={56}
+              height={56}
+              className="h-12 w-auto"
+              priority={false}
+            />
+          </Link>
+          <p className="leading-relaxed">
+            A community service of the Digital &amp; AI Practice of{" "}
+            <Link
+              href="/about"
+              className="bloom-text underline-offset-4 transition hover:underline"
+            >
+              Resolute Management Consultancy
+            </Link>
+            . &copy; {new Date().getFullYear()}. All product and company names
+            belong to their respective owners.
           </p>
         </Container>
       </div>
