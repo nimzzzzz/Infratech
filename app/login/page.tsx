@@ -4,10 +4,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  LinkedinLogo,
   ArrowLeft,
   ArrowRight,
 } from "@phosphor-icons/react/dist/ssr";
+import { LinkedInSignInButton } from "@/components/auth/linkedin-sign-in-button";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -40,14 +40,15 @@ export default async function LoginPage({
   const intent = intentParam === "submit" ? "submit" : "signin";
   const heroImage = findHeroImage();
 
-  // Where each path lands. Real auth is mocked — for the LinkedIn button
-  // we treat success as "returning vendor signs in"; for the demo button
-  // we let you preview the new-vendor flow explicitly.
-  const linkedInHref =
+  // Where the LinkedIn OAuth flow lands the user after the handshake
+  // completes. The demo-mode tiles below it are dev-only previews
+  // (DEMO_MODE auto-disables in production via env.ts), so they keep
+  // their static <Link> behaviour.
+  const linkedInRedirectComplete =
     intent === "submit"
       ? "/dashboard/onboarding/submit?as=returning"
       : "/dashboard";
-  const newVendorHref = "/dashboard?as=new"; // gating redirects to /dashboard/onboarding
+  const newVendorHref = "/dashboard?as=new";
   const returningVendorHref =
     intent === "submit"
       ? "/dashboard/onboarding/submit?as=returning"
@@ -175,18 +176,10 @@ export default async function LoginPage({
               {subtitle}
             </p>
 
-            <Link
-              href={linkedInHref}
-              className="group mt-10 inline-flex h-12 w-full items-center justify-center gap-2.5 bg-[#0A66C2] px-5 text-[14px] font-medium text-white transition-colors hover:bg-[#0959AB] active:translate-y-[1px] sm:h-14 sm:text-[15px]"
-            >
-              <LinkedinLogo size={20} weight="fill" />
-              <span>{primaryCtaLabel}</span>
-              <ArrowRight
-                size={14}
-                weight="bold"
-                className="transition-transform duration-300 group-hover:translate-x-0.5"
-              />
-            </Link>
+            <LinkedInSignInButton
+              redirectUrlComplete={linkedInRedirectComplete}
+              label={primaryCtaLabel}
+            />
 
             {/* demo-mode toggle — pre-wiring real auth, lets you preview both flows */}
             <div className="mt-5 border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-3.5">
