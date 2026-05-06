@@ -36,6 +36,13 @@
       "when": 1778100000000,
       "tag": "0004_reorder_stages_general_first",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778200000000,
+      "tag": "0005_replace_pricing_models",
+      "breakpoints": true
     }
   ]
 }

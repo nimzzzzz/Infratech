@@ -26,13 +26,11 @@ export const capabilities: TaxonomyItem[] = [
 ];
 
 export const pricingModels: TaxonomyItem[] = [
-  { slug: "subscription", name: "Subscription" },
+  { slug: "user-subscription-freemium", name: "User Subscription / Freemium" },
   { slug: "pay-per-use", name: "Pay-per-use" },
+  { slug: "licensed-by-project", name: "Licensed by Project" },
+  { slug: "licensed-by-company-portfolio", name: "Licensed by Company/Portfolio size" },
   { slug: "service-contract", name: "Service Contract" },
-  { slug: "priced-by-project-size", name: "Priced by Project Size" },
-  { slug: "priced-by-portfolio-size", name: "Priced by Portfolio Size" },
-  { slug: "freemium", name: "Freemium" },
-  { slug: "contact-for-pricing", name: "Contact for pricing" },
 ];
 
 export const industries: TaxonomyItem[] = [

@@ -97,11 +97,12 @@ describe("getFilterFacets — single filter applied", () => {
 
 describe("getFilterFacets — empty result set", () => {
   it("filter combination with zero matches still returns every option (all 0s)", async () => {
-    // Pricing 'priced-by-portfolio-size' isn't used by any seeded app,
-    // so combined with any stage it produces an empty universe — but
-    // every facet key must still be present.
+    // After the pricing-models replacement (migration 0005) every
+    // seeded app has zero pricing tags, so any pricing slug combined
+    // with any stage produces an empty universe — but every facet key
+    // must still be present.
     const f = await getFilterFacets({
-      pricing: ["priced-by-portfolio-size"],
+      pricing: ["licensed-by-company-portfolio"],
       stage: ["feasibility"],
     });
     for (const s of stageList) {

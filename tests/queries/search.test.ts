@@ -138,7 +138,7 @@ describe("searchApps — filters", () => {
       stage: ["delivery"],
       capability: ["scheduling"],
       industry: ["construction"],
-      pricing: ["subscription"],
+      pricing: ["user-subscription-freemium"],
     });
     expect(Array.isArray(results)).toBe(true);
     expect(typeof total).toBe("number");
