@@ -85,6 +85,12 @@ Decisions previously open that are now committed. Don't relitigate.
 
 - **Auth architecture (locked Stage 1, 2026-05-06).** One Clerk app, role-based separation via `publicMetadata.role`. Vendors at `/login` (LinkedIn OAuth only). Admins at `/admin/login` (email + password + 2FA enforced, no public link, admins bookmark the URL). Webhook handler at `/api/webhooks/clerk` is the source-of-truth gateway: it inserts the DB row first, then best-effort syncs role back to Clerk metadata. Middleware checks `publicMetadata.role` first, falls back to a DB lookup on `admins.clerk_user_id` if the claim is missing. Hosting region for Neon: Frankfurt (`eu-central-1`).
 - **Test database strategy (locked Stage 1, 2026-05-06).** Vitest with a transaction-rollback fixture (`tests/setup/db-tx.ts`) against the seeded Neon dev branch. The fixture flattens nested `db.transaction()` calls to a pass-through during tests because postgres.js doesn't auto-savepoint nested transactions. Hard-fail safety rail: tests refuse to run if `NODE_ENV=production` or `DATABASE_URL_UNPOOLED` host isn't `*.neon.tech`.
+- **2026-05-06 — Scope narrowed. Directory is invitation-only.** Removed:
+  - Public suggest-an-app form (`/suggest`).
+  - Generic contact form (`/contact`). Per-vendor "Contact this vendor" form at `/apps/[slug]/contact` is unaffected — that's the `contact_messages` flow.
+  - Vendor claim-an-existing-listing flow (`/dashboard/onboarding/claim` + `components/dashboard/claim-search.tsx`).
+
+  Only Resolute-team can add new tool listings via the admin panel. Vendor self-service from Stage 4 onwards is for vendors submitting NEW tools that the team has invited them to claim. The `submission_type` enum keeps the `'claim'` value for historical / seed rows but no production writer may emit it; the `suggestions` table is similarly retained but unused. Don't rebuild the removed surfaces without an explicit decision reversal.
 
 ## 7. SEO Contract (load-bearing)
 
