@@ -28,7 +28,6 @@ export type AppCard = {
   name: string;
   tagline: string | null;
   logoUrl: string | null;
-  featured: boolean;
   vendor: { slug: string; name: string };
   pricingSlug: string | null;
   stages: { slug: string; name: string }[];
@@ -62,7 +61,6 @@ async function fetchCards(appIds: number[]): Promise<AppCard[]> {
         name: apps.name,
         tagline: apps.tagline,
         logoUrl: apps.logoUrl,
-        featured: apps.featured,
         publishedAt: apps.publishedAt,
         vendorSlug: vendors.slug,
         vendorName: vendors.name,
@@ -124,7 +122,6 @@ async function fetchCards(appIds: number[]): Promise<AppCard[]> {
       name: b.name,
       tagline: b.tagline,
       logoUrl: b.logoUrl,
-      featured: b.featured,
       vendor: { slug: b.vendorSlug, name: b.vendorName },
       pricingSlug: pricingByApp.get(b.id) ?? null,
       stages: stagesByApp.get(b.id) ?? [],
@@ -210,18 +207,14 @@ export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
 
 export async function listApps(opts?: {
   status?: AppStatus;
-  featured?: boolean;
   limit?: number;
 }): Promise<AppCard[]> {
   const status = opts?.status ?? "published";
-  const conditions = [eq(apps.status, status)];
-  if (opts?.featured !== undefined)
-    conditions.push(eq(apps.featured, opts.featured));
 
   const rows = await db
     .select({ id: apps.id })
     .from(apps)
-    .where(and(...conditions))
+    .where(eq(apps.status, status))
     .orderBy(apps.name)
     .limit(opts?.limit ?? 1000);
 
@@ -320,20 +313,6 @@ export async function listAllAppSlugs() {
     .from(apps)
     .where(eq(apps.status, "published"));
   return rows.map((r) => r.slug);
-}
-
-export async function getFeaturedApps(limit = 8): Promise<AppCard[]> {
-  return listApps({ featured: true, limit });
-}
-
-export async function listRecentlyAddedApps(limit = 6): Promise<AppCard[]> {
-  const rows = await db
-    .select({ id: apps.id })
-    .from(apps)
-    .where(eq(apps.status, "published"))
-    .orderBy(desc(apps.publishedAt))
-    .limit(limit);
-  return fetchCards(rows.map((r) => r.id));
 }
 
 /**

@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { and, asc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   apps,
@@ -15,8 +15,6 @@ import {
 } from "@/lib/db/schema";
 import { type AppCard } from "./apps";
 
-export type SortKey = "relevance" | "az" | "recent" | "featured";
-
 export type SearchFilters = {
   q?: string;
   stage?: string[];
@@ -25,7 +23,6 @@ export type SearchFilters = {
   industry?: string[];
   page?: number;
   pageSize?: number;
-  sort?: SortKey;
 };
 
 export type SearchResult = {
@@ -37,8 +34,6 @@ export type SearchResult = {
 };
 
 const DEFAULT_PAGE_SIZE = 24;
-const FUZZY_THRESHOLD = 3;
-const fuzzyEnabled = process.env.SEARCH_FUZZY === "true";
 
 /**
  * Translate a slug array into a subquery returning matching app_ids — used
@@ -78,30 +73,6 @@ function appsMatchingTag(
  * partial input like "sched" returns no matches because "sched" isn't
  * a recognised English stem. Adding the :* suffix makes each token a
  * prefix match — "sched:*" matches the indexed token "schedul".
- *
- * Rules:
- *   - Lowercase, then strip anything that isn't a-z / 0-9 / whitespace.
- *     This kills tsquery operators (& | ( ) ! ' " : *) which would
- *     otherwise crash to_tsquery with a syntax error.
- *   - Split on whitespace, drop tokens shorter than 2 chars.
- *     2-char minimum: a single-char prefix like "a:*" matches every
- *     word starting with "a" — too noisy to be useful, especially when
- *     every keystroke fires a query.
- *   - Each remaining token gets ":*" appended; tokens joined with " & "
- *     (AND across all terms).
- *   - Returns null when the result would be empty — caller skips the
- *     q condition entirely so empty / whitespace / sub-2-char input
- *     yields the unfiltered result set.
- *
- * Examples:
- *   "sched"     → "sched:*"             matches scheduling, schedule, …
- *   "risk man"  → "risk:* & man:*"      matches "risk management"
- *   "ai"        → "ai:*"
- *   ""          → null                  no q filter
- *   "a"         → null                  single char, dropped
- *   "a b c"     → null                  every token < 2 chars
- *   "&|()"      → null                  all chars stripped
- *   "ai agents" → "ai:* & agents:*"
  */
 function buildPrefixTsquery(q: string | undefined | null): string | null {
   if (!q) return null;
@@ -117,9 +88,8 @@ function buildPrefixTsquery(q: string | undefined | null): string | null {
 /**
  * Build the shared WHERE clause used by both the result query and the
  * COUNT query. status='published' is non-negotiable; q runs against the
- * tsvector column with a sanitised prefix tsquery (see buildPrefixTsquery
- * for the rationale); each tag filter is an OR-within (slug IN list)
- * wrapped in an AND-across composition.
+ * tsvector column with a sanitised prefix tsquery; each tag filter is an
+ * OR-within (slug IN list) wrapped in an AND-across composition.
  */
 function buildConditions(filters: SearchFilters): SQL[] {
   const conditions: SQL[] = [eq(apps.status, "published")];
@@ -170,27 +140,10 @@ function buildConditions(filters: SearchFilters): SQL[] {
   return conditions;
 }
 
-function orderBy(filters: SearchFilters): SQL[] {
-  const prefixTsquery = buildPrefixTsquery(filters.q);
-  // Default sort: relevance only when there's an actual q filter applied
-  // (so "a" or whitespace-only input falls back to alphabetical, since
-  // there's no q to rank against).
-  const sort: SortKey =
-    filters.sort ?? (prefixTsquery ? "relevance" : "az");
-  if (sort === "relevance" && prefixTsquery) {
-    return [
-      desc(
-        sql`ts_rank(${apps.searchVector}, to_tsquery('english', ${prefixTsquery}))`,
-      ),
-      asc(apps.name),
-    ];
-  }
-  if (sort === "recent")
-    return [sql`${apps.publishedAt} desc nulls last`, asc(apps.name)];
-  if (sort === "featured") return [desc(apps.featured), asc(apps.name)];
-  return [asc(apps.name)];
-}
-
+/**
+ * Always alphabetical by name. Sort tabs (recent / featured / relevance)
+ * were removed in the design refresh — there's exactly one ordering now.
+ */
 export async function searchApps(
   filters: SearchFilters,
 ): Promise<SearchResult> {
@@ -209,45 +162,14 @@ export async function searchApps(
       .select({ id: apps.id })
       .from(apps)
       .where(and(...conditions))
-      .orderBy(...orderBy(filters))
+      .orderBy(asc(apps.name))
       .limit(pageSize)
       .offset((page - 1) * pageSize),
   ]);
   const total = totalRows[0]?.total ?? 0;
 
   const ids = idRows.map((r) => r.id);
-  let results = await fetchCardsInOrder(ids);
-
-  if (
-    fuzzyEnabled &&
-    filters.q?.trim() &&
-    page === 1 &&
-    results.length < FUZZY_THRESHOLD
-  ) {
-    const remaining = pageSize - results.length;
-    if (remaining > 0) {
-      const excludedIds = new Set(ids);
-      const fuzzyConditions = buildConditions({ ...filters, q: undefined });
-      const needle = `%${filters.q.trim()}%`;
-      fuzzyConditions.push(
-        sql`(${apps.name} ILIKE ${needle} OR ${apps.tagline} ILIKE ${needle})`,
-      );
-      const fuzzyIdRows = await db
-        .select({ id: apps.id })
-        .from(apps)
-        .where(and(...fuzzyConditions))
-        .orderBy(desc(apps.featured), asc(apps.name))
-        .limit(remaining + excludedIds.size);
-      const fuzzyIds = fuzzyIdRows
-        .map((r) => r.id)
-        .filter((id) => !excludedIds.has(id))
-        .slice(0, remaining);
-      if (fuzzyIds.length > 0) {
-        const fuzzyCards = await fetchCardsInOrder(fuzzyIds);
-        results = [...results, ...fuzzyCards];
-      }
-    }
-  }
+  const results = await fetchCardsInOrder(ids);
 
   return {
     results,
@@ -266,9 +188,6 @@ export async function searchApps(
 async function fetchCardsInOrder(ids: number[]): Promise<AppCard[]> {
   if (ids.length === 0) return [];
 
-  // All five fetches are independent — fire them concurrently against
-  // the same Neon connection. Was 5 sequential RTTs (~500ms on iad→fra,
-  // ~1500ms on a high-latency dev connection). Now 1 RTT batch.
   const [baseRows, stageRows, capRows, indRows, pricingRows] = await Promise.all([
     db
       .select({
@@ -277,7 +196,6 @@ async function fetchCardsInOrder(ids: number[]): Promise<AppCard[]> {
         name: apps.name,
         tagline: apps.tagline,
         logoUrl: apps.logoUrl,
-        featured: apps.featured,
         publishedAt: apps.publishedAt,
         vendorSlug: vendors.slug,
         vendorName: vendors.name,
@@ -339,7 +257,6 @@ async function fetchCardsInOrder(ids: number[]): Promise<AppCard[]> {
       name: b.name,
       tagline: b.tagline,
       logoUrl: b.logoUrl,
-      featured: b.featured,
       vendor: { slug: b.vendorSlug, name: b.vendorName },
       pricingSlug: pricingByApp.get(b.id) ?? null,
       stages: stagesByApp.get(b.id) ?? [],

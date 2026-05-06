@@ -7,8 +7,6 @@ import {
   listAppsByIndustry,
   listAppsByVendorSlug,
   listAllAppSlugs,
-  getFeaturedApps,
-  listRecentlyAddedApps,
   listRelatedApps,
   listAppsForOwnerVendor,
 } from "@/lib/queries/apps";
@@ -36,11 +34,6 @@ describe("app queries", () => {
     const aconex = apps.find((a) => a.slug === "aconex");
     expect(aconex?.vendor.name).toBe("Oracle");
     expect(Array.isArray(aconex?.capabilitySlugs)).toBe(true);
-  });
-
-  it("listApps respects featured filter", async () => {
-    const featured = await listApps({ featured: true });
-    for (const a of featured) expect(a.featured).toBe(true);
   });
 
   it("listAppsByStage filters by stage slug", async () => {
@@ -86,21 +79,6 @@ describe("app queries", () => {
     const slugs = await listAllAppSlugs();
     expect(slugs.length).toBe(15);
     expect(slugs).toContain("aconex");
-  });
-
-  it("getFeaturedApps respects limit", async () => {
-    const apps = await getFeaturedApps(2);
-    expect(apps.length).toBeLessThanOrEqual(2);
-  });
-
-  it("listRecentlyAddedApps returns up to N apps ordered by publishedAt desc", async () => {
-    const apps = await listRecentlyAddedApps(5);
-    expect(apps.length).toBeLessThanOrEqual(5);
-    for (let i = 1; i < apps.length; i++) {
-      const a = apps[i - 1].publishedAt?.getTime() ?? 0;
-      const b = apps[i].publishedAt?.getTime() ?? 0;
-      expect(a).toBeGreaterThanOrEqual(b);
-    }
   });
 
   it("listRelatedApps excludes the source app", async () => {

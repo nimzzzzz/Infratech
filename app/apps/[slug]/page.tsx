@@ -182,11 +182,6 @@ export default async function AppDetailPage({
                   }
                 />
               </dl>
-              {app.featured ? (
-                <div className="mt-6 border-t border-[var(--color-line)] pt-5 text-[12px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
-                  Editor&rsquo;s pick
-                </div>
-              ) : null}
             </aside>
           </div>
         </Container>

@@ -63,12 +63,11 @@ describe("searchApps — scope", () => {
   });
 });
 
-describe("searchApps — sort + pagination interaction", () => {
-  it("relevance-sorts results when q is present", async () => {
+describe("searchApps — pagination", () => {
+  it("orders search hits alphabetically (sort tabs were retired)", async () => {
     const { results } = await searchApps({ q: "ora" });
-    // Both Aconex and Primavera P6 should be present; Oracle is a
-    // weight-B vendor match in both, so ts_rank ties → secondary sort
-    // by name (ascending). Aconex sorts before Primavera P6.
+    // Both Aconex and Primavera P6 are vendor-match hits for "ora";
+    // alphabetical = Aconex first.
     expect(results[0].slug).toBe("aconex");
   });
 
@@ -203,9 +202,9 @@ describe("searchApps — pagination edges", () => {
   });
 });
 
-describe("searchApps — sort variants", () => {
-  it("sort=az returns alphabetical by name", async () => {
-    const { results } = await searchApps({ sort: "az" });
+describe("searchApps — ordering", () => {
+  it("always returns results alphabetically by name", async () => {
+    const { results } = await searchApps({});
     const names = results.map((r) => r.name);
     // Postgres default collation is byte-order (lowercase after uppercase),
     // matching JS default Array.sort — not localeCompare which puts 'n'
@@ -214,36 +213,10 @@ describe("searchApps — sort variants", () => {
     expect(names).toEqual(sorted);
   });
 
-  it("sort=recent orders by publishedAt desc (NULLS LAST)", async () => {
-    const { results } = await searchApps({ sort: "recent" });
-    for (let i = 1; i < results.length; i++) {
-      const a = results[i - 1].publishedAt?.getTime() ?? -Infinity;
-      const b = results[i].publishedAt?.getTime() ?? -Infinity;
-      expect(a).toBeGreaterThanOrEqual(b);
-    }
-  });
-
-  it("sort=featured puts featured apps first", async () => {
-    const { results } = await searchApps({ sort: "featured" });
-    let sawNonFeatured = false;
-    for (const r of results) {
-      if (!r.featured) sawNonFeatured = true;
-      else if (sawNonFeatured) {
-        throw new Error(
-          `featured app ${r.slug} appeared after a non-featured app`,
-        );
-      }
-    }
-  });
-
-  it("sort=relevance with no q falls back to alphabetical (no crash)", async () => {
-    const { results } = await searchApps({ sort: "relevance" });
+  it("alphabetical even when filters narrow the set", async () => {
+    const { results } = await searchApps({ stage: ["delivery"] });
     const names = results.map((r) => r.name);
-    // Postgres default collation is byte-order (lowercase after uppercase),
-    // matching JS default Array.sort — not localeCompare which puts 'n'
-    // among the alphabetical N's. Compare in PG's order, not natural order.
-    const sorted = [...names].sort();
-    expect(names).toEqual(sorted);
+    expect(names).toEqual([...names].sort());
   });
 });
 
@@ -266,7 +239,6 @@ describe("searchApps — result shape", () => {
     expect(a).toHaveProperty("slug");
     expect(a).toHaveProperty("name");
     expect(a).toHaveProperty("tagline");
-    expect(a).toHaveProperty("featured");
     expect(a).toHaveProperty("vendor");
     expect(a.vendor).toHaveProperty("slug");
     expect(a.vendor).toHaveProperty("name");

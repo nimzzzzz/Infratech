@@ -1,7 +1,6 @@
 import type { AppCard } from "@/lib/queries/apps";
 
 export type FilterKey = "stage" | "capability" | "pricing" | "industry";
-export type SortKey = "az" | "recent" | "featured";
 
 export type FilterState = {
   q: string;
@@ -9,14 +8,10 @@ export type FilterState = {
   capability: string[];
   pricing: string[];
   industry: string[];
-  sort: SortKey;
 };
 
 const splitParam = (value: string | undefined): string[] =>
   value ? value.split(",").filter(Boolean) : [];
-
-const isSort = (v: string): v is SortKey =>
-  v === "az" || v === "recent" || v === "featured";
 
 export function parseFilters(
   searchParams: Record<string, string | string[] | undefined>,
@@ -25,14 +20,12 @@ export function parseFilters(
     const v = searchParams[k];
     return Array.isArray(v) ? v[0] : v;
   };
-  const sort = raw("sort");
   return {
     q: raw("q")?.trim() ?? "",
     stage: splitParam(raw("stage")),
     capability: splitParam(raw("capability")),
     pricing: splitParam(raw("pricing")),
     industry: splitParam(raw("industry")),
-    sort: sort && isSort(sort) ? sort : "az",
   };
 }
 
@@ -68,18 +61,8 @@ export function applyFilters(apps: AppCard[], state: FilterState): AppCard[] {
       matchesCategory(state.pricing, a.pricingSlug) &&
       matchesCategory(state.industry, a.industrySlugs),
   );
-
-  return [...filtered].sort((a, b) => {
-    if (state.sort === "az") return a.name.localeCompare(b.name);
-    if (state.sort === "recent") {
-      const aT = a.publishedAt?.getTime() ?? 0;
-      const bT = b.publishedAt?.getTime() ?? 0;
-      return bT - aT;
-    }
-    // featured
-    if (a.featured !== b.featured) return a.featured ? -1 : 1;
-    return a.name.localeCompare(b.name);
-  });
+  // Always alphabetical by name — sort tabs were removed.
+  return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**
@@ -130,7 +113,6 @@ export function buildHref(
   if (next.capability.length) params.set("capability", next.capability.join(","));
   if (next.pricing.length) params.set("pricing", next.pricing.join(","));
   if (next.industry.length) params.set("industry", next.industry.join(","));
-  if (next.sort !== "az") params.set("sort", next.sort);
   const qs = params.toString();
   return qs ? `${pathname}?${qs}` : pathname;
 }

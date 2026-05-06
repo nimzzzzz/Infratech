@@ -3,7 +3,6 @@ import Link from "next/link";
 import {
   ArrowUpRight,
   PencilSimple,
-  Star,
 } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
@@ -20,7 +19,6 @@ export const metadata: Metadata = {
 export default async function AdminAppsPage() {
   await getAdminSession();
   const sorted = await listApps({ status: "published" });
-  const featuredCount = sorted.filter((a) => a.featured).length;
 
   return (
     <Container className="max-w-6xl py-10 md:py-14">
@@ -32,13 +30,7 @@ export default async function AdminAppsPage() {
       </h1>
       <p className="mt-3 max-w-[60ch] text-[13px] leading-relaxed text-[var(--color-ink-2)] md:text-[14px]">
         <span className="num text-[var(--color-ink)]">{sorted.length}</span>{" "}
-        listings live in the directory.{" "}
-        {featuredCount > 0 ? (
-          <>
-            <span className="num text-[var(--color-ink)]">{featuredCount}</span>{" "}
-            currently featured on the home page.
-          </>
-        ) : null}
+        listings live in the directory.
       </p>
 
       <ul className="mt-10 border-y border-[var(--color-line-strong)] divide-y divide-[var(--color-line)]">
@@ -65,19 +57,9 @@ export default async function AdminAppsPage() {
             <LetterAvatar name={app.name} className="h-9 w-9" />
 
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="font-heading text-[17px] leading-tight md:text-[18px]">
-                  {app.name}
-                </p>
-                {app.featured ? (
-                  <Star
-                    size={12}
-                    weight="fill"
-                    className="text-[var(--color-coral)]"
-                    aria-label="Featured"
-                  />
-                ) : null}
-              </div>
+              <p className="font-heading text-[17px] leading-tight md:text-[18px]">
+                {app.name}
+              </p>
               <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.18em] text-[var(--color-coral)]">
                 {app.vendor.name}
               </p>

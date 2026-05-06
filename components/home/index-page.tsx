@@ -4,22 +4,18 @@ import { FilterSidebar } from "@/components/browse/filter-sidebar";
 import { FilterDrawer } from "@/components/browse/filter-drawer";
 import { StageQuickFilter } from "@/components/browse/stage-quick-filter";
 import { ActiveFilters } from "@/components/browse/active-filters";
-import { SortTabs } from "@/components/browse/sort-tabs";
 import { AppCard } from "@/components/browse/app-card";
-import { searchApps, type SortKey } from "@/lib/queries/search";
+import { searchApps } from "@/lib/queries/search";
 import { getFilterFacets } from "@/lib/queries/facets";
 import { parseFilters } from "@/lib/browse/filters";
-
-const isSort = (v: string | undefined): v is SortKey =>
-  v === "relevance" || v === "az" || v === "recent" || v === "featured";
 
 /**
  * Home / directory view. The original product mental model — filter
  * sidebar on the left, app cards on the right, search at the top.
  *
- * Powered by lib/queries/search.ts (tsvector ranking) +
- * lib/queries/facets.ts (live facet counts). Force-dynamic because
- * the page state lives in URL search params; ISR doesn't apply.
+ * Powered by lib/queries/search.ts (tsvector match) +
+ * lib/queries/facets.ts (live facet counts). Always alphabetical;
+ * sort tabs were retired in the design refresh.
  */
 export async function HomeIndex({
   searchParams,
@@ -28,11 +24,6 @@ export async function HomeIndex({
 }) {
   const state = parseFilters(searchParams);
 
-  const sortParam = Array.isArray(searchParams.sort)
-    ? searchParams.sort[0]
-    : searchParams.sort;
-  const sort = isSort(sortParam) ? sortParam : undefined;
-
   const filters = {
     q: state.q,
     stage: state.stage,
@@ -40,7 +31,6 @@ export async function HomeIndex({
     industry: state.industry,
     pricing: state.pricing,
     pageSize: 1000, // home shows the full set; pagination lives on /browse
-    sort,
   };
 
   const [{ results, total }, facets] = await Promise.all([
@@ -73,19 +63,16 @@ export async function HomeIndex({
             <FilterSidebar facets={facets} />
           </FilterDrawer>
 
-          <header className="flex flex-col gap-4 pb-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-col gap-3">
-              <ActiveFilters />
-              <p className="hidden text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] md:block">
-                Showing{" "}
-                <span className="num text-[var(--color-ink)]">
-                  {results.length}
-                </span>{" "}
-                of <span className="num">{total}</span>{" "}
-                {total === 1 ? "product" : "products"}
-              </p>
-            </div>
-            <SortTabs />
+          <header className="flex flex-col gap-3 pb-6">
+            <ActiveFilters />
+            <p className="hidden text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] md:block">
+              Showing{" "}
+              <span className="num text-[var(--color-ink)]">
+                {results.length}
+              </span>{" "}
+              of <span className="num">{total}</span>{" "}
+              {total === 1 ? "product" : "products"}
+            </p>
           </header>
 
           {results.length === 0 ? (
