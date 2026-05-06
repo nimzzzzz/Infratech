@@ -57,6 +57,9 @@ export default defineConfig({
         "lib/auth/**",
         "lib/browse/filters.ts",
         "app/api/webhooks/**",
+        "app/api/clicks/**",
+        "app/api/views/**",
+        "components/browse/search-bar.tsx",
         "middleware.ts",
       ],
       exclude: [
