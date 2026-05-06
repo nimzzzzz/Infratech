@@ -7,6 +7,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./"),
     },
   },
+  // tsconfig has "jsx": "preserve" (Next handles it). Vitest 4 / Vite 7
+  // uses oxc as the default transformer — point it at the automatic
+  // React jsx-runtime so .tsx tests can render components.
+  oxc: {
+    jsx: { runtime: "automatic" },
+  },
   test: {
     // Neon EU + per-test TLS handshake + v8 coverage instrumentation
     // pushes individual cases past the 5s default. 30s is generous;
@@ -33,8 +39,14 @@ export default defineConfig({
         test: {
           name: "jsdom",
           environment: "jsdom",
-          include: ["tests/ui/**/*.test.{ts,tsx}"],
-          // Empty for Stage 1 — UI tests land later.
+          include: [
+            "tests/ui/**/*.test.{ts,tsx}",
+            "tests/components/**/*.test.{ts,tsx}",
+          ],
+          // No db-tx setup here — these tests don't touch Postgres.
+          // jest-dom matchers + a no-op `server-only` mock so component
+          // graphs that pull in server modules transitively can still load.
+          setupFiles: ["./tests/setup/jsdom.ts"],
         },
       },
     ],
