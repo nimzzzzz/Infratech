@@ -16,7 +16,11 @@ type FormState = {
   role: string;
   subject: string;
   message: string;
+  /** Honeypot — hidden from real users, filled by bots. Must stay empty. */
+  website: string;
 };
+
+type FieldErrors = Partial<Record<keyof FormState, string>>;
 
 export function ContactForm({
   appSlug,
@@ -34,12 +38,22 @@ export function ContactForm({
     role: "",
     subject: "",
     message: "",
+    website: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [topError, setTopError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
-  const update = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setData((d) => ({ ...d, [key]: value }));
+    if (fieldErrors[key]) {
+      setFieldErrors((fe) => {
+        const { [key]: _drop, ...rest } = fe;
+        return rest;
+      });
+    }
+  };
 
   const isValid = Boolean(
     data.name.trim() &&
@@ -49,17 +63,60 @@ export function ContactForm({
       data.message.trim().length >= 10,
   );
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isValid || submitting) return;
     setSubmitting(true);
-    if (typeof window !== "undefined") {
-      // eslint-disable-next-line no-console
-      console.info("[mock contact submission]", { appSlug, ...data });
+    setTopError(null);
+    setFieldErrors({});
+
+    try {
+      const res = await fetch("/api/contact-vendor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appSlug, ...data }),
+      });
+
+      if (res.ok) {
+        setDone(true);
+        return;
+      }
+
+      // Server-side validation — surface field-level errors inline.
+      if (res.status === 400) {
+        const json = (await res.json().catch(() => ({}))) as {
+          fieldErrors?: Record<string, string[]>;
+        };
+        const flat: FieldErrors = {};
+        for (const [k, msgs] of Object.entries(json.fieldErrors ?? {})) {
+          if (msgs && msgs[0]) flat[k as keyof FormState] = msgs[0];
+        }
+        setFieldErrors(flat);
+        setTopError("Please fix the highlighted fields and try again.");
+        return;
+      }
+
+      if (res.status === 404) {
+        setTopError("This tool is no longer available.");
+        return;
+      }
+      if (res.status === 429) {
+        setTopError(
+          "Too many requests from this network. Please try again in an hour.",
+        );
+        return;
+      }
+      if (res.status === 503) {
+        setTopError("This vendor is not currently accepting inquiries.");
+        return;
+      }
+      setTopError("Something went wrong. Please try again.");
+    } catch {
+      // Network error — `fetch` itself rejected.
+      setTopError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    // simulated round-trip; real version POSTs to /api/contact-vendor →
-    // Resend send to vendor + confirmation to visitor + DB write
-    setTimeout(() => setDone(true), 500);
   };
 
   if (done) {
@@ -108,7 +165,38 @@ export function ContactForm({
       onSubmit={handleSubmit}
       className="grid gap-6 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:grid-cols-2 md:p-8"
     >
-      <Field label="Your name" htmlFor="name" required>
+      {/* Honeypot — visually + semantically hidden from real users; bots
+          that fill every input they encounter will trip the silent-drop
+          on the server. tabindex / aria-hidden / autoComplete=off keep
+          assistive tech and password managers from touching it. */}
+      <div aria-hidden className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
+        <label htmlFor="contact-website">Website (leave empty)</label>
+        <input
+          id="contact-website"
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={data.website}
+          onChange={(e) => update("website", e.target.value)}
+        />
+      </div>
+
+      {topError ? (
+        <div
+          role="alert"
+          className="md:col-span-2 border border-[var(--color-magenta)]/40 bg-[var(--color-magenta)]/5 px-4 py-3 text-[13px] text-[var(--color-magenta)]"
+        >
+          {topError}
+        </div>
+      ) : null}
+
+      <Field
+        label="Your name"
+        htmlFor="name"
+        required
+        error={fieldErrors.name}
+      >
         <input
           id="name"
           type="text"
@@ -119,7 +207,12 @@ export function ContactForm({
           className={inputCls}
         />
       </Field>
-      <Field label="Your email" htmlFor="email" required>
+      <Field
+        label="Your email"
+        htmlFor="email"
+        required
+        error={fieldErrors.email}
+      >
         <input
           id="email"
           type="email"
@@ -131,7 +224,12 @@ export function ContactForm({
           className={inputCls}
         />
       </Field>
-      <Field label="Company" htmlFor="company" hint="Optional.">
+      <Field
+        label="Company"
+        htmlFor="company"
+        hint="Optional."
+        error={fieldErrors.company}
+      >
         <input
           id="company"
           type="text"
@@ -141,7 +239,12 @@ export function ContactForm({
           className={inputCls}
         />
       </Field>
-      <Field label="Your role" htmlFor="role" hint="Optional.">
+      <Field
+        label="Your role"
+        htmlFor="role"
+        hint="Optional."
+        error={fieldErrors.role}
+      >
         <input
           id="role"
           type="text"
@@ -153,7 +256,12 @@ export function ContactForm({
         />
       </Field>
       <div className="md:col-span-2">
-        <Field label="Subject" htmlFor="subject" required>
+        <Field
+          label="Subject"
+          htmlFor="subject"
+          required
+          error={fieldErrors.subject}
+        >
           <input
             id="subject"
             type="text"
@@ -172,6 +280,7 @@ export function ContactForm({
           htmlFor="message"
           required
           hint="Plain English. Mention what you're trying to evaluate, your project context, and a sensible reply window."
+          error={fieldErrors.message}
         >
           <textarea
             id="message"
@@ -230,12 +339,14 @@ function Field({
   htmlFor,
   required,
   hint,
+  error,
   children,
 }: {
   label: string;
   htmlFor: string;
   required?: boolean;
   hint?: string;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -250,7 +361,14 @@ function Field({
         ) : null}
       </label>
       {children}
-      {hint ? (
+      {error ? (
+        <p
+          role="alert"
+          className="text-[12px] text-[var(--color-magenta)]"
+        >
+          {error}
+        </p>
+      ) : hint ? (
         <p className="text-[12px] text-[var(--color-ink-3)]">{hint}</p>
       ) : null}
     </div>
