@@ -186,7 +186,7 @@ function orderBy(filters: SearchFilters): SQL[] {
     ];
   }
   if (sort === "recent")
-    return [desc(sql`${apps.publishedAt} NULLS LAST`), asc(apps.name)];
+    return [sql`${apps.publishedAt} desc nulls last`, asc(apps.name)];
   if (sort === "featured") return [desc(apps.featured), asc(apps.name)];
   return [asc(apps.name)];
 }

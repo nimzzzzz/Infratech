@@ -79,3 +79,199 @@ describe("searchApps — sort + pagination interaction", () => {
     expect(totalPages).toBeGreaterThanOrEqual(3);
   });
 });
+
+describe("searchApps — filters", () => {
+  it("empty filters returns every published app, paginated", async () => {
+    const { results, total } = await searchApps({});
+    expect(total).toBe(15);
+    // Default page size is 24, so all 15 fit on one page.
+    expect(results.length).toBe(15);
+  });
+
+  it("filters by stage (single)", async () => {
+    const { results } = await searchApps({ stage: ["operations"] });
+    expect(results.length).toBeGreaterThan(0);
+    for (const r of results) {
+      expect(r.stages.map((s) => s.slug)).toContain("operations");
+    }
+  });
+
+  it("filters by capability (single)", async () => {
+    const { results } = await searchApps({ capability: ["scheduling"] });
+    expect(results.length).toBeGreaterThan(0);
+    for (const r of results) {
+      expect(r.capabilitySlugs).toContain("scheduling");
+    }
+  });
+
+  it("OR within a category — stage=[delivery, operations] returns the union", async () => {
+    const { total: deliveryTotal } = await searchApps({ stage: ["delivery"] });
+    const { total: opsTotal } = await searchApps({ stage: ["operations"] });
+    const { results, total } = await searchApps({
+      stage: ["delivery", "operations"],
+    });
+    // Union must be at least as large as either side and at most their sum.
+    expect(total).toBeGreaterThanOrEqual(Math.max(deliveryTotal, opsTotal));
+    expect(total).toBeLessThanOrEqual(deliveryTotal + opsTotal);
+    for (const r of results) {
+      const slugs = r.stages.map((s) => s.slug);
+      expect(
+        slugs.includes("delivery") || slugs.includes("operations"),
+      ).toBe(true);
+    }
+  });
+
+  it("AND across categories — stage=delivery AND capability=scheduling narrows further", async () => {
+    const { total: stageOnly } = await searchApps({ stage: ["delivery"] });
+    const { results, total } = await searchApps({
+      stage: ["delivery"],
+      capability: ["scheduling"],
+    });
+    expect(total).toBeLessThanOrEqual(stageOnly);
+    for (const r of results) {
+      expect(r.stages.map((s) => s.slug)).toContain("delivery");
+      expect(r.capabilitySlugs).toContain("scheduling");
+    }
+  });
+
+  it("all four filter categories together don't error (smoke)", async () => {
+    const { results, total, page, pageSize, totalPages } = await searchApps({
+      stage: ["delivery"],
+      capability: ["scheduling"],
+      industry: ["construction"],
+      pricing: ["subscription"],
+    });
+    expect(Array.isArray(results)).toBe(true);
+    expect(typeof total).toBe("number");
+    expect(typeof page).toBe("number");
+    expect(typeof pageSize).toBe("number");
+    expect(typeof totalPages).toBe("number");
+  });
+
+  it("q + filters compose (q AND filter predicates)", async () => {
+    const { results } = await searchApps({
+      q: "ora",
+      capability: ["document-control"],
+    });
+    // Aconex matches both q=ora (via Oracle vendor) and capability=document-control
+    expect(results.map((r) => r.slug)).toContain("aconex");
+    for (const r of results) {
+      expect(r.capabilitySlugs).toContain("document-control");
+    }
+  });
+});
+
+describe("searchApps — pagination edges", () => {
+  it("page=1, pageSize=5 returns the first 5", async () => {
+    const { results, page, pageSize, total, totalPages } = await searchApps({
+      page: 1,
+      pageSize: 5,
+    });
+    expect(page).toBe(1);
+    expect(pageSize).toBe(5);
+    expect(results.length).toBe(5);
+    expect(total).toBe(15);
+    expect(totalPages).toBe(3);
+  });
+
+  it("page=2, pageSize=5 returns the next 5 (no overlap with page 1)", async () => {
+    const p1 = await searchApps({ page: 1, pageSize: 5 });
+    const p2 = await searchApps({ page: 2, pageSize: 5 });
+    expect(p2.results.length).toBe(5);
+    const p1Ids = new Set(p1.results.map((r) => r.id));
+    for (const r of p2.results) expect(p1Ids.has(r.id)).toBe(false);
+  });
+
+  it("page beyond range returns an empty results array but preserves total", async () => {
+    const { results, total, totalPages } = await searchApps({
+      page: 999,
+      pageSize: 5,
+    });
+    expect(results).toEqual([]);
+    expect(total).toBe(15);
+    expect(totalPages).toBe(3);
+  });
+
+  it("clamps page to >= 1 when given 0 or negative", async () => {
+    const { page } = await searchApps({ page: 0, pageSize: 5 });
+    expect(page).toBe(1);
+  });
+
+  it("clamps pageSize to a sane upper bound", async () => {
+    const { pageSize } = await searchApps({ pageSize: 99999 });
+    expect(pageSize).toBeLessThanOrEqual(100);
+  });
+});
+
+describe("searchApps — sort variants", () => {
+  it("sort=az returns alphabetical by name", async () => {
+    const { results } = await searchApps({ sort: "az" });
+    const names = results.map((r) => r.name);
+    // Postgres default collation is byte-order (lowercase after uppercase),
+    // matching JS default Array.sort — not localeCompare which puts 'n'
+    // among the alphabetical N's. Compare in PG's order, not natural order.
+    const sorted = [...names].sort();
+    expect(names).toEqual(sorted);
+  });
+
+  it("sort=recent orders by publishedAt desc (NULLS LAST)", async () => {
+    const { results } = await searchApps({ sort: "recent" });
+    for (let i = 1; i < results.length; i++) {
+      const a = results[i - 1].publishedAt?.getTime() ?? -Infinity;
+      const b = results[i].publishedAt?.getTime() ?? -Infinity;
+      expect(a).toBeGreaterThanOrEqual(b);
+    }
+  });
+
+  it("sort=featured puts featured apps first", async () => {
+    const { results } = await searchApps({ sort: "featured" });
+    let sawNonFeatured = false;
+    for (const r of results) {
+      if (!r.featured) sawNonFeatured = true;
+      else if (sawNonFeatured) {
+        throw new Error(
+          `featured app ${r.slug} appeared after a non-featured app`,
+        );
+      }
+    }
+  });
+
+  it("sort=relevance with no q falls back to alphabetical (no crash)", async () => {
+    const { results } = await searchApps({ sort: "relevance" });
+    const names = results.map((r) => r.name);
+    // Postgres default collation is byte-order (lowercase after uppercase),
+    // matching JS default Array.sort — not localeCompare which puts 'n'
+    // among the alphabetical N's. Compare in PG's order, not natural order.
+    const sorted = [...names].sort();
+    expect(names).toEqual(sorted);
+  });
+});
+
+describe("searchApps — result shape", () => {
+  it("returns the documented top-level keys", async () => {
+    const r = await searchApps({});
+    expect(r).toHaveProperty("results");
+    expect(r).toHaveProperty("total");
+    expect(r).toHaveProperty("page");
+    expect(r).toHaveProperty("pageSize");
+    expect(r).toHaveProperty("totalPages");
+    expect(Array.isArray(r.results)).toBe(true);
+  });
+
+  it("each AppCard carries the documented keys", async () => {
+    const { results } = await searchApps({ pageSize: 1 });
+    expect(results.length).toBeGreaterThan(0);
+    const a = results[0];
+    expect(a).toHaveProperty("id");
+    expect(a).toHaveProperty("slug");
+    expect(a).toHaveProperty("name");
+    expect(a).toHaveProperty("tagline");
+    expect(a).toHaveProperty("featured");
+    expect(a).toHaveProperty("vendor");
+    expect(a.vendor).toHaveProperty("slug");
+    expect(a.vendor).toHaveProperty("name");
+    expect(Array.isArray(a.stages)).toBe(true);
+    expect(Array.isArray(a.capabilitySlugs)).toBe(true);
+    expect(Array.isArray(a.industrySlugs)).toBe(true);
+  });
+});
