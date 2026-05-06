@@ -28,7 +28,12 @@ export default async function OnboardingLandingPage({
   const asParam = Array.isArray(sp.as) ? sp.as[0] : sp.as;
   const demoOverride = isDemoOverride(asParam) ? asParam : undefined;
 
-  const { vendor, user } = await getVendorSession({ demoOverride });
+  // Onboarding page itself — opt out of the onboarded gate or this
+  // page would redirect-loop to itself.
+  const { vendor, user } = await getVendorSession({
+    demoOverride,
+    requireOnboarded: false,
+  });
   const firstName = user.name.split(" ")[0];
 
   return (

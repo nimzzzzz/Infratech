@@ -48,10 +48,7 @@ export default async function MessageDetailPage({
   const numericId = Number(id);
   if (!Number.isFinite(numericId)) notFound();
 
-  const { vendor } = await getVendorSession({
-    demoOverride,
-    requireOnboarded: true,
-  });
+  const { vendor } = await getVendorSession({ demoOverride });
 
   const msg = await getMessageByIdForVendor(numericId, vendor.id);
   if (!msg) notFound();

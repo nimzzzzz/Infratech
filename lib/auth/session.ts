@@ -31,15 +31,20 @@ export type DemoOverride = "new" | "returning";
  * Outside demo mode we require a real Clerk session. Redirects to
  * /login if unauthenticated, /login?error=… on data integrity issues.
  *
- * `requireOnboarded` enforces vendor.onboarded === true. Set this on
- * pages that assume the company-confirm step has happened. Pages
- * inside /dashboard/onboarding/** should pass false.
+ * `requireOnboarded` defaults to TRUE — every dashboard page is
+ * assumed to need a fully onboarded vendor unless it opts out. The
+ * onboarding pages themselves (/dashboard/onboarding,
+ * /dashboard/onboarding/submit, /dashboard/onboarding/complete) MUST
+ * pass `requireOnboarded: false` or they redirect-loop.
+ *
+ * The strict default is deliberate: future dashboard subroutes can't
+ * accidentally skip the gate by forgetting to set the option.
  */
 export async function getVendorSession(opts?: {
   demoOverride?: DemoOverride;
   requireOnboarded?: boolean;
 }): Promise<VendorSession> {
-  const requireOnboarded = opts?.requireOnboarded ?? false;
+  const requireOnboarded = opts?.requireOnboarded ?? true;
 
   if (env.DEMO_MODE) {
     // In demo mode the middleware doesn't enforce Clerk auth — short-circuit

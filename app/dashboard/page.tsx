@@ -36,10 +36,8 @@ export default async function DashboardOverviewPage({
   const asParam = Array.isArray(sp.as) ? sp.as[0] : sp.as;
   const demoOverride = isDemoOverride(asParam) ? asParam : undefined;
 
-  const { vendor, user } = await getVendorSession({
-    demoOverride,
-    requireOnboarded: true,
-  });
+  // requireOnboarded defaults to true — implicit on dashboard pages.
+  const { vendor, user } = await getVendorSession({ demoOverride });
 
   const listings = await listAppsForOwnerVendor(vendor.id);
 

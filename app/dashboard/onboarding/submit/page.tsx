@@ -32,7 +32,14 @@ export default async function SubmitPage({
   const sp = await searchParams;
   const asParam = Array.isArray(sp.as) ? sp.as[0] : sp.as;
   const demoOverride = isDemoOverride(asParam) ? asParam : undefined;
-  const { vendor } = await getVendorSession({ demoOverride });
+  // Onboarding flow — opt out of the onboarded gate (the gate would
+  // bounce a not-yet-onboarded vendor back to /dashboard/onboarding,
+  // and an already-onboarded vendor reaches this page from /dashboard
+  // anyway via the "Submit new product" CTA).
+  const { vendor } = await getVendorSession({
+    demoOverride,
+    requireOnboarded: false,
+  });
 
   // ?as=returning  → skips the "Your company" step (vendor profile already on file).
   // For real vendors, derive from the onboarded flag.

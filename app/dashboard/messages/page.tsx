@@ -27,10 +27,7 @@ export default async function MessagesInboxPage({
   const demoOverride = isDemoOverride(asParam) ? asParam : undefined;
   const filterParam = Array.isArray(sp.filter) ? sp.filter[0] : sp.filter;
 
-  const { vendor } = await getVendorSession({
-    demoOverride,
-    requireOnboarded: true,
-  });
+  const { vendor } = await getVendorSession({ demoOverride });
 
   const all = await listMessagesForVendor(vendor.id);
   const unread = await countUnreadForVendor(vendor.id);
