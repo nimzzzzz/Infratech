@@ -15,6 +15,13 @@
       "when": 1778001413044,
       "tag": "0001_set_updated_at",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778027868208,
+      "tag": "0002_neat_scorpion",
+      "breakpoints": true
     }
   ]
 }

@@ -9,10 +9,9 @@ import {
 
 /**
  * Taxonomy tables — the controlled vocabularies an app gets tagged with.
- * Stages and capabilities are admin-editable (intro_md feeds the SEO landing
- * page above the filtered app list). Industries / pricing / regions are
- * fixed lists — vendors can propose additions but those land in the
- * submission payload jsonb, not as new rows here.
+ * Industries / pricing / regions are fixed lists — vendors can propose
+ * additions but those land in the submission payload jsonb, not as new
+ * rows here.
  */
 
 export const stages = pgTable(
@@ -22,7 +21,6 @@ export const stages = pgTable(
     slug: text("slug").notNull(),
     name: text("name").notNull(),
     shortDescription: text("short_description"),
-    introMd: text("intro_md"),
     position: integer("position").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -41,7 +39,6 @@ export const capabilities = pgTable(
     slug: text("slug").notNull(),
     name: text("name").notNull(),
     description: text("description"),
-    introMd: text("intro_md"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
