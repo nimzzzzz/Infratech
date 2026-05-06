@@ -93,10 +93,6 @@ export function SearchBar() {
         className={`${styles.input} h-full w-full bg-transparent px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)]`}
         aria-label="Search the directory"
       />
-      <kbd className="num mr-3 hidden shrink-0 items-center gap-1 border border-[var(--color-line-strong)] px-2 py-0.5 text-[11px] text-[var(--color-ink-3)] sm:inline-flex">
-        <span>⌘</span>
-        <span>K</span>
-      </kbd>
     </label>
   );
 }
