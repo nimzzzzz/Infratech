@@ -52,7 +52,7 @@ export default function AboutPage() {
             <p>
               The directory is curated by{" "}
               <a
-                href="https://www.resolute.com.au"
+                href="https://resolutemanagementconsultancy.com/"
                 target="_blank"
                 rel="noopener nofollow"
                 className="bloom-text underline-offset-4 hover:underline"
@@ -61,6 +61,43 @@ export default function AboutPage() {
               </a>
               . Vendors do not pay for placement.
             </p>
+          </div>
+        </Container>
+      </section>
+
+      <section
+        id="contact"
+        className="border-t border-[var(--color-line)] bg-[var(--color-canvas)] pb-24 md:pb-32 pt-16 md:pt-20 scroll-mt-24"
+      >
+        <Container className="grid gap-14 md:grid-cols-[5fr_7fr]">
+          <h2 className="text-[28px] leading-tight tracking-tight md:text-[36px]">
+            Contact Resolute.
+          </h2>
+          <div className="space-y-5 text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
+            <p>
+              Reach out about the directory, partnership enquiries, or the
+              wider work of the Digital &amp; AI Practice.
+            </p>
+            <address className="not-italic space-y-1.5 text-[var(--color-ink)]">
+              <p className="font-medium">Resolute Management Consultancy</p>
+              {/* TODO: fill in once the user provides them. */}
+              <p className="text-[var(--color-ink-3)]">
+                [Address line — TODO]
+              </p>
+              <p className="text-[var(--color-ink-3)]">[Email — TODO]</p>
+              <p className="text-[var(--color-ink-3)]">[Phone — TODO]</p>
+              <p>
+                Website:{" "}
+                <a
+                  href="https://resolutemanagementconsultancy.com/"
+                  target="_blank"
+                  rel="noopener"
+                  className="bloom-text underline-offset-4 hover:underline"
+                >
+                  resolutemanagementconsultancy.com
+                </a>
+              </p>
+            </address>
           </div>
         </Container>
       </section>
