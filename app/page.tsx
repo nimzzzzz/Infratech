@@ -8,9 +8,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-// Featured + latest matter — re-render every 10 minutes.
-export const revalidate = 600;
+// Filter-driven directory view; URL search params drive the response.
+export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
-  return <HomeIndex />;
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  return <HomeIndex searchParams={sp} />;
 }
