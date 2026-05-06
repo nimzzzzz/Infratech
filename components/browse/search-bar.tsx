@@ -37,7 +37,7 @@ export function SearchBar() {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Search by name, capability, or vendor…"
-        className="h-full w-full bg-transparent px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:outline-none"
+        className="h-full w-full bg-transparent px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:outline-none focus-visible:outline-none"
         aria-label="Search the directory"
       />
       <kbd className="num mr-3 hidden shrink-0 items-center gap-1 border border-[var(--color-line-strong)] px-2 py-0.5 text-[11px] text-[var(--color-ink-3)] sm:inline-flex">
