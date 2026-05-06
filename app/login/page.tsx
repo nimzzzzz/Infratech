@@ -105,10 +105,7 @@ export default async function LoginPage({
 
         {/* editorial caption bottom-left */}
         <div className="absolute bottom-8 left-8 right-8 max-w-md lg:bottom-12 lg:left-12 lg:right-12">
-          <p className="text-[10px] uppercase tracking-[0.32em] text-white/55">
-            Edition 01 &middot; The Index
-          </p>
-          <p className="mt-4 font-heading text-[24px] leading-tight text-white md:text-[28px] lg:text-[34px]">
+          <p className="font-heading text-[24px] leading-tight text-white md:text-[28px] lg:text-[34px]">
             {intent === "submit"
               ? "Get your product seen by the people who run the projects."
               : "Pick up where you left off."}
