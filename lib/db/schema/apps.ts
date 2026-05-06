@@ -56,6 +56,14 @@ export const apps = pgTable(
       .notNull()
       .references(() => vendors.id, { onDelete: "restrict" }),
     name: text("name").notNull(),
+    /**
+     * Denormalised vendor name. Maintained by triggers — populated on
+     * INSERT and on vendor_id change by apps_set_vendor_name(); cascaded
+     * on vendor rename by vendors_propagate_name_to_apps(). Lives on the
+     * apps row so search_vector (a GENERATED column) can include it
+     * without joining at index-build time.
+     */
+    vendorName: text("vendor_name").notNull().default(""),
     tagline: text("tagline"),
     description: text("description"),
     websiteUrl: text("website_url").notNull(),
@@ -69,12 +77,13 @@ export const apps = pgTable(
     featured: boolean("featured").notNull().default(false),
     editorNote: text("editor_note"),
     /**
-     * GENERATED ALWAYS AS (... ) STORED tsvector. Drizzle-kit emits this
-     * verbatim into the migration; the GIN index below makes free-text
-     * search performant.
+     * GENERATED ALWAYS AS (...) STORED tsvector. Searches name (weight A)
+     * + vendor_name (weight B). Tagline + description deliberately
+     * EXCLUDED — search is name-only by product spec; capability/stage/
+     * industry filtering is handled by the sidebar, not free-text.
      */
     searchVector: tsvector("search_vector").generatedAlwaysAs(
-      sql`setweight(to_tsvector('english', coalesce(name, '')), 'A') || setweight(to_tsvector('english', coalesce(tagline, '')), 'B') || setweight(to_tsvector('english', coalesce(description, '')), 'C')`,
+      sql`setweight(to_tsvector('english', coalesce(name, '')), 'A') || setweight(to_tsvector('english', coalesce(vendor_name, '')), 'B')`,
     ),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

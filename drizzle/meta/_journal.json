@@ -22,6 +22,13 @@
       "when": 1778027868208,
       "tag": "0002_neat_scorpion",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778035169371,
+      "tag": "0003_narrow_search_to_name_vendor",
+      "breakpoints": true
     }
   ]
 }
