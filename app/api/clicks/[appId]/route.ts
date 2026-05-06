@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { recordOutboundClick } from "@/lib/queries/tracking";
 
 /**
@@ -9,13 +9,15 @@ import { recordOutboundClick } from "@/lib/queries/tracking";
  *   1. Validate appId is numeric.
  *   2. Validate `to` is a real http(s) URL (rejects javascript: / data:
  *      / file: schemes and other open-redirect bait).
- *   3. Fire-and-forget the DB log — never block the redirect on
- *      tracking failures.
- *   4. 302 to the target.
+ *   3. Schedule the DB log via after() — runs AFTER the response is
+ *      sent. On Vercel serverless this keeps the function alive long
+ *      enough for the INSERT to complete; on standalone Node it runs
+ *      in the same event-loop turn after .end().
+ *   4. 302 to the target — fires immediately, no DB latency in the
+ *      user-facing path.
  *
- * The "Visit website" buttons on app detail pages link to this route;
- * the user sees a brief flash of our domain in the tab title before
- * the browser follows the redirect.
+ * Tracking failure is silent — the user already got their redirect
+ * before we even tried to write.
  */
 export async function GET(
   req: Request,
@@ -45,13 +47,17 @@ export async function GET(
     });
   }
 
-  // Fire-and-forget. Tracking failure must not block the user's redirect.
-  recordOutboundClick({
-    appId: numericId,
-    userAgent: req.headers.get("user-agent"),
-    referrer: req.headers.get("referer"),
-  }).catch((err) => {
-    console.error("[clicks] log failed", err);
+  // Capture headers before scheduling — `req` may be unavailable inside
+  // after() depending on runtime.
+  const userAgent = req.headers.get("user-agent");
+  const referrer = req.headers.get("referer");
+
+  after(async () => {
+    try {
+      await recordOutboundClick({ appId: numericId, userAgent, referrer });
+    } catch (err) {
+      console.error("[clicks] log failed", err);
+    }
   });
 
   return NextResponse.redirect(targetUrl.toString(), 302);
