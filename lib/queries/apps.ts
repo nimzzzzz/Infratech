@@ -52,52 +52,48 @@ export type AppDetail = App & {
 async function fetchCards(appIds: number[]): Promise<AppCard[]> {
   if (appIds.length === 0) return [];
 
-  // Pull the base app rows + vendor in one join
-  const baseRows = await db
-    .select({
-      id: apps.id,
-      slug: apps.slug,
-      name: apps.name,
-      tagline: apps.tagline,
-      logoUrl: apps.logoUrl,
-      featured: apps.featured,
-      publishedAt: apps.publishedAt,
-      vendorSlug: vendors.slug,
-      vendorName: vendors.name,
-    })
-    .from(apps)
-    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
-    .where(inArray(apps.id, appIds));
-
-  // M2M tag slugs in three small joins. With ~15-100 apps these are
-  // cheap; if catalogue grows past a few thousand we'd push these into
-  // a single CTE with json_agg per app.
-  const stageRows = await db
-    .select({ appId: appStages.appId, slug: stages.slug, name: stages.name })
-    .from(appStages)
-    .innerJoin(stages, eq(stages.id, appStages.stageId))
-    .where(inArray(appStages.appId, appIds));
-
-  const capRows = await db
-    .select({ appId: appCapabilities.appId, slug: capabilities.slug })
-    .from(appCapabilities)
-    .innerJoin(capabilities, eq(capabilities.id, appCapabilities.capabilityId))
-    .where(inArray(appCapabilities.appId, appIds));
-
-  const indRows = await db
-    .select({ appId: appIndustries.appId, slug: industries.slug })
-    .from(appIndustries)
-    .innerJoin(industries, eq(industries.id, appIndustries.industryId))
-    .where(inArray(appIndustries.appId, appIds));
-
-  const pricingRows = await db
-    .select({ appId: appPricingModels.appId, slug: pricingModels.slug })
-    .from(appPricingModels)
-    .innerJoin(
-      pricingModels,
-      eq(pricingModels.id, appPricingModels.pricingModelId),
-    )
-    .where(inArray(appPricingModels.appId, appIds));
+  // All five fetches are independent — fire them concurrently against the
+  // same Neon connection. Was 5 sequential RTTs; now 1 RTT batch.
+  const [baseRows, stageRows, capRows, indRows, pricingRows] = await Promise.all([
+    db
+      .select({
+        id: apps.id,
+        slug: apps.slug,
+        name: apps.name,
+        tagline: apps.tagline,
+        logoUrl: apps.logoUrl,
+        featured: apps.featured,
+        publishedAt: apps.publishedAt,
+        vendorSlug: vendors.slug,
+        vendorName: vendors.name,
+      })
+      .from(apps)
+      .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+      .where(inArray(apps.id, appIds)),
+    db
+      .select({ appId: appStages.appId, slug: stages.slug, name: stages.name })
+      .from(appStages)
+      .innerJoin(stages, eq(stages.id, appStages.stageId))
+      .where(inArray(appStages.appId, appIds)),
+    db
+      .select({ appId: appCapabilities.appId, slug: capabilities.slug })
+      .from(appCapabilities)
+      .innerJoin(capabilities, eq(capabilities.id, appCapabilities.capabilityId))
+      .where(inArray(appCapabilities.appId, appIds)),
+    db
+      .select({ appId: appIndustries.appId, slug: industries.slug })
+      .from(appIndustries)
+      .innerJoin(industries, eq(industries.id, appIndustries.industryId))
+      .where(inArray(appIndustries.appId, appIds)),
+    db
+      .select({ appId: appPricingModels.appId, slug: pricingModels.slug })
+      .from(appPricingModels)
+      .innerJoin(
+        pricingModels,
+        eq(pricingModels.id, appPricingModels.pricingModelId),
+      )
+      .where(inArray(appPricingModels.appId, appIds)),
+  ]);
 
   const stagesByApp = new Map<number, { slug: string; name: string }[]>();
   for (const r of stageRows) {

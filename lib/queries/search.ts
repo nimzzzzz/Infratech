@@ -153,18 +153,22 @@ export async function searchApps(
   const pageSize = Math.max(1, Math.min(100, filters.pageSize ?? DEFAULT_PAGE_SIZE));
   const conditions = buildConditions(filters);
 
-  const [{ total }] = await db
-    .select({ total: sql<number>`count(*)::int` })
-    .from(apps)
-    .where(and(...conditions));
-
-  const idRows = await db
-    .select({ id: apps.id })
-    .from(apps)
-    .where(and(...conditions))
-    .orderBy(...orderBy(filters))
-    .limit(pageSize)
-    .offset((page - 1) * pageSize);
+  // COUNT(*) and the paginated id select share the same WHERE clause and
+  // don't depend on each other — fire them in parallel. Saves one RTT.
+  const [totalRows, idRows] = await Promise.all([
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(apps)
+      .where(and(...conditions)),
+    db
+      .select({ id: apps.id })
+      .from(apps)
+      .where(and(...conditions))
+      .orderBy(...orderBy(filters))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
+  ]);
+  const total = totalRows[0]?.total ?? 0;
 
   const ids = idRows.map((r) => r.id);
   let results = await fetchCardsInOrder(ids);
@@ -220,48 +224,49 @@ export async function searchApps(
 async function fetchCardsInOrder(ids: number[]): Promise<AppCard[]> {
   if (ids.length === 0) return [];
 
-  const baseRows = await db
-    .select({
-      id: apps.id,
-      slug: apps.slug,
-      name: apps.name,
-      tagline: apps.tagline,
-      logoUrl: apps.logoUrl,
-      featured: apps.featured,
-      publishedAt: apps.publishedAt,
-      vendorSlug: vendors.slug,
-      vendorName: vendors.name,
-    })
-    .from(apps)
-    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
-    .where(inArray(apps.id, ids));
-
-  const stageRows = await db
-    .select({ appId: appStages.appId, slug: stages.slug, name: stages.name })
-    .from(appStages)
-    .innerJoin(stages, eq(stages.id, appStages.stageId))
-    .where(inArray(appStages.appId, ids));
-
-  const capRows = await db
-    .select({ appId: appCapabilities.appId, slug: capabilities.slug })
-    .from(appCapabilities)
-    .innerJoin(capabilities, eq(capabilities.id, appCapabilities.capabilityId))
-    .where(inArray(appCapabilities.appId, ids));
-
-  const indRows = await db
-    .select({ appId: appIndustries.appId, slug: industries.slug })
-    .from(appIndustries)
-    .innerJoin(industries, eq(industries.id, appIndustries.industryId))
-    .where(inArray(appIndustries.appId, ids));
-
-  const pricingRows = await db
-    .select({ appId: appPricingModels.appId, slug: pricingModels.slug })
-    .from(appPricingModels)
-    .innerJoin(
-      pricingModels,
-      eq(pricingModels.id, appPricingModels.pricingModelId),
-    )
-    .where(inArray(appPricingModels.appId, ids));
+  // All five fetches are independent — fire them concurrently against
+  // the same Neon connection. Was 5 sequential RTTs (~500ms on iad→fra,
+  // ~1500ms on a high-latency dev connection). Now 1 RTT batch.
+  const [baseRows, stageRows, capRows, indRows, pricingRows] = await Promise.all([
+    db
+      .select({
+        id: apps.id,
+        slug: apps.slug,
+        name: apps.name,
+        tagline: apps.tagline,
+        logoUrl: apps.logoUrl,
+        featured: apps.featured,
+        publishedAt: apps.publishedAt,
+        vendorSlug: vendors.slug,
+        vendorName: vendors.name,
+      })
+      .from(apps)
+      .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+      .where(inArray(apps.id, ids)),
+    db
+      .select({ appId: appStages.appId, slug: stages.slug, name: stages.name })
+      .from(appStages)
+      .innerJoin(stages, eq(stages.id, appStages.stageId))
+      .where(inArray(appStages.appId, ids)),
+    db
+      .select({ appId: appCapabilities.appId, slug: capabilities.slug })
+      .from(appCapabilities)
+      .innerJoin(capabilities, eq(capabilities.id, appCapabilities.capabilityId))
+      .where(inArray(appCapabilities.appId, ids)),
+    db
+      .select({ appId: appIndustries.appId, slug: industries.slug })
+      .from(appIndustries)
+      .innerJoin(industries, eq(industries.id, appIndustries.industryId))
+      .where(inArray(appIndustries.appId, ids)),
+    db
+      .select({ appId: appPricingModels.appId, slug: pricingModels.slug })
+      .from(appPricingModels)
+      .innerJoin(
+        pricingModels,
+        eq(pricingModels.id, appPricingModels.pricingModelId),
+      )
+      .where(inArray(appPricingModels.appId, ids)),
+  ]);
 
   const stagesByApp = new Map<number, { slug: string; name: string }[]>();
   for (const r of stageRows) {
