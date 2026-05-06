@@ -29,8 +29,8 @@ import { queue as mockSubmissions } from "@/lib/data/admin-queue";
  *
  * Messages from lib/data/messages.ts are deliberately NOT seeded — the
  * mock data references a demo "arctus" vendor + "arctus-field" app that
- * don't exist in the public catalogue. They live only in mock-session
- * for the dashboard preview, not in the public listings.
+ * don't exist in the public catalogue. They live only in the dashboard
+ * preview fixtures, not in the public listings.
  */
 
 const slugify = (s: string) =>

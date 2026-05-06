@@ -2,7 +2,7 @@
  * Mocked vendor inbox. In Phase 2 this comes from the `vendor_messages`
  * Postgres table populated by `/api/contact-vendor`.
  *
- * The mock session vendor is "Arctus" (per lib/auth/mock-session.ts), so all
+ * The seeded demo vendor is "Arctus" (resolved via lib/auth/session.ts), so all
  * messages here are addressed to that vendor. Mock listings (Arctus Field /
  * Arctus Insights) are NOT in the public catalogue — they only appear in the
  * dashboard so the demo has substance.
