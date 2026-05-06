@@ -34,9 +34,6 @@ export type SearchResult = {
   page: number;
   pageSize: number;
   totalPages: number;
-  /** True if the SEARCH_FUZZY env flag triggered an ILIKE fallback because
-   *  tsquery returned fewer than 3 strict matches. UI can hint at this. */
-  usedFuzzyFallback: boolean;
 };
 
 const DEFAULT_PAGE_SIZE = 24;
@@ -172,7 +169,6 @@ export async function searchApps(
 
   const ids = idRows.map((r) => r.id);
   let results = await fetchCardsInOrder(ids);
-  let usedFuzzyFallback = false;
 
   if (
     fuzzyEnabled &&
@@ -201,7 +197,6 @@ export async function searchApps(
       if (fuzzyIds.length > 0) {
         const fuzzyCards = await fetchCardsInOrder(fuzzyIds);
         results = [...results, ...fuzzyCards];
-        usedFuzzyFallback = true;
       }
     }
   }
@@ -212,7 +207,6 @@ export async function searchApps(
     page,
     pageSize,
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
-    usedFuzzyFallback,
   };
 }
 

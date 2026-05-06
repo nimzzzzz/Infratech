@@ -43,7 +43,7 @@ export async function HomeIndex({
     sort,
   };
 
-  const [{ results, total, usedFuzzyFallback }, facets] = await Promise.all([
+  const [{ results, total }, facets] = await Promise.all([
     searchApps(filters),
     getFilterFacets(filters),
   ]);
@@ -99,12 +99,6 @@ export async function HomeIndex({
             </div>
             <SortTabs />
           </header>
-
-          {usedFuzzyFallback ? (
-            <p className="mb-6 border-l-2 border-[var(--color-coral)] pl-3 text-[12px] text-[var(--color-ink-2)]">
-              Few strict matches — broadened to fuzzy name + tagline search.
-            </p>
-          ) : null}
 
           {results.length === 0 ? (
             <EmptyState />
