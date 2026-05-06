@@ -16,9 +16,6 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      // /browse no longer exists — the home page IS the browse interface.
-      // Permanent redirect for any old links / search-engine indexed paths.
-      { source: "/browse", destination: "/", permanent: true },
       // Variant routes are gone — anyone visiting them lands on the canonical site.
       { source: "/v/:path*", destination: "/", permanent: true },
     ];

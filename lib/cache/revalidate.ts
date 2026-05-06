@@ -10,9 +10,9 @@ import { revalidatePath, revalidateTag } from "next/cache";
  * yet.
  *
  * Each helper invalidates every page that depends on the resource — when
- * an app changes, the home page (latest + featured), /browse (counts),
- * /apps/[slug], the vendor's profile, and every stage / capability the
- * app is tagged with all become stale.
+ * an app changes, the home page (the directory tool itself), /apps/[slug],
+ * the vendor's profile, and every stage / capability the app is tagged
+ * with all become stale.
  *
  * For broad invalidation we lean on revalidatePath rather than
  * revalidateTag since we haven't tagged fetches anywhere yet. Stage 7
@@ -23,7 +23,6 @@ import { revalidatePath, revalidateTag } from "next/cache";
 export function revalidateApp(slug: string): void {
   revalidatePath(`/apps/${slug}`);
   revalidatePath("/");
-  revalidatePath("/browse");
   // Sitemap regen so newly-published / unpublished apps stop appearing
   // in indexable URL set.
   revalidatePath("/sitemap.xml");
@@ -43,12 +42,11 @@ export function revalidateVendor(slug: string): void {
 export function revalidateStage(slug: string): void {
   revalidatePath(`/stages/${slug}`);
   revalidatePath("/");
-  revalidatePath("/browse");
 }
 
 export function revalidateCapability(slug: string): void {
   revalidatePath(`/capabilities/${slug}`);
-  revalidatePath("/browse");
+  revalidatePath("/");
 }
 
 /** Reserved for Stage 7 if/when we tag-based invalidation. */

@@ -17,13 +17,9 @@ const isSort = (v: string | undefined): v is SortKey =>
  * Home / directory view. The original product mental model — filter
  * sidebar on the left, app cards on the right, search at the top.
  *
- * Re-uses /browse's data layer (searchApps + getFilterFacets) so the
- * counts and filter behaviour are identical. Force-dynamic because
+ * Powered by lib/queries/search.ts (tsvector ranking) +
+ * lib/queries/facets.ts (live facet counts). Force-dynamic because
  * the page state lives in URL search params; ISR doesn't apply.
- *
- * /browse still exists as a duplicate of this UX — both routes share
- * the same components and queries. Consolidation can happen in a
- * later stage; for now the duplication is cheap and safe.
  */
 export async function HomeIndex({
   searchParams,

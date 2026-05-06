@@ -10,8 +10,7 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   // Priority hierarchy:
-  //   1.0  — home (the front cover)
-  //   0.9  — /browse (the working tool — high-priority per spec)
+  //   1.0  — home (the directory tool itself)
   //   0.7  — landing pages we want indexed at depth (stage, capability)
   //   0.7  — app detail pages (per-product)
   //   0.5  — vendor profiles + secondary public pages
@@ -22,12 +21,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "daily" as const,
       priority: 1.0,
-    },
-    {
-      url: `${SITE_URL}/browse`,
-      lastModified: now,
-      changeFrequency: "daily" as const,
-      priority: 0.9,
     },
     {
       url: `${SITE_URL}/about`,
