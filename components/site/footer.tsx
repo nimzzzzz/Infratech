@@ -39,12 +39,7 @@ export function Footer() {
             "radial-gradient(60% 70% at 12% 100%, rgba(214, 51, 108, 0.45), transparent 60%), radial-gradient(50% 60% at 80% 90%, rgba(249, 115, 22, 0.30), transparent 65%)",
         }}
       />
-      <Container className="relative grid gap-14 py-20 md:grid-cols-[1.4fr_3fr] md:py-24">
-        {/* Left column intentionally empty on desktop — the R logo + attribution
-            now live in the bottom bar. Kept as a grid placeholder so the right
-            column's link grid keeps its existing 1.4fr / 3fr proportions. */}
-        <div className="hidden md:block" />
-
+      <Container className="relative py-20 md:py-24">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
           {columns.map((col) => (
             <div key={col.title}>
