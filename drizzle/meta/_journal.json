@@ -29,6 +29,13 @@
       "when": 1778035169371,
       "tag": "0003_narrow_search_to_name_vendor",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778100000000,
+      "tag": "0004_reorder_stages_general_first",
+      "breakpoints": true
     }
   ]
 }

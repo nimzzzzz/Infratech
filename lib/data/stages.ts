@@ -5,41 +5,44 @@ export type Stage = {
   index: string;
 };
 
+// Display order chosen for the public chip row. General leads as a
+// "doesn't fit a stage" catch-all; the rest follow the project lifecycle.
+// Slugs and DB ids are unchanged — only the visual order moved.
 export const stages: Stage[] = [
+  {
+    slug: "general",
+    name: "General",
+    short: "Cross-stage platforms and products.",
+    index: "01",
+  },
   {
     slug: "feasibility",
     name: "Feasibility",
     short: "Studies, business cases, options analysis.",
-    index: "01",
+    index: "02",
   },
   {
     slug: "definition",
     name: "Definition",
     short: "Scope, planning, design, contracting.",
-    index: "02",
+    index: "03",
   },
   {
     slug: "delivery",
     name: "Delivery",
     short: "Execution, scheduling, controls, risk.",
-    index: "03",
+    index: "04",
   },
   {
     slug: "operations",
     name: "Operations",
     short: "Asset management, monitoring, maintenance.",
-    index: "04",
+    index: "05",
   },
   {
     slug: "post-delivery",
     name: "Post-Delivery",
     short: "Closeout, lessons, decommissioning.",
-    index: "05",
-  },
-  {
-    slug: "general",
-    name: "General",
-    short: "Cross-stage platforms and products.",
     index: "06",
   },
 ];
