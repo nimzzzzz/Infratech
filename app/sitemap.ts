@@ -9,21 +9,53 @@ export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const staticPaths = [
-    "",
-    "/about",
-    "/suggest",
-    "/contact",
-    "/legal/terms",
-    "/legal/privacy",
-    "/legal/vendor-terms",
-    "/legal/cookies",
-  ].map((p) => ({
-    url: `${SITE_URL}${p}`,
-    lastModified: now,
-    changeFrequency: "weekly" as const,
-    priority: p === "" ? 1 : 0.7,
-  }));
+  // Priority hierarchy:
+  //   1.0  — home (the front cover)
+  //   0.9  — /browse (the working tool — high-priority per spec)
+  //   0.7  — landing pages we want indexed at depth (stage, capability)
+  //   0.7  — app detail pages (per-product)
+  //   0.5  — vendor profiles + secondary public pages
+  //   0.3  — legal pages
+  const staticPaths: MetadataRoute.Sitemap = [
+    {
+      url: `${SITE_URL}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 1.0,
+    },
+    {
+      url: `${SITE_URL}/browse`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/about`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/suggest`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/contact`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    },
+    ...["/legal/terms", "/legal/privacy", "/legal/vendor-terms", "/legal/cookies"].map(
+      (p) => ({
+        url: `${SITE_URL}${p}`,
+        lastModified: now,
+        changeFrequency: "yearly" as const,
+        priority: 0.3,
+      }),
+    ),
+  ];
 
   // DB unreachable at build time → emit just the static paths and let ISR
   // fill in the dynamic ones on the first post-deploy request.
@@ -46,21 +78,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${SITE_URL}/stages/${s.slug}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
-    priority: 0.6,
+    priority: 0.7,
   }));
 
   const capPaths = capabilities.map((c) => ({
     url: `${SITE_URL}/capabilities/${c.slug}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
-    priority: 0.6,
+    priority: 0.7,
   }));
 
   const appPaths = appSlugs.map((slug) => ({
     url: `${SITE_URL}/apps/${slug}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
-    priority: 0.8,
+    priority: 0.7,
   }));
 
   const vendorPaths = vendorSlugs.map((slug) => ({
