@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import { InnerHero } from "@/components/site/inner-hero";
 import {
@@ -9,8 +9,6 @@ import {
   listCapabilities,
 } from "@/lib/queries/taxonomy";
 import { listAppsByCapability } from "@/lib/queries/apps";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const revalidate = 3600;
 
@@ -32,19 +30,10 @@ export async function generateMetadata({
   const { capability } = await params;
   const found = await getCapabilityBySlug(capability);
   if (!found) return { title: "Capability not found" };
-  const description =
-    found.description ??
-    `Project management software with ${found.name.toLowerCase()} capabilities.`;
   return {
-    title: `${found.name} software — Tools across the project lifecycle`,
-    description,
+    title: `${found.name} software`,
+    description: `Project management software with ${found.name.toLowerCase()} capabilities.`,
     alternates: { canonical: `/capabilities/${found.slug}` },
-    openGraph: {
-      title: `${found.name} software — InfraTechDB`,
-      description,
-      url: `${SITE_URL}/capabilities/${found.slug}`,
-      type: "website",
-    },
   };
 }
 
@@ -58,71 +47,24 @@ export default async function CapabilityPage({
   if (!data) notFound();
 
   const apps = await listAppsByCapability(data.slug);
-  const introParagraphs = (data.introMd ?? "")
-    .split(/\n\n+/)
-    .filter((p) => p.trim().length > 0);
 
   return (
     <>
       <InnerHero
         eyebrow="Capability"
-        title={
-          <>
-            {data.name}{" "}
-            <span className="text-[var(--color-ink-3)]">software.</span>
-          </>
-        }
+        title={<>{data.name} software.</>}
         body={
-          data.description ? (
-            <p>{data.description}</p>
-          ) : (
-            <p>
-              Tools listed in this directory under the{" "}
-              {data.name.toLowerCase()} capability.
-            </p>
-          )
+          <p>
+            {data.description ??
+              `Products with ${data.name.toLowerCase()} capabilities.`}
+          </p>
         }
       />
-
-      <JsonLd capability={data} apps={apps} />
-
-      {introParagraphs.length > 0 ? (
-        <section className="bg-[var(--color-canvas)] py-10 md:py-14">
-          <Container>
-            <div className="md:max-w-[68ch] space-y-5 text-[16px] leading-relaxed text-[var(--color-ink)] md:text-[17px]">
-              {introParagraphs.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-            </div>
-          </Container>
-        </section>
-      ) : null}
-
       <section className="bg-[var(--color-canvas)] pb-24 md:pb-32">
         <Container>
-          <header className="mb-6 flex items-end justify-between gap-4 border-b border-[var(--color-line-strong)] pb-3">
-            <h2 className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
-              Tools with this capability{" "}
-              <span className="num text-[var(--color-ink-3)]">
-                ({apps.length})
-              </span>
-            </h2>
-            <Link
-              href={`/browse?capability=${data.slug}`}
-              className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
-            >
-              Open in browser
-              <ArrowRight
-                size={11}
-                weight="bold"
-                className="transition-transform duration-300 group-hover:translate-x-0.5"
-              />
-            </Link>
-          </header>
-
           {apps.length === 0 ? (
             <p className="text-[16px] text-[var(--color-ink-2)]">
-              No tools tagged with this capability yet.
+              No apps tagged with this capability yet.
             </p>
           ) : (
             <ul className="divide-y divide-[var(--color-line)] border-y border-[var(--color-line)]">
@@ -155,68 +97,6 @@ export default async function CapabilityPage({
           )}
         </Container>
       </section>
-    </>
-  );
-}
-
-function JsonLd({
-  capability,
-  apps,
-}: {
-  capability: { slug: string; name: string; description: string | null };
-  apps: { slug: string; name: string }[];
-}) {
-  const collection = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: `${capability.name} software — InfraTechDB`,
-    description: capability.description ?? undefined,
-    url: `${SITE_URL}/capabilities/${capability.slug}`,
-    isPartOf: {
-      "@type": "WebSite",
-      name: "InfraTechDB",
-      url: SITE_URL,
-    },
-    mainEntity: {
-      "@type": "ItemList",
-      numberOfItems: apps.length,
-      itemListElement: apps.map((a, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        url: `${SITE_URL}/apps/${a.slug}`,
-        name: a.name,
-      })),
-    },
-  };
-  const breadcrumbs = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Index", item: SITE_URL },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Capabilities",
-        item: `${SITE_URL}/browse`,
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: capability.name,
-        item: `${SITE_URL}/capabilities/${capability.slug}`,
-      },
-    ],
-  };
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collection) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
-      />
     </>
   );
 }
