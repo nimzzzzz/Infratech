@@ -21,7 +21,6 @@ const columns: { title: string; links: { href: string; label: string }[] }[] = [
     title: "About",
     links: [
       { href: "/about", label: "About this directory" },
-      { href: "/contact", label: "Contact us" },
       { href: "/legal/terms", label: "Terms" },
       { href: "/legal/privacy", label: "Privacy" },
       { href: "/legal/cookies", label: "Cookies" },

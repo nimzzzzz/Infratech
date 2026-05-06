@@ -308,16 +308,6 @@ export default async function AppDetailPage({
             </Section>
           ) : null}
 
-          <p className="text-[13px] text-[var(--color-ink-3)]">
-            Spotted something out of date?{" "}
-            <Link
-              href={`/contact?app=${app.slug}`}
-              className="underline underline-offset-4 hover:text-[var(--color-ink)]"
-            >
-              Suggest an edit
-            </Link>
-            .
-          </p>
         </div>
       </Container>
 
