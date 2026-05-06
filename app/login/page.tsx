@@ -12,7 +12,7 @@ import {
 export const metadata: Metadata = {
   title: "Sign in",
   description:
-    "Sign in with LinkedIn to manage your dashboard, claim a listing, or submit a new product.",
+    "Sign in with LinkedIn to manage your dashboard or submit a new product.",
   alternates: { canonical: "/login" },
   robots: { index: false, follow: false },
 };
@@ -57,7 +57,7 @@ export default async function LoginPage({
   const title = intent === "submit" ? "List your product." : "Welcome back.";
   const subtitle =
     intent === "submit"
-      ? "Sign in with LinkedIn to claim an existing listing or submit a new one. We use LinkedIn to verify you represent the company before a listing goes live."
+      ? "Sign in with LinkedIn to submit a new product. We use LinkedIn to verify you represent the company before a listing goes live."
       : "Sign in with LinkedIn to manage your dashboard, edit listings, and reply to inquiries.";
   const primaryCtaLabel =
     intent === "submit" ? "Continue with LinkedIn" : "Sign in with LinkedIn";

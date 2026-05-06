@@ -13,19 +13,21 @@ import { apps } from "./apps";
 import { admins } from "./audit";
 
 /**
- * Submissions are the moderation queue. Two flavours via the `type` enum:
+ * Submissions are the moderation queue.
  *
  *   • new   — vendor submitting a brand-new app. payload contains the full
  *             proposed app (name, tagline, description, taxonomy refs,
  *             customCapabilities/customIndustries proposals, optional
  *             company-on-first-submit data). app_id is NULL until approved.
  *
- *   • claim — vendor claiming an existing editorial stub. app_id points to
- *             the target app from the start; payload may carry edits the
- *             vendor proposes alongside the claim.
+ *   • claim — DEPRECATED 2026-05-06. The directory is invitation-only and
+ *             listings are seeded by the admin team — there is no public
+ *             "claim an existing listing" path. Enum value is retained so
+ *             historical / seeded rows keep loading; new rows MUST be
+ *             type = 'new'. Do not add a writer for type = 'claim'.
  *
- * Suggestions are the public "suggest an app" form — separate flow, no auth.
- * Lives in this file because the admin queue surfaces both.
+ * Suggestions schema is similarly retained but unused — the surface that
+ * wrote into it (/suggest) was removed at the same scope-narrowing.
  */
 export const submissionType = pgEnum("submission_type", ["new", "claim"]);
 

@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Plus,
-  MagnifyingGlass,
-} from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, Plus } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import {
   getVendorSession,
@@ -17,10 +13,11 @@ export const metadata: Metadata = {
 };
 
 /**
- * Onboarding landing — only shown to NEW vendors who haven't claimed or
- * submitted anything yet. Returning vendors skip this page entirely and land
- * on /dashboard directly (with the "+ Add another tool" CTA in the listings
- * section if they want a second tool).
+ * Onboarding landing — confirms LinkedIn-verified company affiliation,
+ * then routes the vendor straight into the submit wizard. No claim
+ * branch — directory is invitation-only and listings are seeded by the
+ * Resolute admin team; vendors are invited specifically to submit a NEW
+ * tool against an existing vendor profile.
  */
 export default async function OnboardingLandingPage({
   searchParams,
@@ -47,27 +44,37 @@ export default async function OnboardingLandingPage({
         <strong className="font-medium text-[var(--color-ink)]">
           {vendor.name}
         </strong>
-        . You&rsquo;ve got two paths from here.
+        . Let&rsquo;s get your product on the directory.
       </p>
 
       <ul className="mt-12 space-y-4">
         <li>
-          <PathCard
+          <Link
             href="/dashboard/onboarding/submit"
-            eyebrow="Path A"
-            icon={Plus}
-            title="Submit a new product."
-            body="Walk through three short steps to set up your company profile and add your first product to the directory. We'll review the submission and email you when it's live, usually within two business days."
-          />
-        </li>
-        <li>
-          <PathCard
-            href="/dashboard/onboarding/claim"
-            eyebrow="Path B"
-            icon={MagnifyingGlass}
-            title="Claim an existing listing."
-            body="If your product is already in the directory as an editorial stub, claim it and we'll transfer ownership after verifying. You can edit the description, add screenshots, and update categories."
-          />
+            className="group relative grid grid-cols-[auto_1fr_auto] items-start gap-5 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 transition-colors hover:border-[var(--color-ink)]/40 md:p-8"
+          >
+            <span className="grid h-12 w-12 place-items-center bg-[var(--color-canvas)] text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">
+              <Plus size={20} weight="regular" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+                Submit a new product
+              </p>
+              <p className="mt-2 font-heading text-[22px] leading-tight tracking-tight md:text-[26px]">
+                Add your tool to the directory.
+              </p>
+              <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)]">
+                Three short steps to set up your company profile and submit
+                your first product. We&rsquo;ll review and email you when it
+                goes live, usually within two business days.
+              </p>
+            </div>
+            <ArrowRight
+              size={18}
+              weight="regular"
+              className="mt-2 text-[var(--color-ink-3)] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--color-ink)]"
+            />
+          </Link>
         </li>
       </ul>
 
@@ -82,50 +89,5 @@ export default async function OnboardingLandingPage({
         .
       </p>
     </Container>
-  );
-}
-
-function PathCard({
-  href,
-  eyebrow,
-  icon: Icon,
-  title,
-  body,
-}: {
-  href: string;
-  eyebrow: string;
-  icon: React.ComponentType<{
-    size?: number;
-    weight?: "regular" | "bold" | "fill";
-    className?: string;
-  }>;
-  title: string;
-  body: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group relative grid grid-cols-[auto_1fr_auto] items-start gap-5 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 transition-colors hover:border-[var(--color-ink)]/40 md:p-8"
-    >
-      <span className="grid h-12 w-12 place-items-center bg-[var(--color-canvas)] text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">
-        <Icon size={20} weight="regular" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
-          {eyebrow}
-        </p>
-        <p className="mt-2 font-heading text-[22px] leading-tight tracking-tight md:text-[26px]">
-          {title}
-        </p>
-        <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)]">
-          {body}
-        </p>
-      </div>
-      <ArrowRight
-        size={18}
-        weight="regular"
-        className="mt-2 text-[var(--color-ink-3)] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--color-ink)]"
-      />
-    </Link>
   );
 }
