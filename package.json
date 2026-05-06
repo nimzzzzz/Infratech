@@ -20,6 +20,8 @@
   "dependencies": {
     "@clerk/nextjs": "^7.3.0",
     "@phosphor-icons/react": "^2.1.7",
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.0.8",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "framer-motion": "^11.18.0",
@@ -27,6 +29,7 @@
     "postgres": "^3.4.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "resend": "^6.12.2",
     "server-only": "^0.0.1",
     "svix": "^1.92.2",
     "tailwind-merge": "^2.6.0",
