@@ -57,6 +57,49 @@ export const vendors = pgTable(
   ],
 );
 
+/**
+ * vendor_members are the humans who sign in via Clerk and act on a
+ * vendor's behalf. The split lets multiple Clerk users represent the
+ * same company — the vendor record stays authoritative for the
+ * company; this table holds per-human session + onboarding state.
+ *
+ * vendor_id is nullable: at first sign-in we create the member row
+ * before they've confirmed which company they belong to. The
+ * /dashboard/onboarding step inserts a vendors row and repoints
+ * vendor_id from NULL to the new id.
+ *
+ * GDPR delete (user.deleted webhook): clear PII fields + clerk_user_id
+ * and set suspended=true. Don't touch the vendor row — the company
+ * still exists; only this human's link to it is severed.
+ */
+export const vendorMembers = pgTable(
+  "vendor_members",
+  {
+    id: serial("id").primaryKey(),
+    vendorId: integer("vendor_id").references(() => vendors.id, {
+      onDelete: "set null",
+    }),
+    clerkUserId: text("clerk_user_id").notNull(),
+    name: text("name").notNull(),
+    primaryEmail: text("primary_email").notNull(),
+    linkedinUrl: text("linkedin_url"),
+    role: text("role"),
+    onboarded: boolean("onboarded").notNull().default(false),
+    suspended: boolean("suspended").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ux_vendor_members_clerk_user_id").on(t.clerkUserId),
+    index("ix_vendor_members_vendor").on(t.vendorId),
+    index("ix_vendor_members_suspended").on(t.suspended),
+  ],
+);
+
 /** Regions a vendor actively serves. */
 export const vendorRegions = pgTable(
   "vendor_regions",
@@ -73,4 +116,6 @@ export const vendorRegions = pgTable(
 
 export type Vendor = typeof vendors.$inferSelect;
 export type NewVendor = typeof vendors.$inferInsert;
+export type VendorMember = typeof vendorMembers.$inferSelect;
+export type NewVendorMember = typeof vendorMembers.$inferInsert;
 export type VendorRegion = typeof vendorRegions.$inferSelect;
