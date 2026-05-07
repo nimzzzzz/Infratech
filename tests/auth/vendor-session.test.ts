@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { db } from "@/lib/db/client";
-import { vendors, vendorMembers } from "@/lib/db/schema";
+import { vendors, vendorMembers, apps } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 /**
@@ -8,10 +8,11 @@ import { eq } from "drizzle-orm";
  *
  *  - @/lib/env  : DEMO_MODE flips per-test. .env.local sets it true,
  *                 but real-Clerk-path cases need it false.
- *  - @clerk/nextjs/server : auth() returns { userId } we control.
- *  - next/navigation : redirect() is normally a "throw on render" sentinel
- *                      from Next; we throw a tagged RedirectError instead
- *                      so tests can assert the destination.
+ *  - @clerk/nextjs/server : auth() returns { userId } we control,
+ *                            clerkClient.users.getUser returns the
+ *                            user from clerkUserMock.user.
+ *  - next/navigation : redirect() throws a tagged RedirectError so
+ *                       tests can assert the destination.
  */
 const envMock = vi.hoisted(() => ({
   DEMO_MODE: false,
@@ -44,9 +45,6 @@ vi.mock("@/lib/env", () => ({ env: envMock }));
 
 const authMock = vi.hoisted(() => ({ userId: null as string | null }));
 const clerkUserMock = vi.hoisted(() => ({
-  // Mutable per-test. Defaults to null = "Clerk user not found / API
-  // unreachable" so the lazy-create branch returns null in cases that
-  // don't exercise it explicitly.
   user: null as null | {
     id: string;
     firstName: string | null;
@@ -86,77 +84,167 @@ beforeEach(() => {
   clerkUserMock.user = null;
 });
 
-/**
- * Inserts a vendors row + a vendor_members row pointing at it.
- * Returns the vendor for back-compat with existing assertions; the
- * member's onboarded/suspended state mirrors the requested values.
- *
- * TODO(stage-4 commit 6): replace with helpers that match the new
- * shape (createTestVendorMember, createTestVendor) so tests can
- * exercise both pre-onboarding and onboarded states clearly.
- */
-async function createTestVendor(opts: {
-  clerkUserId: string;
-  onboarded: boolean;
-  suspended?: boolean;
-}) {
+// ── Test fixture helpers ────────────────────────────────────────────
+
+async function insertTestVendor(name = "Test Vendor") {
   const slug = `tv-${Math.random().toString(36).slice(2, 10)}`;
   const [row] = await db
     .insert(vendors)
     .values({
       slug,
-      name: "Test Vendor",
+      name,
       contactEmail: `${slug}@example.com`,
-      suspended: opts.suspended ?? false,
     })
     .returning();
-  await db.insert(vendorMembers).values({
-    vendorId: row.id,
-    clerkUserId: opts.clerkUserId,
-    name: "Test Vendor",
-    primaryEmail: `${slug}@example.com`,
-    onboarded: opts.onboarded,
-    suspended: opts.suspended ?? false,
-  });
   return row;
 }
 
-describe("getVendorSession — real Clerk path", () => {
-  it("resolves the Clerk userId to its vendor row + populates user fields", async () => {
+async function insertTestMember(opts: {
+  clerkUserId: string;
+  vendorId: number | null;
+  onboarded: boolean;
+  suspended?: boolean;
+  name?: string;
+  email?: string;
+  role?: string | null;
+}) {
+  const [row] = await db
+    .insert(vendorMembers)
+    .values({
+      vendorId: opts.vendorId,
+      clerkUserId: opts.clerkUserId,
+      name: opts.name ?? "Test Person",
+      primaryEmail: opts.email ?? `${opts.clerkUserId}@example.com`,
+      onboarded: opts.onboarded,
+      suspended: opts.suspended ?? false,
+      role: opts.role ?? null,
+    })
+    .returning();
+  return row;
+}
+
+// ── Real Clerk path ─────────────────────────────────────────────────
+
+describe("getVendorSession — onboarded vendor (vendor_id populated)", () => {
+  it("returns the full session with both vendor + vendorMember non-null", async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
-    const v = await createTestVendor({
+    const v = await insertTestVendor("Aiko Co");
+    await insertTestMember({
       clerkUserId: "user_real_1",
+      vendorId: v.id,
       onboarded: true,
+      name: "Aiko Tanaka",
+      email: "aiko@example.com",
+      role: "CTO",
     });
     authMock.userId = "user_real_1";
 
     const session = await getVendorSession();
+
     expect(session.vendor.id).toBe(v.id);
+    expect(session.vendor.name).toBe("Aiko Co");
     expect(session.vendorMember.clerkUserId).toBe("user_real_1");
+    expect(session.vendorMember.name).toBe("Aiko Tanaka");
+    expect(session.vendorMember.role).toBe("CTO");
+    expect(session.vendorMember.onboarded).toBe(true);
     expect(session.user.id).toBe("user_real_1");
-    expect(session.user.name).toBe(v.name);
-    expect(session.user.email).toBe(v.contactEmail);
+    expect(session.user.name).toBe("Aiko Tanaka");
+    expect(session.user.email).toBe("aiko@example.com");
+  });
+});
+
+describe("getVendorSession — pre-onboarding vendor_member (vendor_id NULL)", () => {
+  it("redirects an unonboarded member with no vendor to /dashboard/onboarding under the default gate", async () => {
+    const { getVendorSession } = await import("@/lib/auth/session");
+    await insertTestMember({
+      clerkUserId: "user_pre_1",
+      vendorId: null,
+      onboarded: false,
+    });
+    authMock.userId = "user_pre_1";
+
+    await expect(getVendorSession()).rejects.toThrow(
+      /REDIRECT:\/dashboard\/onboarding/,
+    );
   });
 
+  it("returns the open shape (vendor=null) when called with requireOnboarded:false — the onboarding pages themselves", async () => {
+    const { getVendorSession } = await import("@/lib/auth/session");
+    const m = await insertTestMember({
+      clerkUserId: "user_pre_2",
+      vendorId: null,
+      onboarded: false,
+      name: "Hannah Pre",
+      email: "hannah@example.com",
+    });
+    authMock.userId = "user_pre_2";
+
+    const session = await getVendorSession({ requireOnboarded: false });
+
+    expect(session.vendor).toBeNull();
+    expect(session.vendorMember.id).toBe(m.id);
+    expect(session.vendorMember.vendorId).toBeNull();
+    expect(session.vendorMember.onboarded).toBe(false);
+    expect(session.user.name).toBe("Hannah Pre");
+  });
+
+  it("redirects an onboarded member whose vendor_id is somehow NULL (corrupted state) back to /dashboard/onboarding when the gate is on", async () => {
+    const { getVendorSession } = await import("@/lib/auth/session");
+    // Defensive contract: gate=on implies vendor exists. If it
+    // doesn't, send the human back through onboarding rather than
+    // handing them a null vendor.
+    await insertTestMember({
+      clerkUserId: "user_corrupt_1",
+      vendorId: null,
+      onboarded: true,
+    });
+    authMock.userId = "user_corrupt_1";
+
+    await expect(getVendorSession()).rejects.toThrow(
+      /REDIRECT:\/dashboard\/onboarding/,
+    );
+  });
+});
+
+describe("getVendorSession — error paths", () => {
   it("redirects to /login when no Clerk userId is present", async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
     authMock.userId = null;
     await expect(getVendorSession()).rejects.toThrow(/REDIRECT:\/login$/);
   });
 
-  it("redirects to /login?error=no_vendor when userId has no matching vendor row AND lazy-create fallback fails (Clerk API unreachable)", async () => {
+  it("redirects to /login?error=no_vendor when userId has no member row AND lazy-create fails", async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
-    authMock.userId = "user_orphan_xyz";
-    // clerkUserMock.user stays null, so the helper's clerkClient call
-    // throws and lazyCreateVendorFromClerk returns null.
+    authMock.userId = "user_orphan_x";
+    // clerkUserMock.user stays null → helper's clerkClient call
+    // throws → lazyCreate returns null → redirect.
     await expect(getVendorSession()).rejects.toThrow(
       /REDIRECT:\/login\?error=no_vendor/,
     );
   });
 
-  it("lazy-creates a vendor row when the Clerk session exists but the webhook never delivered", async () => {
+  it("redirects to /login?error=suspended for a suspended vendor_member", async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
-    const userId = "user_3DLateWebhook42AbCdEf";
+    const v = await insertTestVendor();
+    await insertTestMember({
+      clerkUserId: "user_susp_1",
+      vendorId: v.id,
+      onboarded: true,
+      suspended: true,
+    });
+    authMock.userId = "user_susp_1";
+    await expect(getVendorSession()).rejects.toThrow(
+      /REDIRECT:\/login\?error=suspended/,
+    );
+  });
+});
+
+// ── Lazy-create fallback ────────────────────────────────────────────
+
+describe("getVendorSession — lazy-create vendor_members fallback", () => {
+  it("creates a vendor_members row from Clerk user data when the webhook didn't deliver", async () => {
+    const { getVendorSession } = await import("@/lib/auth/session");
+    const userId = "user_3DLazyCreatedAaaaBb";
     authMock.userId = userId;
     clerkUserMock.user = {
       id: userId,
@@ -170,114 +258,93 @@ describe("getVendorSession — real Clerk path", () => {
 
     const session = await getVendorSession({ requireOnboarded: false });
 
-    // After the schema split, lazy-create produces a vendor_members
-    // row only — vendor stays null until /dashboard/onboarding runs.
-    // Commit 6 expands these assertions; this commit narrows them
-    // to the post-refactor shape so tsc stays clean.
+    // vendor stays null — lazy-create only writes to vendor_members.
+    // The /dashboard/onboarding flow is what creates a vendor row.
     expect(session.vendor).toBeNull();
     expect(session.vendorMember.clerkUserId).toBe(userId);
     expect(session.vendorMember.name).toBe("Aiko Tanaka");
     expect(session.vendorMember.primaryEmail).toBe("aiko@example.com");
     expect(session.vendorMember.onboarded).toBe(false);
+    expect(session.vendorMember.vendorId).toBeNull();
 
+    // Persisted: a follow-up call returns the same member without
+    // re-running lazy-create.
     const second = await getVendorSession({ requireOnboarded: false });
     expect(second.vendorMember.id).toBe(session.vendorMember.id);
   });
 
-  it("redirects to /login?error=suspended for a suspended vendor", async () => {
+  it("falls back to ${userId}@unknown.example when Clerk user has no email", async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
-    await createTestVendor({
-      clerkUserId: "user_suspended_2",
-      onboarded: true,
-      suspended: true,
-    });
-    authMock.userId = "user_suspended_2";
-    await expect(getVendorSession()).rejects.toThrow(
-      /REDIRECT:\/login\?error=suspended/,
-    );
-  });
-});
-
-describe("getVendorSession — onboarded gate", () => {
-  it("redirects an unonboarded vendor to /dashboard/onboarding (default requireOnboarded=true)", async () => {
-    const { getVendorSession } = await import("@/lib/auth/session");
-    await createTestVendor({
-      clerkUserId: "user_pre_onboard_3",
-      onboarded: false,
-    });
-    authMock.userId = "user_pre_onboard_3";
-    await expect(getVendorSession()).rejects.toThrow(
-      /REDIRECT:\/dashboard\/onboarding/,
-    );
-  });
-
-  it("returns the session when requireOnboarded=false even if vendor.onboarded=false (the onboarding pages themselves)", async () => {
-    const { getVendorSession } = await import("@/lib/auth/session");
-    const v = await createTestVendor({
-      clerkUserId: "user_onboard_page_4",
-      onboarded: false,
-    });
-    authMock.userId = "user_onboard_page_4";
+    const userId = "user_3DNoEmail112233";
+    authMock.userId = userId;
+    clerkUserMock.user = {
+      id: userId,
+      firstName: "Email",
+      lastName: "Missing",
+      primaryEmailAddressId: null,
+      emailAddresses: [], // Clerk has no email — rare for LinkedIn but possible
+    };
 
     const session = await getVendorSession({ requireOnboarded: false });
-    expect(session.vendor!.id).toBe(v.id);
-    expect(session.vendorMember.onboarded).toBe(false);
-  });
-
-  it("does not redirect when vendorMember.onboarded=true under default settings", async () => {
-    const { getVendorSession } = await import("@/lib/auth/session");
-    const v = await createTestVendor({
-      clerkUserId: "user_onboarded_5",
-      onboarded: true,
-    });
-    authMock.userId = "user_onboarded_5";
-
-    const session = await getVendorSession();
-    expect(session.vendor.id).toBe(v.id);
+    expect(session.vendorMember.primaryEmail).toBe(`${userId}@unknown.example`);
   });
 });
+
+// ── DEMO_MODE bypass ────────────────────────────────────────────────
 
 describe("getVendorSession — DEMO_MODE bypass", () => {
   beforeEach(() => {
     envMock.DEMO_MODE = true;
-    authMock.userId = null; // demo path doesn't even consult Clerk
+    authMock.userId = null;
   });
 
-  it('demoOverride="returning" returns a session with vendor populated (DEMO_MODE bypass)', async () => {
+  it('demoOverride="returning" returns a session with vendor + vendorMember populated (synthesised when no real member exists)', async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
+    // Seed has no vendor_members rows → falls back to first vendor
+    // row + synthetic member with onboarded=true.
     const session = await getVendorSession({ demoOverride: "returning" });
-    // Post-refactor the bypass picks the first onboarded
-    // vendor_member if any exists, else falls back to the first
-    // seeded vendor with a synthetic member.
     expect(session.vendor).not.toBeNull();
     expect(session.vendorMember.onboarded).toBe(true);
   });
 
-  it('demoOverride="new" returns the first non-onboarded vendor (requires opting out of the onboarded gate, since "new" implies pre-onboarding)', async () => {
+  it('demoOverride="returning" prefers a real onboarded vendor_member if one exists', async () => {
+    const { getVendorSession } = await import("@/lib/auth/session");
+    const v = await insertTestVendor("Real Demo Co");
+    await insertTestMember({
+      clerkUserId: "user_demo_real",
+      vendorId: v.id,
+      onboarded: true,
+      name: "Real Demo Person",
+    });
+    const session = await getVendorSession({ demoOverride: "returning" });
+    expect(session.vendor!.id).toBe(v.id);
+    expect(session.vendorMember.name).toBe("Real Demo Person");
+  });
+
+  it('demoOverride="new" returns vendor=null with a synthetic unonboarded member when called with requireOnboarded:false', async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
     const session = await getVendorSession({
       demoOverride: "new",
       requireOnboarded: false,
     });
-    // After B.1 the demoOverride="new" branch returns vendor=null
-    // (synthetic pre-onboarded member with vendorId=null). Commit 6
-    // replaces this assertion accordingly.
     expect(session.vendor).toBeNull();
+    expect(session.vendorMember.onboarded).toBe(false);
+    expect(session.vendorMember.vendorId).toBeNull();
   });
 
-  it("DEMO_MODE still applies the onboarded gate by default — redirects an unonboarded demo vendor", async () => {
+  it('demoOverride="new" with the default onboarded gate redirects to /dashboard/onboarding', async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
     await expect(
-      getVendorSession({ demoOverride: "new" /* default requireOnboarded=true */ }),
+      getVendorSession({ demoOverride: "new" }),
     ).rejects.toThrow(/REDIRECT:\/dashboard\/onboarding/);
   });
 
   it("DEMO_MODE redirects to /login?error=no_demo_vendor when no seeded vendor exists at all", async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
-    // Post-refactor the demoOverride="returning" branch falls back
-    // to the first vendors row when no onboarded member exists.
-    // Empty the vendors table inside the test tx to force the no-
-    // demo-vendor branch.
+    // Wipe vendors. Apps reference vendors via FK; clear them
+    // first so the delete cascades cleanly within the test tx.
+    await db.delete(apps);
+    await db.delete(vendorMembers);
     await db.delete(vendors);
 
     await expect(
@@ -285,3 +352,7 @@ describe("getVendorSession — DEMO_MODE bypass", () => {
     ).rejects.toThrow(/REDIRECT:\/login\?error=no_demo_vendor/);
   });
 });
+
+// Quiet the lint about importing eq even though we don't use it directly
+// in this file anymore.
+void eq;
