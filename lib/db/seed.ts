@@ -138,7 +138,6 @@ async function main() {
           hqCountry: v.headquarters,
           logoUrl: v.logoUrl ?? null,
           contactEmail: `contact@${v.slug}.example`,
-          onboarded: true,
         })),
       )
       .returning({ id: schema.vendors.id, slug: schema.vendors.slug });
@@ -221,7 +220,6 @@ async function main() {
             name: sub.submitter.companyName,
             contactEmail: sub.submitter.email,
             linkedinUrl: sub.submitter.linkedinUrl,
-            onboarded: false,
           })
           .returning({ id: schema.vendors.id });
         submitterVendorId = created.id;

@@ -1,9 +1,15 @@
 import { Webhook } from "svix";
 import { clerkClient } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { and, eq, isNotNull, ne, sql } from "drizzle-orm";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db/client";
-import { vendors, admins, auditLog, apps } from "@/lib/db/schema";
+import {
+  vendors,
+  vendorMembers,
+  admins,
+  auditLog,
+  apps,
+} from "@/lib/db/schema";
 
 /**
  * Clerk webhook handler.
@@ -24,15 +30,21 @@ import { vendors, admins, auditLog, apps } from "@/lib/db/schema";
  *       1. Determine canonical role: explicit publicMetadata.role="admin"
  *          → admin; everything else (LinkedIn OAuth, email, missing) →
  *          vendor.
- *       2. Insert the DB row first.
+ *       2. Insert the DB row first. Vendors are stored in vendor_members
+ *          (vendor_id NULL until /dashboard/onboarding); admins in admins.
  *       3. Best-effort: push role back to Clerk publicMetadata if it
  *          differs from canonical. Failure logs + breadcrumbs, doesn't
  *          throw.
- *   • user.updated — sync name/email; reconcile role drift the same way.
- *     If no DB row exists, fall through to handleUserCreated.
- *   • user.deleted — vendors anonymised + their published apps moved to
- *     "unpublished"; admins hard-deleted. Either path writes an
- *     audit_log row with admin_id=NULL.
+ *   • user.updated — sync name/email on the existing vendor_members or
+ *     admins row; reconcile role drift the same way. If no DB row
+ *     exists, fall through to handleUserCreated.
+ *   • user.deleted — vendor_members PII anonymised + clerk_user_id
+ *     cleared + suspended=true; if the member was the only one
+ *     pointing at their vendor, the vendor row is suspended too;
+ *     their published apps move to "unpublished". Admins hard-
+ *     deleted. Either path writes an audit_log row with admin_id=NULL.
+ *     The vendor row itself is never deleted — the company exists
+ *     independently of the human's link to it.
  */
 
 type ClerkUser = {
@@ -61,12 +73,6 @@ type ClerkEvent =
   | { type: "user.deleted"; data: ClerkDeletedUser };
 
 type CanonicalRole = "vendor" | "admin";
-
-const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
 
 function fullNameOf(u: ClerkUser): string {
   const parts = [u.first_name, u.last_name].filter(Boolean);
@@ -186,17 +192,19 @@ async function handleUserCreated(user: ClerkUser): Promise<void> {
       .onConflictDoNothing({ target: admins.clerkUserId });
   } else {
     const name = fullNameOf(user);
-    const email = primaryEmailOf(user);
+    const email = primaryEmailOf(user) ?? `${user.id}@unknown.example`;
+    // vendor_id stays NULL — the human hasn't confirmed their company
+    // yet. /dashboard/onboarding inserts a vendors row and repoints.
     await db
-      .insert(vendors)
+      .insert(vendorMembers)
       .values({
-        slug: `${slugify(name)}-${user.id.slice(-6)}`,
+        vendorId: null,
         clerkUserId: user.id,
         name,
-        contactEmail: email,
+        primaryEmail: email,
         onboarded: false,
       })
-      .onConflictDoNothing({ target: vendors.clerkUserId });
+      .onConflictDoNothing({ target: vendorMembers.clerkUserId });
   }
 
   // 2. Best-effort: ensure Clerk metadata reflects canonical role.
@@ -209,8 +217,8 @@ async function handleUserUpdated(user: ClerkUser): Promise<void> {
   const name = fullNameOf(user);
   const email = primaryEmailOf(user);
 
-  // Find the existing record. Admin first — admin/vendor never collide on
-  // clerk_user_id, but admin is the smaller table.
+  // Find the existing record. Admin first — admin and vendor_member
+  // never collide on clerk_user_id, but admin is the smaller table.
   const [adminRow] = await db
     .select()
     .from(admins)
@@ -230,25 +238,28 @@ async function handleUserUpdated(user: ClerkUser): Promise<void> {
     return;
   }
 
-  const [vendorRow] = await db
+  const [memberRow] = await db
     .select()
-    .from(vendors)
-    .where(eq(vendors.clerkUserId, user.id))
+    .from(vendorMembers)
+    .where(eq(vendorMembers.clerkUserId, user.id))
     .limit(1);
 
-  if (vendorRow) {
+  if (memberRow) {
+    // primary_email is NOT NULL — only update if Clerk gave us one.
+    const patch: { name: string; primaryEmail?: string } = { name };
+    if (email) patch.primaryEmail = email;
     await db
-      .update(vendors)
-      .set({ name, contactEmail: email })
-      .where(eq(vendors.id, vendorRow.id));
+      .update(vendorMembers)
+      .set(patch)
+      .where(eq(vendorMembers.id, memberRow.id));
     if (user.public_metadata?.role !== "vendor") {
       await syncRoleToClerk(user.id, "vendor", user.public_metadata);
     }
     return;
   }
 
-  // No DB row — defensive: an update for a user we've never seen. Treat
-  // as a created event.
+  // No DB row — defensive: an update for a user we've never seen.
+  // Treat as a created event.
   console.warn(
     `[clerk webhook] user.updated for ${user.id} but no DB row exists; treating as created`,
   );
@@ -278,36 +289,65 @@ async function handleUserDeleted(user: ClerkDeletedUser): Promise<void> {
     return;
   }
 
-  const [vendorRow] = await db
+  const [memberRow] = await db
     .select()
-    .from(vendors)
-    .where(eq(vendors.clerkUserId, user.id))
+    .from(vendorMembers)
+    .where(eq(vendorMembers.clerkUserId, user.id))
     .limit(1);
 
-  if (!vendorRow) return;
+  if (!memberRow) return;
 
   await db.transaction(async (tx) => {
     await tx.insert(auditLog).values({
       adminId: null,
-      action: "vendor.gdpr_delete",
-      targetType: "vendor",
-      targetId: String(vendorRow.id),
-      before: vendorRow,
+      action: "vendor_member.gdpr_delete",
+      targetType: "vendor_member",
+      targetId: String(memberRow.id),
+      before: memberRow,
       after: null,
     });
+
+    // Anonymise the member row. Don't delete — audit_log references
+    // the id; cascading delete would clobber that breadcrumb.
     await tx
-      .update(vendors)
+      .update(vendorMembers)
       .set({
-        name: "[deleted vendor]",
-        contactEmail: null,
+        name: "[deleted user]",
+        primaryEmail: `deleted-${memberRow.id}@unknown.example`,
         linkedinUrl: null,
-        clerkUserId: null,
+        clerkUserId: `deleted-${memberRow.id}`,
         suspended: true,
       })
-      .where(eq(vendors.id, vendorRow.id));
-    await tx
-      .update(apps)
-      .set({ status: "unpublished" })
-      .where(eq(apps.vendorId, vendorRow.id));
+      .where(eq(vendorMembers.id, memberRow.id));
+
+    // The vendor row itself stays — the company exists independently
+    // of this human's link to it. But if this human was the ONLY
+    // active member of that vendor, suspend the vendor and unpublish
+    // its apps (no one's left to maintain it).
+    if (memberRow.vendorId !== null) {
+      const [{ remaining }] = await tx
+        .select({ remaining: sql<number>`count(*)::int` })
+        .from(vendorMembers)
+        .where(
+          and(
+            eq(vendorMembers.vendorId, memberRow.vendorId),
+            ne(vendorMembers.suspended, true),
+            isNotNull(vendorMembers.clerkUserId),
+          ),
+        );
+      // The just-anonymised row above set suspended=true so it's
+      // already excluded by the `ne(suspended, true)` clause. If the
+      // count is zero, this human was the sole active member.
+      if (remaining === 0) {
+        await tx
+          .update(vendors)
+          .set({ suspended: true })
+          .where(eq(vendors.id, memberRow.vendorId));
+        await tx
+          .update(apps)
+          .set({ status: "unpublished" })
+          .where(eq(apps.vendorId, memberRow.vendorId));
+      }
+    }
   });
 }
