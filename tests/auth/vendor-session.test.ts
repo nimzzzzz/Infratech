@@ -43,8 +43,30 @@ const envMock = vi.hoisted(() => ({
 vi.mock("@/lib/env", () => ({ env: envMock }));
 
 const authMock = vi.hoisted(() => ({ userId: null as string | null }));
+const clerkUserMock = vi.hoisted(() => ({
+  // Mutable per-test. Defaults to null = "Clerk user not found / API
+  // unreachable" so the lazy-create branch returns null in cases that
+  // don't exercise it explicitly.
+  user: null as null | {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    primaryEmailAddressId: string | null;
+    emailAddresses: Array<{ id: string; emailAddress: string }>;
+  },
+}));
 vi.mock("@clerk/nextjs/server", () => ({
   auth: vi.fn(async () => ({ userId: authMock.userId })),
+  clerkClient: vi.fn(async () => ({
+    users: {
+      getUser: vi.fn(async (id: string) => {
+        if (clerkUserMock.user && clerkUserMock.user.id === id) {
+          return clerkUserMock.user;
+        }
+        throw new Error(`Clerk user ${id} not found (mock)`);
+      }),
+    },
+  })),
 }));
 
 class RedirectError extends Error {
@@ -61,6 +83,7 @@ vi.mock("next/navigation", () => ({
 beforeEach(() => {
   envMock.DEMO_MODE = false;
   authMock.userId = null;
+  clerkUserMock.user = null;
 });
 
 async function createTestVendor(opts: {
@@ -106,12 +129,43 @@ describe("getVendorSession — real Clerk path", () => {
     await expect(getVendorSession()).rejects.toThrow(/REDIRECT:\/login$/);
   });
 
-  it("redirects to /login?error=no_vendor when userId has no matching vendor row", async () => {
+  it("redirects to /login?error=no_vendor when userId has no matching vendor row AND lazy-create fallback fails (Clerk API unreachable)", async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
     authMock.userId = "user_orphan_xyz";
+    // clerkUserMock.user stays null, so the helper's clerkClient call
+    // throws and lazyCreateVendorFromClerk returns null.
     await expect(getVendorSession()).rejects.toThrow(
       /REDIRECT:\/login\?error=no_vendor/,
     );
+  });
+
+  it("lazy-creates a vendor row when the Clerk session exists but the webhook never delivered", async () => {
+    const { getVendorSession } = await import("@/lib/auth/session");
+    const userId = "user_3DLateWebhook42AbCdEf";
+    authMock.userId = userId;
+    clerkUserMock.user = {
+      id: userId,
+      firstName: "Aiko",
+      lastName: "Tanaka",
+      primaryEmailAddressId: "idn_primary",
+      emailAddresses: [
+        { id: "idn_primary", emailAddress: "aiko@example.com" },
+      ],
+    };
+
+    const session = await getVendorSession({ requireOnboarded: false });
+
+    // Row was created with the webhook's exact shape.
+    expect(session.vendor.clerkUserId).toBe(userId);
+    expect(session.vendor.name).toBe("Aiko Tanaka");
+    expect(session.vendor.contactEmail).toBe("aiko@example.com");
+    expect(session.vendor.onboarded).toBe(false);
+    expect(session.vendor.slug).toMatch(/^aiko-tanaka-[A-Za-z0-9]{6}$/);
+
+    // And it's persisted: a follow-up call returns the same row
+    // without re-running lazy-create (no Clerk API call needed).
+    const second = await getVendorSession({ requireOnboarded: false });
+    expect(second.vendor.id).toBe(session.vendor.id);
   });
 
   it("redirects to /login?error=suspended for a suspended vendor", async () => {

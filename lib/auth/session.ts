@@ -1,6 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db/client";
@@ -76,7 +76,17 @@ export async function getVendorSession(opts?: {
   const { userId } = await auth();
   if (!userId) redirect("/login");
 
-  const vendor = await getVendorByClerkUserId(userId);
+  let vendor: Vendor | null = await getVendorByClerkUserId(userId);
+  if (!vendor) {
+    // Webhook-failure fallback. The Clerk webhook is the canonical
+    // creator of vendors rows on user.created — but it's a best-effort
+    // delivery (network hiccups, signing-secret rotations, dev-mode
+    // tunnels, etc.). When it fails, the user has a valid Clerk
+    // session but no DB row, and would otherwise dead-end at
+    // /login?error=no_vendor with no recovery path. Try to repair
+    // inline using Clerk's user object as the source of truth.
+    vendor = await lazyCreateVendorFromClerk(userId);
+  }
   if (!vendor) redirect("/login?error=no_vendor");
   if (vendor.suspended) redirect("/login?error=suspended");
 
@@ -156,4 +166,61 @@ function initialsOf(name: string): string {
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+/**
+ * Inline vendor-row creation from a Clerk user object. Used as a
+ * fallback when the user.created webhook didn't run or failed —
+ * keeps the (slug, clerkUserId, name, contactEmail, onboarded)
+ * shape identical to what the webhook handler in
+ * app/api/webhooks/clerk/route.ts produces, so a lazy-created row
+ * is indistinguishable from a webhook-created one.
+ *
+ * onConflictDoNothing on clerk_user_id means that if a concurrent
+ * webhook insert wins the race, we re-fetch and return the row it
+ * created. Either way, exactly one row exists per Clerk user.
+ *
+ * Returns null on any failure so callers can fall through to the
+ * existing /login?error=no_vendor redirect rather than throwing
+ * inside getVendorSession.
+ */
+async function lazyCreateVendorFromClerk(
+  userId: string,
+): Promise<Vendor | null> {
+  try {
+    const cc = await clerkClient();
+    const u = await cc.users.getUser(userId);
+
+    const fullName =
+      [u.firstName, u.lastName].filter(Boolean).join(" ") || "Unnamed vendor";
+    const primary = u.emailAddresses.find(
+      (e) => e.id === u.primaryEmailAddressId,
+    );
+    const email =
+      primary?.emailAddress ?? u.emailAddresses[0]?.emailAddress ?? null;
+
+    await db
+      .insert(vendors)
+      .values({
+        slug: `${slugify(fullName)}-${userId.slice(-6)}`,
+        clerkUserId: userId,
+        name: fullName,
+        contactEmail: email,
+        onboarded: false,
+      })
+      .onConflictDoNothing({ target: vendors.clerkUserId });
+
+    // Re-fetch — covers both our successful insert AND a concurrent
+    // webhook insert that won the conflict.
+    return await getVendorByClerkUserId(userId);
+  } catch (err) {
+    console.error("[session] lazyCreateVendorFromClerk failed", err);
+    return null;
+  }
 }
