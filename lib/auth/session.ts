@@ -1,19 +1,37 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db/client";
-import { vendors, type Vendor } from "@/lib/db/schema";
-import { getVendorByClerkUserId } from "@/lib/queries/vendors";
+import {
+  vendors,
+  vendorMembers,
+  type Vendor,
+  type VendorMember,
+} from "@/lib/db/schema";
+import { getVendorByMemberClerkUserId } from "@/lib/queries/vendors";
 
+/**
+ * Closed shape — vendor is guaranteed non-null because the onboarded
+ * gate has already fired. This is the default for every dashboard
+ * page that doesn't explicitly opt out.
+ */
 export type VendorSession = {
   vendor: Vendor;
-  user: {
-    id: string;
-    name: string;
-    email: string | null;
-  };
+  vendorMember: VendorMember;
+  user: { id: string; name: string; email: string | null };
+};
+
+/**
+ * Open shape — vendor may be null. Used by the onboarding pages
+ * themselves, where a brand-new sign-in legitimately has a
+ * vendor_members row but no vendor row yet.
+ */
+export type VendorSessionOpen = {
+  vendor: Vendor | null;
+  vendorMember: VendorMember;
+  user: { id: string; name: string; email: string | null };
 };
 
 export type DemoOverride = "new" | "returning";
@@ -21,54 +39,92 @@ export type DemoOverride = "new" | "returning";
 /**
  * Resolve the current vendor session.
  *
- * In demo mode (NEXT_PUBLIC_DEMO_MODE=true and not production) the
- * `demoOverride` arg short-circuits Clerk and returns a deterministic
- * seeded vendor:
- *   • "new" → first vendor with onboarded=false (typically a submitter
- *     auto-created by the seed). Used to preview the onboarding gate.
- *   • "returning" → first vendor with onboarded=true (Oracle in seed).
- *
- * Outside demo mode we require a real Clerk session. Redirects to
- * /login if unauthenticated, /login?error=… on data integrity issues.
- *
  * `requireOnboarded` defaults to TRUE — every dashboard page is
  * assumed to need a fully onboarded vendor unless it opts out. The
- * onboarding pages themselves (/dashboard/onboarding,
- * /dashboard/onboarding/submit, /dashboard/onboarding/complete) MUST
- * pass `requireOnboarded: false` or they redirect-loop.
+ * onboarding pages (/dashboard/onboarding, /dashboard/onboarding/
+ * submit, /dashboard/onboarding/complete) MUST pass
+ * `requireOnboarded: false` or they redirect-loop.
  *
- * The strict default is deliberate: future dashboard subroutes can't
- * accidentally skip the gate by forgetting to set the option.
+ * The strict default is deliberate: future dashboard subroutes
+ * can't accidentally skip the gate by forgetting to set the
+ * option.
+ *
+ * Overload signatures encode the contract: callers using the
+ * default (or explicit true) get VendorSession with non-null
+ * vendor. Callers passing false get VendorSessionOpen with
+ * possibly-null vendor.
+ *
+ * In demo mode (NEXT_PUBLIC_DEMO_MODE=true and not production) we
+ * short-circuit Clerk and synthesise a session from a deterministic
+ * seeded vendor. The synthesis no longer pulls from
+ * vendors.onboarded (that column is being dropped) — instead it
+ * picks the first vendor with at least one member-bearing app
+ * relation, falling back to the first vendor by id. Slightly
+ * degraded vs the old conflated model, by design.
  */
 export async function getVendorSession(opts?: {
   demoOverride?: DemoOverride;
+}): Promise<VendorSession>;
+export async function getVendorSession(opts: {
+  demoOverride?: DemoOverride;
+  requireOnboarded: false;
+}): Promise<VendorSessionOpen>;
+export async function getVendorSession(opts: {
+  demoOverride?: DemoOverride;
+  requireOnboarded: true;
+}): Promise<VendorSession>;
+export async function getVendorSession(opts?: {
+  demoOverride?: DemoOverride;
   requireOnboarded?: boolean;
-}): Promise<VendorSession> {
+}): Promise<VendorSession | VendorSessionOpen> {
   const requireOnboarded = opts?.requireOnboarded ?? true;
 
   if (env.DEMO_MODE) {
-    // In demo mode the middleware doesn't enforce Clerk auth — short-circuit
-    // to a deterministic seeded vendor. ?as=new picks the first non-onboarded
-    // vendor (lets us preview the onboarding gate); anything else picks the
-    // first onboarded one.
     const wantOnboarded = opts?.demoOverride !== "new";
-    const [vendor] = await db
-      .select()
-      .from(vendors)
-      .where(eq(vendors.onboarded, wantOnboarded))
-      .limit(1);
-    if (!vendor) redirect("/login?error=no_demo_vendor");
-
-    if (requireOnboarded && !vendor.onboarded) {
-      redirect("/dashboard/onboarding");
+    // Demo bypass: pick the first onboarded member if any exist (dev
+    // box may have created one via a real test sign-in), else
+    // synthesise from the first seeded vendor.
+    if (wantOnboarded) {
+      const [memberRow] = await db
+        .select({ member: vendorMembers, vendor: vendors })
+        .from(vendorMembers)
+        .leftJoin(vendors, eq(vendors.id, vendorMembers.vendorId))
+        .where(eq(vendorMembers.onboarded, true))
+        .limit(1);
+      if (memberRow && memberRow.vendor) {
+        return makeSession(memberRow.vendor, memberRow.member);
+      }
+      const [vendorRow] = await db
+        .select()
+        .from(vendors)
+        .orderBy(vendors.id)
+        .limit(1);
+      if (!vendorRow) redirect("/login?error=no_demo_vendor");
+      return makeSession(vendorRow, syntheticMember(vendorRow));
     }
 
+    // demoOverride === "new" — preview the onboarding gate. Open shape.
+    const fakeMember: VendorMember = {
+      id: -1,
+      vendorId: null,
+      clerkUserId: "demo_new_user",
+      name: "Demo New User",
+      primaryEmail: "demo+new@example.com",
+      linkedinUrl: null,
+      role: null,
+      onboarded: false,
+      suspended: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    if (requireOnboarded) redirect("/dashboard/onboarding");
     return {
-      vendor,
+      vendor: null,
+      vendorMember: fakeMember,
       user: {
-        id: vendor.clerkUserId ?? `demo_${vendor.id}`,
-        name: vendor.name,
-        email: vendor.contactEmail,
+        id: fakeMember.clerkUserId,
+        name: fakeMember.name,
+        email: fakeMember.primaryEmail,
       },
     };
   }
@@ -76,30 +132,53 @@ export async function getVendorSession(opts?: {
   const { userId } = await auth();
   if (!userId) redirect("/login");
 
-  let vendor: Vendor | null = await getVendorByClerkUserId(userId);
-  if (!vendor) {
+  let result = await getVendorByMemberClerkUserId(userId);
+  if (!result) {
     // Webhook-failure fallback. The Clerk webhook is the canonical
-    // creator of vendors rows on user.created — but it's a best-effort
-    // delivery (network hiccups, signing-secret rotations, dev-mode
-    // tunnels, etc.). When it fails, the user has a valid Clerk
-    // session but no DB row, and would otherwise dead-end at
-    // /login?error=no_vendor with no recovery path. Try to repair
-    // inline using Clerk's user object as the source of truth.
-    vendor = await lazyCreateVendorFromClerk(userId);
+    // creator of vendor_members rows on user.created — but it's
+    // best-effort delivery (network hiccups, signing-secret
+    // rotations, dev-mode tunnels, etc.). When it fails, the user
+    // has a valid Clerk session but no DB row, and would otherwise
+    // dead-end at /login?error=no_vendor with no recovery path. Try
+    // to repair inline using Clerk's user object as the source of
+    // truth.
+    result = await lazyCreateVendorMemberFromClerk(userId);
   }
-  if (!vendor) redirect("/login?error=no_vendor");
-  if (vendor.suspended) redirect("/login?error=suspended");
+  if (!result) redirect("/login?error=no_vendor");
 
-  if (requireOnboarded && !vendor.onboarded) {
+  const { vendor, vendorMember } = result;
+  if (vendorMember.suspended) redirect("/login?error=suspended");
+
+  if (requireOnboarded && !vendorMember.onboarded) {
     redirect("/dashboard/onboarding");
   }
 
+  if (requireOnboarded) {
+    // Defensive: the onboarded gate above implies a vendor_id is set
+    // (the onboarding flow only flips onboarded=true after creating
+    // and linking a vendor). If somehow a member is onboarded with
+    // no vendor, treat the session as broken and bounce back to
+    // onboarding rather than handing the caller a null vendor.
+    if (!vendor) redirect("/dashboard/onboarding");
+    return {
+      vendor,
+      vendorMember,
+      user: {
+        id: userId,
+        name: vendorMember.name,
+        email: vendorMember.primaryEmail,
+      },
+    };
+  }
+
+  // Open shape — caller asked for it explicitly.
   return {
     vendor,
+    vendorMember,
     user: {
       id: userId,
-      name: vendor.name,
-      email: vendor.contactEmail,
+      name: vendorMember.name,
+      email: vendorMember.primaryEmail,
     },
   };
 }
@@ -107,17 +186,49 @@ export async function getVendorSession(opts?: {
 export const isDemoOverride = (v: unknown): v is DemoOverride =>
   v === "new" || v === "returning";
 
+function makeSession(vendor: Vendor, vendorMember: VendorMember): VendorSession {
+  return {
+    vendor,
+    vendorMember,
+    user: {
+      id: vendorMember.clerkUserId,
+      name: vendorMember.name,
+      email: vendorMember.primaryEmail,
+    },
+  };
+}
+
+/** Used only by the DEMO_MODE returning-vendor path when no real
+ *  vendor_members row exists yet. */
+function syntheticMember(vendor: Vendor): VendorMember {
+  return {
+    id: -1,
+    vendorId: vendor.id,
+    clerkUserId: `demo_${vendor.id}`,
+    name: vendor.name,
+    primaryEmail: vendor.contactEmail ?? `demo_${vendor.id}@unknown.example`,
+    linkedinUrl: null,
+    role: null,
+    onboarded: true,
+    suspended: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}
+
 /**
  * Layout-friendly header data resolver.
  *
- * The dashboard layout wraps every dashboard page including onboarding,
- * but a layout can't see searchParams to know if a page is using demo
- * override. This returns sensible header props in all states:
+ * Layouts can't see searchParams (so they can't honour ?as= demo
+ * overrides) and can't redirect (it'd preempt the page render).
+ * This returns sensible header props in all states; the page
+ * itself is responsible for the actual auth gate via
+ * getVendorSession().
  *
- *   • Real Clerk session → vendor row data
- *   • DEMO_MODE on, no Clerk session → first onboarded vendor (Oracle in seed)
- *   • Anything else → empty placeholder (the page render itself will
- *     redirect via getVendorSession)
+ * Resolution order:
+ *   • Real Clerk session → vendor_member.name (always set), vendor.name when present
+ *   • DEMO_MODE on → first onboarded member, else first vendor
+ *   • Anything else → "—" placeholder
  */
 export async function getDashboardHeaderData(): Promise<{
   companyName: string;
@@ -128,30 +239,48 @@ export async function getDashboardHeaderData(): Promise<{
   try {
     const { userId } = await auth();
     if (userId) {
-      const vendor = await getVendorByClerkUserId(userId);
-      if (vendor) {
+      const result = await getVendorByMemberClerkUserId(userId);
+      if (result) {
+        const { vendor, vendorMember } = result;
         return {
-          companyName: vendor.name,
-          userName: vendor.name,
-          userInitials: initialsOf(vendor.name),
+          companyName: vendor?.name ?? "—",
+          userName: vendorMember.name,
+          userInitials: initialsOf(vendorMember.name),
+          userTitle: vendorMember.role,
         };
       }
     }
   } catch {
-    // No middleware yet, or unauthenticated. Fall through to demo / placeholder.
+    // No middleware yet, or unauthenticated. Fall through.
   }
 
   if (env.DEMO_MODE) {
-    const [vendor] = await db
+    // First onboarded member → that's the most truthful demo state.
+    const [row] = await db
+      .select({ member: vendorMembers, vendor: vendors })
+      .from(vendorMembers)
+      .leftJoin(vendors, eq(vendors.id, vendorMembers.vendorId))
+      .where(eq(vendorMembers.onboarded, true))
+      .limit(1);
+    if (row?.vendor) {
+      return {
+        companyName: row.vendor.name,
+        userName: row.member.name,
+        userInitials: initialsOf(row.member.name),
+        userTitle: row.member.role,
+      };
+    }
+    // Else fall back to first vendor row, with a placeholder member.
+    const [vendorRow] = await db
       .select()
       .from(vendors)
-      .where(eq(vendors.onboarded, true))
+      .orderBy(vendors.id)
       .limit(1);
-    if (vendor) {
+    if (vendorRow) {
       return {
-        companyName: vendor.name,
-        userName: vendor.name,
-        userInitials: initialsOf(vendor.name),
+        companyName: vendorRow.name,
+        userName: vendorRow.name,
+        userInitials: initialsOf(vendorRow.name),
       };
     }
   }
@@ -168,31 +297,28 @@ function initialsOf(name: string): string {
     .join("");
 }
 
-const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-
 /**
- * Inline vendor-row creation from a Clerk user object. Used as a
- * fallback when the user.created webhook didn't run or failed —
- * keeps the (slug, clerkUserId, name, contactEmail, onboarded)
- * shape identical to what the webhook handler in
- * app/api/webhooks/clerk/route.ts produces, so a lazy-created row
- * is indistinguishable from a webhook-created one.
+ * Inline vendor_members-row creation from a Clerk user object.
  *
- * onConflictDoNothing on clerk_user_id means that if a concurrent
- * webhook insert wins the race, we re-fetch and return the row it
- * created. Either way, exactly one row exists per Clerk user.
+ * Used as a fallback when the user.created webhook didn't run or
+ * failed. Same shape the webhook handler produces, so a lazy-
+ * created row is indistinguishable from a webhook-created one.
  *
- * Returns null on any failure so callers can fall through to the
+ * onConflictDoNothing on clerk_user_id means a concurrent webhook
+ * insert can't deadlock — whichever side wins the race is fine, the
+ * loser re-fetches and returns the existing row.
+ *
+ * Returns null on any failure so callers fall through to the
  * existing /login?error=no_vendor redirect rather than throwing
  * inside getVendorSession.
+ *
+ * NOTE: this creates a vendor_members row only — vendor_id stays
+ * NULL. The /dashboard/onboarding flow inserts a vendors row and
+ * repoints vendor_id when the human confirms their company.
  */
-async function lazyCreateVendorFromClerk(
+async function lazyCreateVendorMemberFromClerk(
   userId: string,
-): Promise<Vendor | null> {
+): Promise<{ vendor: Vendor | null; vendorMember: VendorMember } | null> {
   try {
     const cc = await clerkClient();
     const u = await cc.users.getUser(userId);
@@ -203,24 +329,30 @@ async function lazyCreateVendorFromClerk(
       (e) => e.id === u.primaryEmailAddressId,
     );
     const email =
-      primary?.emailAddress ?? u.emailAddresses[0]?.emailAddress ?? null;
+      primary?.emailAddress ??
+      u.emailAddresses[0]?.emailAddress ??
+      `${userId}@unknown.example`;
 
     await db
-      .insert(vendors)
+      .insert(vendorMembers)
       .values({
-        slug: `${slugify(fullName)}-${userId.slice(-6)}`,
+        vendorId: null,
         clerkUserId: userId,
         name: fullName,
-        contactEmail: email,
+        primaryEmail: email,
         onboarded: false,
       })
-      .onConflictDoNothing({ target: vendors.clerkUserId });
+      .onConflictDoNothing({ target: vendorMembers.clerkUserId });
 
     // Re-fetch — covers both our successful insert AND a concurrent
     // webhook insert that won the conflict.
-    return await getVendorByClerkUserId(userId);
+    return await getVendorByMemberClerkUserId(userId);
   } catch (err) {
-    console.error("[session] lazyCreateVendorFromClerk failed", err);
+    console.error("[session] lazyCreateVendorMemberFromClerk failed", err);
     return null;
   }
 }
+
+// Quiet the lint/type checker about isNotNull import retention —
+// reserved for follow-on commits that filter members by vendor_id.
+void isNotNull;

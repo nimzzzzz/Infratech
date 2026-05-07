@@ -155,17 +155,18 @@ describe("getVendorSession — real Clerk path", () => {
 
     const session = await getVendorSession({ requireOnboarded: false });
 
-    // Row was created with the webhook's exact shape.
-    expect(session.vendor.clerkUserId).toBe(userId);
-    expect(session.vendor.name).toBe("Aiko Tanaka");
-    expect(session.vendor.contactEmail).toBe("aiko@example.com");
-    expect(session.vendor.onboarded).toBe(false);
-    expect(session.vendor.slug).toMatch(/^aiko-tanaka-[A-Za-z0-9]{6}$/);
+    // TODO(stage-4 commit 6): rewrite for the vendor_members shape.
+    // After the schema split, lazy-create produces a vendor_members
+    // row only — vendor stays null. These assertions are the OLD
+    // shape and will be replaced in the test-rewrite commit.
+    expect(session.vendor!.clerkUserId).toBe(userId);
+    expect(session.vendor!.name).toBe("Aiko Tanaka");
+    expect(session.vendor!.contactEmail).toBe("aiko@example.com");
+    expect(session.vendor!.onboarded).toBe(false);
+    expect(session.vendor!.slug).toMatch(/^aiko-tanaka-[A-Za-z0-9]{6}$/);
 
-    // And it's persisted: a follow-up call returns the same row
-    // without re-running lazy-create (no Clerk API call needed).
     const second = await getVendorSession({ requireOnboarded: false });
-    expect(second.vendor.id).toBe(session.vendor.id);
+    expect(second.vendor!.id).toBe(session.vendor!.id);
   });
 
   it("redirects to /login?error=suspended for a suspended vendor", async () => {
@@ -204,8 +205,8 @@ describe("getVendorSession — onboarded gate", () => {
     authMock.userId = "user_onboard_page_4";
 
     const session = await getVendorSession({ requireOnboarded: false });
-    expect(session.vendor.id).toBe(v.id);
-    expect(session.vendor.onboarded).toBe(false);
+    expect(session.vendor!.id).toBe(v.id);
+    expect(session.vendor!.onboarded).toBe(false);
   });
 
   it("does not redirect when vendor.onboarded=true under default settings", async () => {
@@ -239,7 +240,10 @@ describe("getVendorSession — DEMO_MODE bypass", () => {
       demoOverride: "new",
       requireOnboarded: false,
     });
-    expect(session.vendor.onboarded).toBe(false);
+    // After B.1 the demoOverride="new" branch returns vendor=null
+    // (synthetic pre-onboarded member with vendorId=null). Commit 6
+    // replaces this assertion accordingly.
+    expect(session.vendor).toBeNull();
   });
 
   it("DEMO_MODE still applies the onboarded gate by default — redirects an unonboarded demo vendor", async () => {

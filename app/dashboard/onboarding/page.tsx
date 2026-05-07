@@ -29,12 +29,16 @@ export default async function OnboardingLandingPage({
   const demoOverride = isDemoOverride(asParam) ? asParam : undefined;
 
   // Onboarding page itself — opt out of the onboarded gate or this
-  // page would redirect-loop to itself.
+  // page would redirect-loop to itself. `vendor` may be null at
+  // this point (fresh sign-in pre-onboarding); the welcome copy
+  // below conditionally falls back to a generic phrase. B.2 swaps
+  // this whole page out for the company-confirm form.
   const { vendor, user } = await getVendorSession({
     demoOverride,
     requireOnboarded: false,
   });
   const firstName = user.name.split(" ")[0];
+  const companyLabel = vendor?.name ?? "your company";
 
   return (
     <Container className="max-w-3xl py-12 md:py-20">
@@ -47,7 +51,7 @@ export default async function OnboardingLandingPage({
       <p className="mt-5 max-w-[56ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
         We&rsquo;ve verified you with LinkedIn as part of{" "}
         <strong className="font-medium text-[var(--color-ink)]">
-          {vendor.name}
+          {companyLabel}
         </strong>
         . Let&rsquo;s get your product on the directory.
       </p>

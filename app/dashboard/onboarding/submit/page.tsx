@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import { SubmitWizard } from "@/components/dashboard/submit-wizard";
@@ -36,14 +37,21 @@ export default async function SubmitPage({
   // bounce a not-yet-onboarded vendor back to /dashboard/onboarding,
   // and an already-onboarded vendor reaches this page from /dashboard
   // anyway via the "Submit new product" CTA).
-  const { vendor } = await getVendorSession({
+  const { vendor, vendorMember } = await getVendorSession({
     demoOverride,
     requireOnboarded: false,
   });
 
-  // ?as=returning  → skips the "Your company" step (vendor profile already on file).
-  // For real vendors, derive from the onboarded flag.
-  const skipCompanyStep = asParam === "returning" || vendor.onboarded;
+  // The wizard's prefill assumes a vendor exists. If the human
+  // hasn't completed company-confirm yet (vendor still null), bounce
+  // them to /dashboard/onboarding to do that first. B.2 will make
+  // that page the company-confirm form.
+  if (!vendor) redirect("/dashboard/onboarding");
+
+  // ?as=returning  → skips the "Your company" step (vendor profile
+  // already on file). For real vendors, derive from the onboarded
+  // flag on their member row.
+  const skipCompanyStep = asParam === "returning" || vendorMember.onboarded;
 
   return (
     <Container className="max-w-3xl py-10 md:py-14">
