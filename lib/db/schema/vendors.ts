@@ -12,23 +12,25 @@ import {
 import { regions } from "./taxonomy";
 
 /**
- * Vendors are the companies that own apps. A vendor row exists in two flavours:
+ * Vendors are the companies that own apps. Per-human session +
+ * onboarding state lives on vendor_members (below); this table is
+ * authoritative for the company itself.
  *
- *   • Editorial stub — created by an admin, no clerk_user_id yet. The vendor
- *     can later "claim" their listing on first LinkedIn sign-in.
- *   • Self-registered — created via the Clerk webhook on first sign-in,
- *     clerk_user_id set, onboarded=false until the vendor confirms their
- *     company info on /dashboard/onboarding.
+ *   • Editorial stub — created by an admin, no associated
+ *     vendor_members row yet. A vendor can later "claim" their
+ *     listing once a human signs in via Clerk and links to it.
+ *   • Self-registered — created in /dashboard/onboarding when a
+ *     vendor_member confirms their company; that flow inserts the
+ *     vendors row and repoints vendor_members.vendor_id from NULL.
  *
- * contact_email is the address Resend forwards visitor inquiries to. It is
- * NEVER rendered publicly (CLAUDE.md §3 rule 5).
+ * contact_email is the address Resend forwards visitor inquiries to.
+ * It is NEVER rendered publicly (CLAUDE.md §3 rule 5).
  */
 export const vendors = pgTable(
   "vendors",
   {
     id: serial("id").primaryKey(),
     slug: text("slug").notNull(),
-    clerkUserId: text("clerk_user_id"),
     name: text("name").notNull(),
     contactEmail: text("contact_email"),
     shortBlurb: text("short_blurb"),
@@ -40,7 +42,6 @@ export const vendors = pgTable(
     hqCountry: text("hq_country"),
     hqCity: text("hq_city"),
     logoUrl: text("logo_url"),
-    onboarded: boolean("onboarded").notNull().default(false),
     suspended: boolean("suspended").notNull().default(false),
     claimedAt: timestamp("claimed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -52,7 +53,6 @@ export const vendors = pgTable(
   },
   (t) => [
     uniqueIndex("ux_vendors_slug").on(t.slug),
-    uniqueIndex("ux_vendors_clerk_user_id").on(t.clerkUserId),
     index("ix_vendors_suspended").on(t.suspended),
   ],
 );

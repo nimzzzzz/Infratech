@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   getVendorBySlug,
-  getVendorByClerkUserId,
+  getVendorByMemberClerkUserId,
   listVendors,
   listAllVendorSlugs,
 } from "@/lib/queries/vendors";
@@ -29,20 +29,30 @@ describe("vendor queries", () => {
     expect(v).toBeNull();
   });
 
-  it("getVendorByClerkUserId returns null when clerk_user_id not seeded", async () => {
-    // Seed vendors don't have clerk_user_id set; the demo admin does, but
-    // they're in admins, not vendors.
-    const v = await getVendorByClerkUserId("user_does_not_exist");
-    expect(v).toBeNull();
+  it("getVendorByMemberClerkUserId returns null when clerk_user_id not seeded", async () => {
+    // Seed vendors don't have any vendor_members rows; the demo
+    // admin is in admins, separate table.
+    const r = await getVendorByMemberClerkUserId("user_does_not_exist");
+    expect(r).toBeNull();
   });
 
-  it("getVendorByClerkUserId finds a vendor we just inserted with one", async () => {
+  it("getVendorByMemberClerkUserId joins the vendor_member to its vendor when both exist", async () => {
+    // Insert a vendor + a vendor_members row pointing at it.
     await db.execute(sql`
-      INSERT INTO vendors (slug, name, contact_email, clerk_user_id, onboarded)
-      VALUES ('clerktest-vendor', 'Clerktest Vendor', 'x@example.com', 'user_test_lookup', false)
+      INSERT INTO vendors (slug, name, contact_email)
+      VALUES ('clerktest-vendor', 'Clerktest Vendor', 'x@example.com')
     `);
-    const v = await getVendorByClerkUserId("user_test_lookup");
-    expect(v?.name).toBe("Clerktest Vendor");
+    await db.execute(sql`
+      INSERT INTO vendor_members
+        (vendor_id, clerk_user_id, name, primary_email, onboarded)
+      VALUES
+        ((SELECT id FROM vendors WHERE slug = 'clerktest-vendor'),
+         'user_test_lookup', 'Clerk Test User', 'x@example.com', true)
+    `);
+    const r = await getVendorByMemberClerkUserId("user_test_lookup");
+    expect(r?.vendor?.name).toBe("Clerktest Vendor");
+    expect(r?.vendorMember.name).toBe("Clerk Test User");
+    expect(r?.vendorMember.onboarded).toBe(true);
   });
 
   it("listVendors returns all 14 seeded public vendors", async () => {

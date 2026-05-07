@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { db } from "@/lib/db/client";
-import { vendors } from "@/lib/db/schema";
+import { vendors, vendorMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 /**
@@ -86,6 +86,15 @@ beforeEach(() => {
   clerkUserMock.user = null;
 });
 
+/**
+ * Inserts a vendors row + a vendor_members row pointing at it.
+ * Returns the vendor for back-compat with existing assertions; the
+ * member's onboarded/suspended state mirrors the requested values.
+ *
+ * TODO(stage-4 commit 6): replace with helpers that match the new
+ * shape (createTestVendorMember, createTestVendor) so tests can
+ * exercise both pre-onboarding and onboarded states clearly.
+ */
 async function createTestVendor(opts: {
   clerkUserId: string;
   onboarded: boolean;
@@ -97,12 +106,18 @@ async function createTestVendor(opts: {
     .values({
       slug,
       name: "Test Vendor",
-      clerkUserId: opts.clerkUserId,
       contactEmail: `${slug}@example.com`,
-      onboarded: opts.onboarded,
       suspended: opts.suspended ?? false,
     })
     .returning();
+  await db.insert(vendorMembers).values({
+    vendorId: row.id,
+    clerkUserId: opts.clerkUserId,
+    name: "Test Vendor",
+    primaryEmail: `${slug}@example.com`,
+    onboarded: opts.onboarded,
+    suspended: opts.suspended ?? false,
+  });
   return row;
 }
 
@@ -117,7 +132,7 @@ describe("getVendorSession — real Clerk path", () => {
 
     const session = await getVendorSession();
     expect(session.vendor.id).toBe(v.id);
-    expect(session.vendor.clerkUserId).toBe("user_real_1");
+    expect(session.vendorMember.clerkUserId).toBe("user_real_1");
     expect(session.user.id).toBe("user_real_1");
     expect(session.user.name).toBe(v.name);
     expect(session.user.email).toBe(v.contactEmail);
@@ -155,18 +170,18 @@ describe("getVendorSession — real Clerk path", () => {
 
     const session = await getVendorSession({ requireOnboarded: false });
 
-    // TODO(stage-4 commit 6): rewrite for the vendor_members shape.
     // After the schema split, lazy-create produces a vendor_members
-    // row only — vendor stays null. These assertions are the OLD
-    // shape and will be replaced in the test-rewrite commit.
-    expect(session.vendor!.clerkUserId).toBe(userId);
-    expect(session.vendor!.name).toBe("Aiko Tanaka");
-    expect(session.vendor!.contactEmail).toBe("aiko@example.com");
-    expect(session.vendor!.onboarded).toBe(false);
-    expect(session.vendor!.slug).toMatch(/^aiko-tanaka-[A-Za-z0-9]{6}$/);
+    // row only — vendor stays null until /dashboard/onboarding runs.
+    // Commit 6 expands these assertions; this commit narrows them
+    // to the post-refactor shape so tsc stays clean.
+    expect(session.vendor).toBeNull();
+    expect(session.vendorMember.clerkUserId).toBe(userId);
+    expect(session.vendorMember.name).toBe("Aiko Tanaka");
+    expect(session.vendorMember.primaryEmail).toBe("aiko@example.com");
+    expect(session.vendorMember.onboarded).toBe(false);
 
     const second = await getVendorSession({ requireOnboarded: false });
-    expect(second.vendor!.id).toBe(session.vendor!.id);
+    expect(second.vendorMember.id).toBe(session.vendorMember.id);
   });
 
   it("redirects to /login?error=suspended for a suspended vendor", async () => {
@@ -206,10 +221,10 @@ describe("getVendorSession — onboarded gate", () => {
 
     const session = await getVendorSession({ requireOnboarded: false });
     expect(session.vendor!.id).toBe(v.id);
-    expect(session.vendor!.onboarded).toBe(false);
+    expect(session.vendorMember.onboarded).toBe(false);
   });
 
-  it("does not redirect when vendor.onboarded=true under default settings", async () => {
+  it("does not redirect when vendorMember.onboarded=true under default settings", async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
     const v = await createTestVendor({
       clerkUserId: "user_onboarded_5",
@@ -228,10 +243,14 @@ describe("getVendorSession — DEMO_MODE bypass", () => {
     authMock.userId = null; // demo path doesn't even consult Clerk
   });
 
-  it('demoOverride="returning" returns the first onboarded vendor (Oracle in seed)', async () => {
+  it('demoOverride="returning" returns a session with vendor populated (DEMO_MODE bypass)', async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
     const session = await getVendorSession({ demoOverride: "returning" });
-    expect(session.vendor.onboarded).toBe(true);
+    // Post-refactor the bypass picks the first onboarded
+    // vendor_member if any exists, else falls back to the first
+    // seeded vendor with a synthetic member.
+    expect(session.vendor).not.toBeNull();
+    expect(session.vendorMember.onboarded).toBe(true);
   });
 
   it('demoOverride="new" returns the first non-onboarded vendor (requires opting out of the onboarded gate, since "new" implies pre-onboarding)', async () => {
@@ -253,15 +272,13 @@ describe("getVendorSession — DEMO_MODE bypass", () => {
     ).rejects.toThrow(/REDIRECT:\/dashboard\/onboarding/);
   });
 
-  it("DEMO_MODE redirects to /login?error=no_demo_vendor when no seeded vendor matches the override", async () => {
+  it("DEMO_MODE redirects to /login?error=no_demo_vendor when no seeded vendor exists at all", async () => {
     const { getVendorSession } = await import("@/lib/auth/session");
-    // Wipe every onboarded vendor inside the test tx so the demoOverride
-    // can't find one. (Suspended / unonboarded rows aren't enough — the
-    // demo-mode lookup filters on onboarded.)
-    await db
-      .update(vendors)
-      .set({ onboarded: false })
-      .where(eq(vendors.onboarded, true));
+    // Post-refactor the demoOverride="returning" branch falls back
+    // to the first vendors row when no onboarded member exists.
+    // Empty the vendors table inside the test tx to force the no-
+    // demo-vendor branch.
+    await db.delete(vendors);
 
     await expect(
       getVendorSession({ demoOverride: "returning" }),

@@ -38,20 +38,6 @@ export async function getVendorByMemberClerkUserId(
   return { vendor: row.vendor, vendorMember: row.member };
 }
 
-/**
- * @deprecated Use getVendorByMemberClerkUserId. Kept as a thin
- * compatibility shim while callers migrate; removed in the
- * column-drop commit. Returns the joined vendor row (or null) so
- * existing callers that just needed "the company for this user"
- * keep working.
- */
-export async function getVendorByClerkUserId(
-  clerkUserId: string,
-): Promise<Vendor | null> {
-  const result = await getVendorByMemberClerkUserId(clerkUserId);
-  return result?.vendor ?? null;
-}
-
 export const listVendors = () =>
   db
     .select()
