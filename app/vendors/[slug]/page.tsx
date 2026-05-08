@@ -46,7 +46,7 @@ export async function generateMetadata({
     description: vendor.shortBlurb ?? undefined,
     alternates: { canonical: `/vendors/${vendor.slug}` },
     openGraph: {
-      title: `${vendor.name} on InfraTechDB`,
+      title: `${vendor.name} on AllInfratech`,
       description: vendor.shortBlurb ?? undefined,
       url: `${SITE_URL}/vendors/${vendor.slug}`,
       type: "website",
@@ -332,7 +332,7 @@ function JsonLd({ vendor, toolCount }: { vendor: Vendor; toolCount: number }) {
       : undefined,
     numberOfEmployees: vendor.employeeBand ?? undefined,
     logo: vendor.logoUrl ?? undefined,
-    knowsAbout: `Maintains ${toolCount} ${toolCount === 1 ? "product" : "products"} in the InfraTechDB directory.`,
+    knowsAbout: `Maintains ${toolCount} ${toolCount === 1 ? "product" : "products"} in the AllInfratech directory.`,
   };
   const breadcrumbs = {
     "@context": "https://schema.org",

@@ -53,7 +53,7 @@ export function VendorInquiryEmail({
           <Heading style={h1Style}>New inquiry from the directory</Heading>
           <Text style={muted}>
             Someone viewing your <strong>{appName}</strong> listing on
-            InfraTechDB just sent {vendorName} a message.
+            AllInfratech just sent {vendorName} a message.
           </Text>
 
           <Section style={cardStyle}>

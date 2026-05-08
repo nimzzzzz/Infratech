@@ -6,14 +6,15 @@ import { env } from "@/lib/env";
  *   • a bare address ("hello@example.com")        → wrapped with display name
  *   • already in display form ("X <a@b.com>")     → returned as-is
  *
- * Display name is "InfraTechDB" — matches the masthead and what visitors
- * see on the directory itself, so the sender column in their inbox is
- * recognisable.
+ * Display name is "AllInfratech Directory" — explicit "Directory"
+ * suffix disambiguates the inbox sender column from the company
+ * name that vendors might also see in unrelated correspondence.
+ * Matches the spec set during the production-domain switch.
  */
 export function fromAddress(): string {
   const { EMAIL_FROM } = env.resend();
   if (EMAIL_FROM.includes("<")) return EMAIL_FROM;
-  return `InfraTechDB <${EMAIL_FROM}>`;
+  return `AllInfratech Directory <${EMAIL_FROM}>`;
 }
 
 /** Internal BCC inbox — the Resolute team's copy of every inquiry. */

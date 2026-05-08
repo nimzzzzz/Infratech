@@ -19,11 +19,11 @@ export function Header() {
       <div className="mx-auto flex h-auto w-full max-w-7xl items-center justify-between px-5 py-3 sm:px-6 md:px-8 md:py-4">
         <Link
           href="/"
-          aria-label="InfratechDatabase home"
+          aria-label="AllInfratech home"
           className="group flex flex-col leading-none"
         >
           <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)] md:text-[20px]">
-            InfratechDatabase
+            AllInfratech
           </span>
           <span className="mt-1.5 text-[12px] leading-snug text-[var(--color-ink-3)] md:text-[13px]">
             A repository of infrastructure technology products and companies

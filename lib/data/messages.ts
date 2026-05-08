@@ -77,7 +77,7 @@ export const messages: VendorMessage[] = [
     },
     subject: "Demo request — Arctus Insights for portfolio reporting",
     body:
-      "Hi,\n\nI saw Arctus Insights on the InfraTechDB directory and the schedule analytics description matches a gap we have. We run 18 active capital projects, all baselined in P6, and our monthly executive readout takes our controls team almost a full week to compile.\n\nCan we schedule a 30-minute demo? I'd like to see:\n- How the nightly P6 ingest works for portfolios\n- What the executive-level rollup looks like\n- Pricing structure for 15-25 active projects\n\nMy team is open mid-May. Best,\nPriya",
+      "Hi,\n\nI saw Arctus Insights on the AllInfratech directory and the schedule analytics description matches a gap we have. We run 18 active capital projects, all baselined in P6, and our monthly executive readout takes our controls team almost a full week to compile.\n\nCan we schedule a 30-minute demo? I'd like to see:\n- How the nightly P6 ingest works for portfolios\n- What the executive-level rollup looks like\n- Pricing structure for 15-25 active projects\n\nMy team is open mid-May. Best,\nPriya",
     receivedAt: "2026-05-02T16:08:00Z",
     status: "read",
   },

@@ -52,7 +52,7 @@ export function VisitorConfirmationEmail({
 
           <Text style={small}>
             <Link href={appUrl} style={linkStyle}>
-              View {appName} on InfraTechDB
+              View {appName} on AllInfratech
             </Link>
             <br />
             <Link href={siteUrl} style={linkStyle}>
@@ -63,7 +63,7 @@ export function VisitorConfirmationEmail({
           <Hr style={hrStyle} />
 
           <Text style={footnote}>
-            InfraTechDB is an independent reference of project management and
+            AllInfratech is an independent reference of project management and
             infrastructure software, maintained by the Digital &amp; AI
             Practice at Resolute Management Consultancy. Inclusion is not an
             endorsement.
