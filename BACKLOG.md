@@ -21,6 +21,20 @@ These cannot ship to a real audience without being addressed first.
 - ✅ `/api/contact-vendor` route ships with Zod validation, IP rate limit, honeypot, parallel Resend sends (vendor inquiry + visitor confirmation), `contact_messages` row written before mail send. Reply-To = visitor email so vendor replies skip the directory entirely. BCC = `EMAIL_CONTACT_INBOX` for the internal Resolute team.
 - Email FROM display name is "AllInfratech Directory"; transitions from `onboarding@resend.dev` (Stage 3 sandbox) to `directory@allinfratech.com` once Phase D.3 Resend domain verification completes.
 
+### Logo upload constraints (Phase 4-C upload pipeline)
+The favicon-sourced placeholder logos shipped 2026-05-09 (commit `1e83477`) surfaced the visual variance issues. To ensure the directory looks professional once vendors actually upload their own logos, the upload endpoint at `/api/uploads/sign` (Phase 4-C) must enforce:
+
+- **Square aspect ratio.** Reject uploads where `width !== height`, OR auto-centre-crop server-side at upload time. Square mandate is non-negotiable for the card-grid to look clean — wordmarks in square slots letterbox poorly. Vendors needing to display a wordmark have the option to upload it as the *vendor* logo (rendered larger on `/vendors/[slug]`) while uploading a square mark for the *app* logo.
+- **Minimum 256×256 resolution.** The 32×32 Oracle favicon currently in seed data scales to 64px slot pixelated and unprofessional. Reject smaller uploads with a clear error message ("logo must be at least 256×256 pixels — most company brand assets exceed this; check your press kit").
+- **Maximum 2MB file size + PNG/SVG/JPG allowlist.** Already in CLAUDE.md §3 rule 8.
+- **Required alt text** at upload time. Already specified in CLAUDE.md §3 rule 8 + §12.
+- **Server-side SVG sanitisation** if SVG is allowed (strip `<script>`, inline event handlers, external references). Otherwise restrict uploads to raster only.
+- **Optional brand colour field** so the card slot can take the company's brand colour as background, with the logo overlaid. Defers this — `bg-[var(--color-canvas-warm)]` is acceptable for v1, but worth revisiting if the all-cream-canvas grid feels monotone once real logos populate.
+
+The current placeholder favicons (10 of 14 vendors) stay in `public/logos/vendors/` until Phase 4-C wires real uploads, at which point the `logo_url` column points at R2-hosted assets with the constraints above. The 4 fall-back-to-LetterAvatar vendors (rdash, buildroid-robotics, white-helmet-safety, bridge2ai) demonstrate the day-1 mixed state, which is fine as long as letter avatars look polished — they do.
+
+Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
+
 ## 🟡 Future ideas — explore later
 
 ### "Did this lead anywhere?" feedback loop
