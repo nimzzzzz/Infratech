@@ -1,6 +1,8 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -35,6 +37,15 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // Already signed in? Skip the login form. Clerk's SDK refuses to
+  // start a fresh sign-in flow when a session already exists ("You're
+  // already signed in"), and the public-chrome header (now session-
+  // aware below) shouldn't be lying anyway. /dashboard's
+  // getVendorSession handles onward routing — onboarding gate,
+  // suspended check, no-vendor lazy-create, etc.
+  const { userId } = await auth();
+  if (userId) redirect("/dashboard");
+
   const sp = await searchParams;
   const intentParam = Array.isArray(sp.intent) ? sp.intent[0] : sp.intent;
   const intent = intentParam === "submit" ? "submit" : "signin";

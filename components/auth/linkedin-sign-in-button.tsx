@@ -5,6 +5,8 @@
 // need the classic one for OAuth-redirect — Signal doesn't expose
 // the strategy="oauth_*" flow.
 import { useSignIn } from "@clerk/nextjs/legacy";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import {
   LinkedinLogo,
   ArrowRight,
@@ -38,9 +40,20 @@ export function LinkedInSignInButton({
   label: string;
 }) {
   const { signIn, isLoaded } = useSignIn();
+  const { isSignedIn } = useUser();
+  const router = useRouter();
 
   const handleClick = () => {
     if (!isLoaded || !signIn) return;
+    // Belt-and-braces: /login is also session-gated server-side, so
+    // a signed-in user shouldn't reach this button. If they do
+    // (deep link, cached page, demo-mode preview), Clerk's SDK
+    // would reject the fresh sign-in flow with "You're already
+    // signed in." Skip straight to where success would have landed.
+    if (isSignedIn) {
+      router.push(redirectUrlComplete);
+      return;
+    }
     void signIn.authenticateWithRedirect({
       strategy: "oauth_linkedin_oidc",
       redirectUrl: "/sso-callback",
