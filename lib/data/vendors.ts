@@ -38,6 +38,7 @@ export const vendors: Vendor[] = [
     founded: 1977,
     employeeBand: "100,000+",
     headquarters: "Austin, Texas, USA",
+    logoUrl: "/logos/vendors/oracle.png",
     gallery: mockGallery("oracle"),
   },
   {
@@ -51,6 +52,7 @@ export const vendors: Vendor[] = [
     founded: 2002,
     employeeBand: "3,000+",
     headquarters: "Carpinteria, California, USA",
+    logoUrl: "/logos/vendors/procore-technologies.png",
     gallery: mockGallery("procore"),
   },
   {
@@ -64,6 +66,7 @@ export const vendors: Vendor[] = [
     founded: 2017,
     employeeBand: "51-200",
     headquarters: "London, United Kingdom",
+    logoUrl: "/logos/vendors/nplan.png",
     gallery: mockGallery("nplan"),
   },
   {
@@ -77,6 +80,7 @@ export const vendors: Vendor[] = [
     founded: 2016,
     employeeBand: "501-1,000",
     headquarters: "Lysaker, Norway",
+    logoUrl: "/logos/vendors/cognite.png",
     gallery: mockGallery("cognite"),
   },
   {
@@ -90,6 +94,7 @@ export const vendors: Vendor[] = [
     founded: 1975,
     employeeBand: "220,000+",
     headquarters: "Redmond, Washington, USA",
+    logoUrl: "/logos/vendors/microsoft.png",
     gallery: mockGallery("microsoft"),
   },
   {
@@ -103,6 +108,7 @@ export const vendors: Vendor[] = [
     founded: 1984,
     employeeBand: "5,001-10,000",
     headquarters: "Exton, Pennsylvania, USA",
+    logoUrl: "/logos/vendors/bentley-systems.png",
     gallery: mockGallery("bentley"),
   },
   {
@@ -116,6 +122,7 @@ export const vendors: Vendor[] = [
     founded: 1911,
     employeeBand: "282,000+",
     headquarters: "Armonk, New York, USA",
+    logoUrl: "/logos/vendors/ibm.png",
     gallery: mockGallery("ibm"),
   },
   {
@@ -129,6 +136,7 @@ export const vendors: Vendor[] = [
     founded: 2014,
     employeeBand: "51-200",
     headquarters: "Palo Alto, California, USA",
+    logoUrl: "/logos/vendors/alice-technologies.png",
     gallery: mockGallery("alice"),
   },
   {
@@ -142,6 +150,7 @@ export const vendors: Vendor[] = [
     founded: 2014,
     employeeBand: "11-50",
     headquarters: "Atlanta, Georgia, USA",
+    logoUrl: "/logos/vendors/smartpm-technologies.png",
     gallery: mockGallery("smartpm"),
   },
   {
@@ -155,6 +164,7 @@ export const vendors: Vendor[] = [
     founded: 2019,
     employeeBand: "11-50",
     headquarters: "London, United Kingdom",
+    logoUrl: "/logos/vendors/bimcrone.png",
     gallery: mockGallery("bimcrone"),
   },
   {

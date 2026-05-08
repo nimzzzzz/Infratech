@@ -94,11 +94,20 @@ export default async function AppDetailPage({
           <Breadcrumb appName={app.name} />
 
           <div className="mt-8 flex h-[200px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] md:h-[260px]">
-            <LetterAvatar
-              name={app.name}
-              className="h-24 w-24 md:h-32 md:w-32"
-              letterClassName="text-[56px] md:text-[72px]"
-            />
+            {app.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={app.logoUrl}
+                alt=""
+                className="h-24 w-24 object-contain md:h-32 md:w-32"
+              />
+            ) : (
+              <LetterAvatar
+                name={app.name}
+                className="h-24 w-24 md:h-32 md:w-32"
+                letterClassName="text-[56px] md:text-[72px]"
+              />
+            )}
           </div>
 
           <div className="mt-10 grid gap-10 md:grid-cols-[7fr_5fr] md:gap-14">

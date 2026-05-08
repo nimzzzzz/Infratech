@@ -13,11 +13,20 @@ export function AppCard({ app }: { app: AppCardData }) {
       className="group relative flex h-full flex-col overflow-hidden border border-[var(--color-line)] bg-[var(--color-surface)] transition-colors duration-300 hover:border-[var(--color-ink)]/40"
     >
       <div className="flex h-[120px] shrink-0 items-center justify-center border-b border-[var(--color-line)] bg-[var(--color-canvas-warm)]">
-        <LetterAvatar
-          name={app.name}
-          className="h-16 w-16"
-          letterClassName="text-[32px]"
-        />
+        {app.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={app.logoUrl}
+            alt=""
+            className="h-16 w-16 object-contain"
+          />
+        ) : (
+          <LetterAvatar
+            name={app.name}
+            className="h-16 w-16"
+            letterClassName="text-[32px]"
+          />
+        )}
       </div>
 
       <div className="flex flex-1 flex-col p-6">
