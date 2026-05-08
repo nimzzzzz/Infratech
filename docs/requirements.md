@@ -1,8 +1,10 @@
-# Resolute Apps Directory — Website Requirements
+# AllInfratech — Website Requirements
 
-**Version:** 1.0 (draft)
+**Version:** 2.0 (live — sync-tracked with phase work)
 **Owner:** Resolute Management Consultancy
 **Purpose:** Curated public directory of project management & infrastructure tools, organised by project stage. Used as a soft credibility tool in client meetings and as a passive lead/reputation asset for Resolute.
+
+> **Scope locked 2026-05-06:** Directory is **invitation-only**. Only the Resolute team adds new tool listings via the admin panel. There is no public "suggest an app" form and no vendor "claim an existing listing" flow. Sections referencing those flows below are marked **REMOVED**.
 
 ---
 
@@ -10,10 +12,9 @@
 
 The site is **a directory, not a Resolute product page**. It should feel like an independent, curated resource — the kind of thing a consultancy quietly maintains because they care about the space.
 
-- **Brand split:** The directory has its own name, logo, and visual identity. Resolute appears as: (a) one line in the footer ("Curated by Resolute Management Consultancy" with link), (b) a short paragraph on the About page, (c) optional small wordmark in the header. That's it.
-- **No hard sell:** No Resolute service pitches, contact-us-for-consulting CTAs, or lead capture forms beyond the standard "suggest an app / contact us" form.
+- **Brand split (locked 2026-05-08):** Public name **AllInfratech**, domain `allinfratech.com`. Tagline *"A repository of infrastructure technology products and companies."* Resolute appears as: (a) the footer R-logo + one-line attribution linking to `https://resolutemanagementconsultancy.com/`, (b) the About page Contact section. That's it.
+- **No hard sell:** No Resolute service pitches, contact-us-for-consulting CTAs, or public lead-capture forms (the per-vendor "Contact this vendor" form at `/apps/[slug]/contact` is the only public form that sends mail; it forwards inquiries to the vendor and BCCs the internal Resolute inbox).
 - **Tone:** Neutral, reference-style — like G2 or Capterra, not like a marketing site.
-- **Decision needed before build:** Domain + name for the directory. Suggestions to consider — `infratools.io`, `buildstack.directory`, `projectstack.io`, `stagedtools.com`. Pick one and lock it before design starts.
 
 ---
 
@@ -35,45 +36,55 @@ The login page must clearly state: **"This login is for app vendors who want to 
 
 ### 3.1 Taxonomy (lock these before development)
 
-**Project stages** (primary axis — matches your CSV):
-- Feasibility
-- Definition
-- Delivery
-- Operations
-- Post-Delivery
-- General (cross-stage tools)
+**Project stages** (primary axis — display order locked 2026-05-07, General leads):
+1. General (cross-stage tools)
+2. Feasibility
+3. Definition
+4. Delivery
+5. Operations
+6. Post-Delivery
 
-An app can belong to **multiple stages** (e.g. CivCore is in all four).
+An app can belong to **multiple stages**. Migration `0004_reorder_stages_general_first.sql` updates `stages.position` per slug; UI reads in position order.
 
 **Capability tags** (secondary axis — also from your CSV, normalised):
 Scheduling, Building Information Modelling, AI Agents, Design Review, Cost Estimation, Procurement, Project Portfolio Management, Operations Analysis, Capital Planning & Evaluation, Transaction Advisory, Knowledge Base, Risk Management, Construction Project Management, Document Control, Inspections & Snag List, Materials Management, Order Management, HSEQ, RFP Analysis, Reality Capture & Field Intelligence, Robotic Delivery, Event Chronology.
 
 Capabilities are admin-managed — vendors pick from the existing list when submitting. New capability requests go to admin for approval. This prevents tag sprawl.
 
-**Pricing models:**
-Subscription, Pay-per-use, Service Contract, Priced by Project Size, Priced by Portfolio Size, Freemium, Contact for pricing.
+**Pricing models** (locked 2026-05-07 — replaced original 7-row list with 5):
+- User Subscription / Freemium (`user-subscription-freemium`)
+- Pay-per-use (`pay-per-use`)
+- Licensed by Project (`licensed-by-project`)
+- Licensed by Company/Portfolio size (`licensed-by-company-portfolio`)
+- Service Contract (`service-contract`)
+
+Migration `0005_replace_pricing_models.sql` does the swap; `0006_repopulate_pricing_tags.sql` re-tags the 15 seeded apps.
 
 **Industry/sector** (recommended new axis, not in CSV):
 Construction, Infrastructure, Energy, Real Estate, Manufacturing, General. Helps clients narrow down faster.
 
-### 3.2 Site map
+### 3.2 Site map (current)
 
 ```
-/                          Home (hero + featured apps + browse-by-stage)
-/browse                    Full directory with filters
-/stages/[stage]            Stage landing pages (SEO)
-/capabilities/[capability] Capability landing pages (SEO)
-/apps/[slug]               App detail page
-/about                     About the directory + Resolute mention
-/suggest                   Public form to suggest an app
-/contact                   General contact
-/legal/terms
-/legal/privacy
-/legal/vendor-terms
-/login                     Vendor login (LinkedIn)
-/dashboard                 Vendor area (auth-gated)
-/admin                     Admin area (separate auth)
+/                              Home (filter sidebar + cards, search, stage chip row)
+/stages/[stage]                Stage landing pages (SEO)
+/capabilities/[capability]     Capability landing pages (SEO)
+/apps/[slug]                   App detail page
+/apps/[slug]/contact           Per-vendor "contact this vendor" form (only public form that sends mail)
+/vendors/[slug]                Vendor profile
+/about                         About + #contact section with Resolute info
+/legal/{terms,privacy,vendor-terms,cookies}
+/login                         Vendor login (LinkedIn OAuth) — redirects signed-in users to /dashboard
+/sso-callback                  Clerk OAuth-redirect handler
+/dashboard                     Vendor area (Clerk-gated)
+/admin                         Admin area (separate auth + 2FA — Stage 5)
 ```
+
+**REMOVED 2026-05-06** (scope narrowing):
+- `/browse` — collapsed into `/`
+- `/suggest` — public suggest-an-app form
+- `/contact` — generic contact form (the per-vendor form at `/apps/[slug]/contact` stays)
+- `/dashboard/onboarding/claim` — vendor claim-an-existing-listing flow
 
 ---
 
@@ -87,19 +98,22 @@ Construction, Infrastructure, Energy, Real Estate, Manufacturing, General. Helps
 - Search bar prominent.
 - Footer with Resolute attribution, legal links, social.
 
-### 4.2 Browse page (`/browse`)
+### 4.2 Browse — collapsed into `/` (2026-05-06)
+
+The home page IS the browse experience. No separate `/browse` route.
+
 - **Filter sidebar** (left on desktop, drawer on mobile):
-  - Stage (multi-select checkboxes)
+  - Stage (multi-select checkboxes — also surfaced as a chip row at the top)
   - Capability (multi-select, searchable list)
   - Pricing model (multi-select)
   - Industry (multi-select)
 - **Active filters** shown as removable chips above results.
-- **Search bar** for free-text search over app name, description, capabilities.
-- **Sort:** Alphabetical (default), Recently added, Featured.
+- **Search bar** for free-text search. **Scope locked 2026-05-06: name + denormalised vendor_name only** (not tagline / description / tag names — keeps results predictable).
+- **Sort:** Always alphabetical. **Sort tabs retired Stage 2.5** — `apps.featured` column kept in DB as dormant data.
 - **Results grid:** App cards showing logo, name, one-line description, stage tags, pricing badge.
-- **URL state:** Filters reflected in URL params so results are shareable/bookmarkable.
-- **Pagination or infinite scroll** (recommend pagination — better SEO).
-- **Empty state:** "No tools match — try removing a filter, or [suggest an app]."
+- **URL state:** Filters reflected in URL params so results are shareable/bookmarkable. The `?sort=` param was removed when sort tabs were retired.
+- **Pagination:** default page size 24; full set fetched on home (1000 cap).
+- **Empty state:** "No products match the current combination of filters. Try removing one, or clearing all filters above." (No "suggest an app" link — that flow was removed.)
 
 ### 4.3 App detail page (`/apps/[slug]`)
 Required sections:
@@ -120,8 +134,9 @@ Required sections:
 - SEO-optimised: H1 = stage/capability name, intro paragraph (admin-editable), full filtered list of apps below.
 - These are the pages that should rank on Google for "[capability] software" queries.
 
-### 4.5 Suggest an app page
-Public form (no auth needed): Submitter name, email, app name, app URL, why it should be listed. Sent to admin for review and outreach.
+### 4.5 Suggest an app page — REMOVED 2026-05-06
+
+The directory is invitation-only. The `/suggest` route and the suggestion-handling code path were removed. The `suggestions` DB table is retained for historical rows but no production writer emits to it.
 
 ---
 
@@ -129,8 +144,11 @@ Public form (no auth needed): Submitter name, email, app name, app URL, why it s
 
 ### 5.1 Login
 - **LinkedIn OAuth only** (no email/password for vendors — reduces fake registrations and gives implicit identity verification).
-- LinkedIn scope: basic profile + email.
-- After first login, vendor is asked to confirm: company name, role, app they want to list.
+- LinkedIn OIDC scope: `openid profile email`.
+- After first sign-in, the human is represented by a `vendor_members` row with `vendor_id` NULL. The `/dashboard/onboarding` step is the company-confirm form (Phase B.2): captures company name, website, the human's role at the company, the human's LinkedIn URL, and a legal-acceptance checkbox. On submit, INSERT a `vendors` row, repoint `vendor_member.vendor_id` to its id, set `onboarded=true`, INSERT a `vendor_member_legal_acceptances` row with terms version + IP + UA.
+- Repeat sign-ins from an already-onboarded human skip onboarding and land on `/dashboard`.
+- **Multi-human support:** multiple `vendor_members` can point at the same `vendors` row. The schema separation (Phase B.1, 2026-05-08) is what makes this possible.
+- **Already-signed-in handling:** `/login` server-redirects authenticated users to `/dashboard`; the LinkedIn button itself also detects a present session and routes to `/dashboard` instead of starting a fresh OAuth flow.
 - **Clear copy on login page**: "This login is for app vendors. If you're browsing, no account needed."
 
 ### 5.2 Vendor dashboard
@@ -243,7 +261,7 @@ These get full descriptions written by Resolute, marked as "Editorial listing" i
 - **Filters are AND across categories, OR within a category.** Example: Stage = (Delivery OR Operations) AND Capability = (Risk Management). Standard directory behaviour.
 - **Free-text search** uses full-text search on name, tagline, description, capabilities. Postgres `tsvector` is enough — no need for Elasticsearch in v1.
 - **Filter counts:** Each filter option shows count of matching apps in current filter context (e.g. "Delivery (12)").
-- **No-results experience:** Suggest removing filters, suggest an app, or browse by stage.
+- **No-results experience:** Suggest removing filters or browsing by stage. (The "suggest an app" prompt was removed 2026-05-06 with scope narrowing.)
 - **Performance target:** Filter/search results return in under 300ms for up to 1,000 apps.
 
 ---
@@ -311,7 +329,7 @@ Chrome, Edge, Safari, Firefox — last 2 versions. No IE support.
 
 ### 9.1 Site-wide
 - Privacy-friendly analytics (Plausible or Umami — avoid GA4 to reduce cookie banner friction).
-- Events: app page view, filter applied, search performed, "Visit website" click, "Contact vendor" submitted, "Suggest an app" submitted.
+- Events: app page view, filter applied, search performed, "Visit website" click, "Contact vendor" submitted. ("Suggest an app" event removed 2026-05-06 with scope narrowing.)
 
 ### 9.2 Per-app metrics (shown to vendors)
 - Page views (last 30 / 90 days).
@@ -360,14 +378,16 @@ Core tables:
 - `app_industries` — app_id, industry_id
 - `app_pricing_models` — app_id, pricing_model_id
 - `app_screenshots` — id, app_id, url, alt, position
-- `vendors` — id, clerk_user_id, company_name, contact_email, linkedin_url, suspended, created_at
-- `admins` — id, clerk_user_id, role, created_at
-- `submissions` — tracks the review queue: id, app_id, submitted_by, submitted_at, status, reviewer_id, reviewed_at, review_notes
-- `app_views` — id, app_id, day, count (rolled up daily for analytics)
-- `outbound_clicks` — id, app_id, clicked_at
-- `contact_messages` — id, app_id, sender_name, sender_email, message, created_at
-- `suggestions` — public "suggest an app" submissions
-- `audit_log` — admin actions
+- `vendors` — id, slug, name, contact_email, short_blurb, description, website_url, linkedin_url, founded_year, employee_band, hq_country, hq_city, logo_url, suspended, claimed_at, created_at, updated_at. **Phase B.1 (2026-05-08) dropped `clerk_user_id` and `onboarded` — those moved to `vendor_members`.**
+- **`vendor_members`** (new, Phase B.1) — id, vendor_id (nullable FK → vendors), clerk_user_id (UQ NOT NULL), name, primary_email NOT NULL, linkedin_url, role, onboarded, suspended, created_at, updated_at. **Per-human session + onboarding state.**
+- **`vendor_member_legal_acceptances`** (pending Phase B.2) — id, vendor_member_id, terms_version, accepted_at, ip_address, user_agent, created_at.
+- `admins` — id, clerk_user_id, name, email, role, created_at, updated_at
+- `submissions` — review queue. Type enum is `('new', 'claim')` but **`'claim'` is deprecated 2026-05-06** — no production writer emits it.
+- `app_views` — app_id, day, count (rolled up daily; PK on (app_id, day))
+- `outbound_clicks` — id, app_id, clicked_at, user_agent, referrer
+- `contact_messages` — id, app_id, vendor_id (denormalised), sender_name, sender_email, sender_company, sender_role, subject, body, status (unread/read/archived), created_at, updated_at
+- `suggestions` — **retained but unused** (table kept for historical rows; the `/suggest` form was removed 2026-05-06)
+- `audit_log` — id, admin_id, action, target_type, target_id, before, after, created_at
 
 ---
 
@@ -395,9 +415,9 @@ Public browse + filters + app detail pages, all 18 apps seeded by you (no vendor
 **Goal:** You can show the site to clients in meetings.
 
 ### Phase 2 — Vendor self-service (3–4 weeks)
-LinkedIn OAuth, vendor dashboard, submission flow, admin review queue, vendor analytics, "claim this listing" flow for the 14 stub apps.
+LinkedIn OAuth, vendor dashboard, submission flow, admin review queue, vendor analytics. **The "claim this listing" flow was REMOVED 2026-05-06** with the directory's shift to invitation-only — vendor self-service is now scoped to vendors invited to claim a vendor profile against a NEW tool listing.
 
-**Goal:** Vendors can register and manage their own listings, reducing your maintenance load.
+**Goal:** Invited vendors can register and manage their own NEW listings, reducing maintenance load.
 
 ### Phase 3 — Polish & growth (ongoing)
 Featured apps, related apps, advanced analytics, comparison tool, email newsletter, paid featured placements (if ever wanted).
@@ -420,15 +440,20 @@ Document these as "Phase 3+" and don't get talked into them in v1.
 
 ---
 
-## 15. Open decisions (need your input before kickoff)
+## 15. Decisions (status as of 2026-05-08)
 
-1. **Directory name and domain** — pick before design starts.
-2. **Visual brand direction** — do you want serious/corporate, or modern/approachable? Reference 2–3 sites you like.
-3. **Geographic positioning** — global, MENA-focused, or both? Affects copy and which apps you prioritise.
-4. **Resolute footer line wording** — exact phrasing for the attribution.
-5. **Which 4 apps to fully showcase** — confirm the suggested four (Primavera P6, Procore, nPlan, Cognite) or swap.
-6. **Hosting region** — Vercel global edge is fine for performance; database region matters for compliance. UAE or EU recommended.
-7. **Budget and timeline** — drives whether to build in-house, hire a contractor, or use an agency.
+### Closed
+
+1. ✅ **Directory name and domain** — `AllInfratech` at `allinfratech.com` (locked 2026-05-08).
+2. ✅ **Visual brand direction** — italic Alike + Pavanam, pink/orange accents on light canvas, dark night surface for footer; hero image as full-bleed background. Wordmark + inline tagline replaces the original black-bar masthead.
+3. ✅ **Resolute footer line wording** — "A community service of the Digital & AI Practice of Resolute Management Consultancy. © {year}. All product and company names belong to their respective owners." Linked to `https://resolutemanagementconsultancy.com/`.
+4. ✅ **Showcase apps** — 15 apps seeded with full descriptions; the `apps.featured` column is dormant (locked-retired Stage 2.5). No "Editor's pick" UI in v1.
+5. ✅ **Hosting region** — Vercel `fra1` (Frankfurt) functions, Neon `eu-central-1` Frankfurt DB, Cloudflare proxy in front (no regional pin). Confirms EU compliance; UAE accessibility resolved by the Cloudflare proxy.
+
+### Still open
+
+1. ⬜ **Geographic positioning** — global vs MENA-focused vs both. Affects landing copy and which apps to prioritise next as the catalogue grows.
+2. ⬜ **Budget and timeline** — drives pacing of Stages 5 (Admin), 6 (Inbox + analytics), 7 (Polish & growth).
 
 ---
 

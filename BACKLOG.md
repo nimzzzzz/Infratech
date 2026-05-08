@@ -11,17 +11,15 @@ file before launching anything publicly.**
 
 These cannot ship to a real audience without being addressed first.
 
-### Contact-vendor form: spam protection
-- **What's needed**: rate limiting (Upstash Redis, ~5 req/IP/hour on `/api/contact-vendor`) + Cloudflare Turnstile or hCaptcha invisible challenge on the form.
-- **Why deferred**: contact form is mocked right now — no real emails go out, so spammers have nothing to abuse yet.
-- **Trigger**: the day we wire Resend / make the form actually send emails. **Same day must have rate limit + CAPTCHA in place — do not deploy without both.**
-- **Estimate**: ~half a day. Upstash account, `@upstash/ratelimit` package, Turnstile script tag + server-side token verify in the route handler.
-- Discussed: 2026-05-04.
+### Contact-vendor form: spam protection — partially landed
+- **Status (2026-05-06):** Stage 3 wired in-memory IP-keyed rate limit (5/hr/instance) at `lib/email/rate-limit.ts` + honeypot `website` field on the form. **Distributed rate limit deferred — current limiter is per Vercel function instance, not globally enforced.** A determined attacker can hit different instances.
+- **Still needed before public launch:** distributed limiter (Upstash Redis or Vercel KV) replacing the Map-based bucket; Cloudflare Turnstile or hCaptcha challenge if abuse becomes measurable. The Cloudflare proxy now in front of the site (Phase D.1) is itself a baseline — Cloudflare's free WAF mitigates obvious bots before the request even reaches us.
+- **Trigger:** Stage 7 (polish & growth) OR sooner if abuse is observed in production.
+- Discussed: 2026-05-04, 2026-05-06.
 
-### Vendor email server side
-- **What's needed**: actual `/api/contact-vendor` route that looks up vendor email (from DB), sends via Resend with templated HTML, writes message record to `vendor_messages` table.
-- **Why deferred**: Phase 2 — depends on Clerk + Postgres + Resend all being wired.
-- **Trigger**: phase 2 kickoff (when the Phase 1 design + admin shell is signed off).
+### Vendor email server side — DONE (Stage 3)
+- ✅ `/api/contact-vendor` route ships with Zod validation, IP rate limit, honeypot, parallel Resend sends (vendor inquiry + visitor confirmation), `contact_messages` row written before mail send. Reply-To = visitor email so vendor replies skip the directory entirely. BCC = `EMAIL_CONTACT_INBOX` for the internal Resolute team.
+- Email FROM display name is "AllInfratech Directory"; transitions from `onboarding@resend.dev` (Stage 3 sandbox) to `directory@allinfratech.com` once Phase D.3 Resend domain verification completes.
 
 ## 🟡 Future ideas — explore later
 
@@ -53,9 +51,9 @@ These cannot ship to a real audience without being addressed first.
 ### Why we use Vercel
 - CLAUDE.md §2 spec'd it. Free tier covers expected directory traffic comfortably. Paid tier ($20/mo) only needed when hitting scale or hosting-region constraints (CLAUDE.md §8 specifies EU/UAE region for compliance — Vercel can deploy to `fra1`/`dub1`/`cdg1` for EU when we go live for real).
 
-### Why no real LinkedIn auth yet
-- We're in design / iteration phase. Real LinkedIn OAuth needs a LinkedIn Developer app + Clerk account + env config — premature setup before the design is locked.
-- **Trigger**: Phase 2 kickoff. Plan ~1-2 hours total: register LinkedIn app, set up Clerk project, wire `@clerk/nextjs`, swap `lib/auth/mock-session.ts` import for real `auth()`.
+### Real LinkedIn auth — DONE through dev instance, prod pending
+- ✅ Stage 4 Phase A (2026-05-07) wired `@clerk/nextjs/legacy` `useSignIn().authenticateWithRedirect`, `/sso-callback` page renders `<AuthenticateWithRedirectCallback />`, lazy-create `vendor_members` row from Clerk user when webhook hasn't delivered, signed-in case handled across `/login` + button + header.
+- 🟡 **Phase D.2 in progress** — Clerk Production instance switch. Blocked on LinkedIn Developer Portal "Sign in with LinkedIn using OpenID Connect" product review (1–72 h SLA). Custom credentials replace Clerk's shared sandbox LinkedIn OAuth keys.
 
 ### Background-removal on uploaded vendor logos
 - Vendors upload logos as PNG/JPG with whatever background. We'd want a clean transparent version on the dark footer / over varied backgrounds.
