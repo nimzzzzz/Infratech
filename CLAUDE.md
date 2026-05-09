@@ -166,6 +166,8 @@ Decisions previously open that are now committed. Don't relitigate.
 
 - **Production domain switch (Phase D, in progress 2026-05-08 → mostly landed 2026-05-09).** Site renamed end-to-end to `AllInfratech` including metadata + email surfaces. `allinfratech.com` live behind a Cloudflare proxy in front of Vercel — UAE TRA blocks Vercel's apex IP `216.198.79.1` directly at the TLS-SNI layer, so Cloudflare's edge IPs front everything (UAE access verified without VPN). DNS migrated from Bluehost to Cloudflare nameservers (`huxley.ns.cloudflare.com` + `kehlani.ns.cloudflare.com`); Bluehost stays the registrar. Cloudflare SSL mode = Full (strict). Apex A record proxied; Resend records DNS-only. **Resend domain verified + sending live** as of 2026-05-09. **Clerk Production + LinkedIn Developer Portal still blocked** on access from boss — Phase D.2. www subdomain deferred (not configured).
 
+- **EMAIL_FROM finalized = `team@allinfratech.com` (2026-05-09).** Replaces the Stage 3 sandbox value `onboarding@resend.dev`. Resend domain verification for `allinfratech.com` (Phase D.3) covers any `*@allinfratech.com` sender, so the local-part can move freely without re-verifying. `lib/email/from.ts` wraps as `AllInfratech Directory <team@allinfratech.com>` (display name unchanged). `EMAIL_CONTACT_INBOX` stays `infratechdb@outlook.com` for now — branded inbox migration is tracked as tech debt in §14.
+
 - **File storage = Vercel Blob (Phase D.4, 2026-05-09).** Decision changed from the originally-spec'd Cloudflare R2. Reason: R2 requires a card on file even on the free tier; Vercel Blob is one-click on the existing Vercel account with no payment data required. Store `allinfratech-uploads`, region FRA1, public access (URLs are unguessable random strings; logos + screenshots are publicly viewable by design). **Stage 4 Phase C must use the `@vercel/blob` SDK, NOT the originally-spec'd `@aws-sdk/client-s3` (which was R2's S3-compatible interface).** Free-tier limits: 1 GB storage + 1 GB bandwidth/month — monitor and migrate to R2 if approached. TODO before Stage 4 launch: set Vercel bandwidth spend alert. Old `R2_*` env vars are deprecated and removed from this brain (see §13).
   **Migration trigger:** Migrate to Cloudflare R2 when Vercel Blob bandwidth approaches 800 MB/month (80% of 1 GB free tier) or when projected monthly cost exceeds $5, whichever comes first.
 
@@ -351,3 +353,17 @@ resolute-directory/
 - Don't reach for `@aws-sdk/client-s3` — file storage moved from R2 to Vercel Blob in Phase D.4 (2026-05-09). Use `@vercel/blob`. The original Stage 4 spec said S3-compatible client; that spec is superseded.
 - Don't proxy Resend DNS records through Cloudflare (orange cloud). Mail can't traverse an HTTP proxy — DKIM / SPF / MX / DMARC must be DNS-only (grey cloud). Same for any future MX or mail-related TXT records.
 - Don't add a www CNAME without re-checking Vercel's domain config — www.allinfratech.com is intentionally not configured at the moment.
+
+## 14. TODO / Tech Debt
+
+Open follow-ups not blocking current work but worth tracking. Each entry: what + why deferred + trigger.
+
+- **Branded inbox for `EMAIL_CONTACT_INBOX`.** Currently `infratechdb@outlook.com`. Migrate to `team@allinfratech.com` (or `contact@allinfratech.com`) when email hosting is set up. Requires Google Workspace, Zoho Mail, or similar + adding MX records at Cloudflare (DNS only, grey cloud — same constraint as Resend's records). **Out of scope for Phase D**; revisit during ops/branding cleanup.
+
+- **Vercel Blob bandwidth alert.** Set a spend alert in Vercel project settings before Stage 4 Phase C launch. Free tier is 1 GB storage + 1 GB bandwidth/month; the locked migration trigger to R2 is at 800 MB/month or $5/month projected. The alert is what gives us early warning. Trigger: before Stage 4 Phase C ships uploads.
+
+- **Distributed rate limiting** for `/api/contact-vendor`. Current limiter is per Vercel function instance (in-memory `Map`). Replace with Upstash Redis or Vercel KV before public launch. Cloudflare WAF in front (Phase D.1.5) is a partial mitigation. Trigger: Stage 7 (polish & growth) OR sooner if abuse measured.
+
+- **DMARC tightening.** Currently `p=none` (observability mode). After ~1 week of clean DMARC reports from Resend's sending, tighten to `p=quarantine`, then `p=reject`. Trigger: post-launch, after a baseline of legit-mail reports.
+
+- **LinkedIn OAuth product approval** (Phase D.2 prerequisite). Once Resolute LinkedIn account is shared, register the LinkedIn Developer Portal app and request "Sign in with LinkedIn using OpenID Connect" (1–72 h LinkedIn review). Then the Clerk dev → prod switch can land. Trigger: boss provides Resolute LinkedIn access.
