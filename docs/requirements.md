@@ -352,7 +352,7 @@ Reusing your existing stack from Altaris Picks gives you the fastest path to shi
 - **Auth:** Clerk (LinkedIn OAuth provider for vendors, email+password+2FA for admins via separate Clerk instance or role).
 - **Database:** Neon Postgres.
 - **ORM:** Drizzle.
-- **File storage:** Cloudflare R2 or Vercel Blob for logos/screenshots.
+- **File storage:** **Vercel Blob** (locked Phase D.4 2026-05-09 — chose over Cloudflare R2 to avoid R2's card-on-file requirement). Store `allinfratech-uploads`, region FRA1, public access. Stage 4 Phase C must use `@vercel/blob` SDK, NOT `@aws-sdk/client-s3`. Free-tier limits 1 GB storage + 1 GB bandwidth/month — monitor and migrate to R2 if approached.
 - **Email:** Resend (transactional: vendor notifications, contact forwards, suggest-an-app submissions).
 - **Search:** Postgres full-text search (`tsvector` + `GIN` index). Upgrade to Algolia/Meilisearch only if it becomes a problem.
 - **Rich text editor:** Tiptap (vendor description input).

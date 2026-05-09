@@ -10,7 +10,7 @@ Operational security model for AllInfratech. Source-of-truth requirements live i
 | Vendor → dashboard | Listing tampering, account takeover | Clerk LinkedIn OAuth (implicit identity check); `requireOnboarded` gate defaults to TRUE on every dashboard page; admin review on every submission (Stage 5) |
 | Admin → admin panel | Privilege escalation, insider error | Separate Clerk auth surface, mandatory 2FA (Stage 5), audit log on every mutation, role gated via `publicMetadata.role + DB lookup fallback` |
 | User content → render | XSS, HTML injection, link spam | Server-side rich-text sanitiser allowlist (B.2 onwards), `rel="nofollow noopener"` on all external links, no inline styles |
-| Upload → storage → CDN | Malware, oversized payloads, MIME confusion | MIME sniff + extension match + size cap (B.C); virus scan stubbed (B.C TODO); served from Cloudflare R2 custom subdomain `assets.allinfratech.com`, not the app origin |
+| Upload → storage → CDN | Malware, oversized payloads, MIME confusion | MIME sniff + extension match + size cap (B.C); virus scan stubbed (B.C TODO); served from Vercel Blob (`allinfratech-uploads`, FRA1, public access — URLs are unguessable random strings), not the app origin. **Storage choice changed Phase D.4 2026-05-09 from R2 to Vercel Blob** to avoid the card-on-file requirement |
 | Edge → origin | DDoS, country-level blocks | Cloudflare proxy in front of Vercel (Phase D.1) — UAE TRA filter on Vercel apex IP `216.198.79.1` necessitates this; bonus DDoS surface |
 
 ## Hard rules
@@ -22,7 +22,7 @@ Operational security model for AllInfratech. Source-of-truth requirements live i
 5. CSRF tokens on every state-changing form. Server actions inherit Next.js's built-in protection — verify it's on.
 6. Rate limit per-IP on every public form. **Stage 3 wired** for `/api/contact-vendor`. Stage 4 will wire it for `/api/submissions` per-vendor. Stage 7 replaces the in-memory bucket with a distributed (Redis/Upstash) store.
 7. Admin actions (approve, reject, edit, unpublish, delete, taxonomy edits, vendor suspension) write to `audit_log` with: actor id, action, target, timestamp, before/after JSON. **Webhook GDPR deletes already write `vendor_member.gdpr_delete` rows**.
-8. File uploads validated server-side: MIME sniff, extension allowlist (PNG/JPG/SVG for logos; SVG must be sanitised separately), size cap, virus scan (stubbed in Stage 4 Phase C; ClamAV via Cloudflare Workers or R2 built-in scanning before launch).
+8. File uploads validated server-side: MIME sniff, extension allowlist (PNG/JPG/SVG for logos; SVG must be sanitised separately), size cap, virus scan (stubbed in Stage 4 Phase C; investigate Vercel Blob's built-in scanning options or post-upload Sentry-monitored hash check before launch). **Stage 4 Phase C uses `@vercel/blob`, not `@aws-sdk/client-s3`** (storage moved from R2 to Vercel Blob in Phase D.4, 2026-05-09).
 9. **Vendor contact emails are stored on `vendors.contact_email` but never returned by any public API or rendered in HTML.** Visitor "contact this vendor" forms POST to `/api/contact-vendor` which forwards via Resend. Reply-To = visitor email so vendors reply directly without exposing their address.
 10. Honeypot field on every public form (`website` input on contact-vendor; `website2` planned for submissions). Non-empty → silent 200, no DB / email writes.
 11. Dependencies: weekly `npm audit` review. Patch high/critical within 48h.
@@ -44,7 +44,7 @@ If a secret lands in a commit:
 | `CLERK_SECRET_KEY` | Clerk dashboard → API keys |
 | `CLERK_WEBHOOK_SIGNING_SECRET` | Clerk dashboard → webhooks → rotate signing secret |
 | `RESEND_API_KEY` | Resend dashboard → API keys |
-| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Cloudflare dashboard → R2 → manage API tokens |
+| `BLOB_READ_WRITE_TOKEN` | Vercel project → Storage → Blob → store `allinfratech-uploads` → Settings → rotate token |
 | `SENTRY_AUTH_TOKEN` | Sentry → user auth tokens |
 
 ## Privacy / compliance

@@ -2,7 +2,7 @@
 
 A curated public directory of project management & infrastructure tools, organised by project stage. Maintained by the Digital & AI Practice of Resolute Management Consultancy.
 
-**Public site:** [allinfratech.com](https://allinfratech.com) (Phase D production-domain switch in progress; falls back to `infratech-wine.vercel.app` until Cloudflare proxy lands).
+**Public site:** [allinfratech.com](https://allinfratech.com) — live behind Cloudflare proxy in front of Vercel as of 2026-05-09. UAE-accessible without VPN. Final Clerk Production switch (Phase D.2) blocked on LinkedIn Developer Portal access; otherwise the production switch is complete.
 
 > **Repo / folder names** still say `resolute-directory` / `Infratech` (working names). The public brand is **AllInfratech** — file/folder/repo renames are mechanical churn with zero user value, so they stay.
 
@@ -33,7 +33,11 @@ cp .env.example .env.local
 #          NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard/onboarding,
 #          NEXT_PUBLIC_SITE_URL=http://localhost:3000,
 #          RESEND_API_KEY + EMAIL_FROM + EMAIL_CONTACT_INBOX,
-#          R2_* keys.
+#          BLOB_READ_WRITE_TOKEN  (Vercel Blob — copy from
+#            Vercel project → Storage → Blob → store
+#            "allinfratech-uploads" → .env.local tab.
+#            Pre-Phase-4-C this isn't read by any code path,
+#            but it should be present so local dev matches prod).
 # Set NEXT_PUBLIC_DEMO_MODE=true for fast local iteration without
 # real Clerk; set false to exercise the real auth path.
 
@@ -93,7 +97,7 @@ Current migration list:
 
 ## Deployment
 
-Vercel project `infratech` deploys from the `main` branch. Production domain `allinfratech.com` (Phase D.1 in progress — Cloudflare proxy front-end fixes UAE TLS-SNI block on Vercel's newer apex IP). Functions pinned to `fra1` (Frankfurt) via `vercel.json` to colocate with Neon's `eu-central-1` region.
+Vercel project `infratech` deploys from the `main` branch. Production domain `allinfratech.com` is live (Phase D.1 + D.1.5 done 2026-05-09). DNS is managed by Cloudflare (free plan); Bluehost remains the registrar. Cloudflare proxies the apex (orange cloud) — fixes the UAE TLS-SNI block on Vercel's apex IP `216.198.79.1`. Resend records (DKIM / SPF / DMARC) stay DNS-only (grey cloud — mail can't HTTP-proxy). Functions pinned to `fra1` (Frankfurt) via `vercel.json` to colocate with Neon's `eu-central-1` region. File storage = Vercel Blob (`allinfratech-uploads`, FRA1, public access).
 
 Env vars must be set on Vercel in **both Production and Preview scopes** to match. Don't enable `NEXT_PUBLIC_DEMO_MODE=true` on Production — `lib/env.ts` auto-disables it via `!isProd`, but explicit `false` is clearer.
 
@@ -103,5 +107,5 @@ See [PROGRESS.md](PROGRESS.md) for the full milestone log. At a glance:
 
 - **Stage 1 (Foundations)**, **Stage 2 (Public surface + search)**, **Stage 2.5 (Design + scope cleanup)**, **Stage 3 (Vendor inquiry email pipeline)** — ✅ done
 - **Stage 4 — Vendor self-service** — 🟡 Phase A done (real Clerk auth), Phase B.1 done (vendors / vendor_members schema split), B.2 next
-- **Phase D — Production domain switch** — 🟡 site renamed, custom domain claimed, Cloudflare proxy planned to fix UAE TLS-SNI block
+- **Phase D — Production domain switch** — 🟡 mostly landed: site renamed, `allinfratech.com` live behind Cloudflare proxy (UAE-accessible), Resend domain verified, Vercel Blob storage provisioned. **Only D.2 (Clerk Production + LinkedIn Developer Portal) remains** — blocked on Resolute LinkedIn account access.
 - **Stages 5 (Admin), 6 (Inbox + analytics), 7 (Polish & growth)** — ⬜ not started

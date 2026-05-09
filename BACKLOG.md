@@ -31,7 +31,7 @@ The favicon-sourced placeholder logos shipped 2026-05-09 (commit `1e83477`) surf
 - **Server-side SVG sanitisation** if SVG is allowed (strip `<script>`, inline event handlers, external references). Otherwise restrict uploads to raster only.
 - **Optional brand colour field** so the card slot can take the company's brand colour as background, with the logo overlaid. Defers this — `bg-[var(--color-canvas-warm)]` is acceptable for v1, but worth revisiting if the all-cream-canvas grid feels monotone once real logos populate.
 
-The current placeholder favicons (10 of 14 vendors) stay in `public/logos/vendors/` until Phase 4-C wires real uploads, at which point the `logo_url` column points at R2-hosted assets with the constraints above. The 4 fall-back-to-LetterAvatar vendors (rdash, buildroid-robotics, white-helmet-safety, bridge2ai) demonstrate the day-1 mixed state, which is fine as long as letter avatars look polished — they do.
+The current placeholder favicons (10 of 14 vendors) stay in `public/logos/vendors/` until Phase 4-C wires real uploads, at which point the `logo_url` column points at Vercel Blob-hosted assets (storage choice locked Phase D.4 2026-05-09 — was R2 in original spec) with the constraints above. Use `@vercel/blob`, not `@aws-sdk/client-s3`. The 4 fall-back-to-LetterAvatar vendors (rdash, buildroid-robotics, white-helmet-safety, bridge2ai) demonstrate the day-1 mixed state, which is fine as long as letter avatars look polished — they do.
 
 Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
 

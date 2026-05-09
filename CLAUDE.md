@@ -32,8 +32,8 @@ Full requirements live in [docs/requirements.md](docs/requirements.md). When in 
 | Auth | Clerk v7 | LinkedIn OAuth for vendors via `@clerk/nextjs/legacy` `useSignIn().authenticateWithRedirect`. Signal-based hooks (the new default) don't expose the OAuth-redirect API. Admin path stays mocked until Stage 5 |
 | ORM | Drizzle | migrations in `drizzle/`, journal at `drizzle/meta/_journal.json`. `npm run db:migrate` |
 | Database | Neon Postgres | full-text search via `tsvector` + GIN; region: `eu-central-1` (Frankfurt) |
-| File storage | Cloudflare R2 | for logos / screenshots. Custom subdomain `assets.allinfratech.com` (Phase D.4 in progress) |
-| Email | Resend | transactional only. Domain `allinfratech.com` verified (Phase D.3 in progress); FROM = `AllInfratech Directory <directory@allinfratech.com>` |
+| File storage | **Vercel Blob** (decision changed Phase D.4 2026-05-09 — was Cloudflare R2) | Store name `allinfratech-uploads`, region FRA1 (Frankfurt — closest to MENA), public access (URLs are unguessable random strings). Chose Vercel Blob over R2 to avoid Cloudflare's card-on-file requirement. Free-tier limits: 1 GB storage + 1 GB bandwidth/month — monitor and migrate to R2 if approached. **Stage 4 Phase C must use the `@vercel/blob` SDK, NOT `@aws-sdk/client-s3` as originally specced.** Env: `BLOB_READ_WRITE_TOKEN` (auto-set by Vercel; scoped to Production + Preview + Development) |
+| Email | Resend | transactional only. Domain `allinfratech.com` verified Phase D.3 2026-05-09 (region us-east-1, 4 DNS records: DKIM TXT, SPF MX, SPF TXT, DMARC TXT); FROM = `AllInfratech Directory <directory@allinfratech.com>` |
 | Email templates | React Email | `lib/email/templates/*.tsx`, server-side `render()` to HTML at send time |
 | Rich text | Tiptap | vendor description editor, sanitised allowlist (not yet wired) |
 | Validation | Zod | request bodies on every API route; `lib/env.ts` env parsing |
@@ -117,7 +117,14 @@ Site map (current — `/suggest` + `/contact` removed in scope narrowing):
 | **Stage 6 — Vendor inbox + analytics** | ⬜ not started | Inbox detail view; per-app view + click metrics; vendor dashboard reads |
 | **Stage 7 — Polish & growth** | ⬜ deferred | Featured re-introduction (if desired), distributed rate limiting, performance review, comparison tool |
 
-**Phase D — production switch** (parallel to Stage 4): D.0 site rename ✅ done; D.1 Vercel custom domain (resolves but UAE blocks → Cloudflare proxy planned); D.2 Clerk Production (blocked on LinkedIn OIDC product review); D.3 Resend domain verification (records added, awaiting verify); D.4 R2 custom subdomain (pending); D.5 final smoke test.
+**Phase D — production switch** (parallel to Stage 4):
+- D.0 ✅ site rename (2026-05-08)
+- D.1 ✅ Vercel apex `allinfratech.com` live with SSL (2026-05-09). Apex A `@ → 216.198.79.1` (Vercel project IP). www subdomain deferred — not added in Vercel, no CNAME. **Issue surfaced + fix:** SSL HTTP-01 challenge cycled "Generating SSL → Invalid Configuration" repeatedly. Fix that worked: remove domain → wait full 30 s → re-add. Rapid re-add did NOT work; the pause matters.
+- D.1.5 ✅ Cloudflare DNS migration (2026-05-09 — new sub-phase, not in original plan). Reason: UAE ISPs (Etisalat / du) block Vercel's apex IP `216.198.79.1` directly, so the bare Vercel setup was unreachable from UAE without VPN. Bluehost stays the registrar; nameservers swapped to `huxley.ns.cloudflare.com` + `kehlani.ns.cloudflare.com`. Cloudflare SSL/TLS mode: Full (strict). Apex A is **Proxied** (orange cloud); all Resend records are **DNS only** (grey cloud — mail can't go through HTTP proxy). UAE access verified working without VPN.
+- D.2 🔒 Blocked — Clerk Production + LinkedIn Developer Portal pending Resolute LinkedIn account access from boss.
+- D.3 ✅ Resend domain verified (2026-05-09). Domain `allinfratech.com`, region `us-east-1` (North Virginia). 4 DNS records added (DKIM TXT, SPF MX, SPF TXT, DMARC TXT). Status: ready to send.
+- D.4 ✅ Vercel Blob storage (2026-05-09 — **decision changed from Cloudflare R2**). Store `allinfratech-uploads`, region FRA1, public access. Reason: avoid Cloudflare's card-on-file requirement on the R2 free tier. Free-tier limits 1 GB storage + 1 GB bandwidth/month — TODO set Vercel bandwidth spend alert before Stage 4 launch.
+- D.5 ⏳ Final smoke test (deferred until D.2 lands — needs real Clerk + LinkedIn flow end-to-end).
 
 Out of scope for v1 (deliberately): user reviews/ratings, comparison tool, paid placements, multi-language, vendor messaging inbox (one-way only), public API, mobile app. **Don't get talked into these in v1.**
 
@@ -157,7 +164,10 @@ Decisions previously open that are now committed. Don't relitigate.
 
 - **`vendor_members` schema split (Phase B.1, 2026-05-08).** `vendors` no longer holds `clerk_user_id` or `onboarded` — those moved to a new `vendor_members` table. The split lets multiple Clerk users represent the same company. `vendor_id` on a member is nullable: at first sign-in we create the member row before the human has chosen which company they belong to. The `/dashboard/onboarding` step (B.2) inserts a vendors row and repoints `vendor_id` from NULL. GDPR delete anonymises the `vendor_members` row + suspends the vendor row only if the deleted human was the sole active member.
 
-- **Production domain switch (Phase D, in progress 2026-05-08).** Site renamed end-to-end to `AllInfratech` including metadata + email surfaces. Custom domain `allinfratech.com` claimed in Vercel. UAE TRA blocks the new Vercel anycast IP `216.198.79.1` at the TLS-SNI layer (older `76.76.21.21` works fine — see `infratech-wine.vercel.app`). **Resolution:** Cloudflare proxies in front of Vercel. DNS migrated from Bluehost to Cloudflare nameservers; A record proxied (orange cloud), Resend records DNS-only (grey cloud). Resend domain verification + Clerk Production switch + R2 custom subdomain remain.
+- **Production domain switch (Phase D, in progress 2026-05-08 → mostly landed 2026-05-09).** Site renamed end-to-end to `AllInfratech` including metadata + email surfaces. `allinfratech.com` live behind a Cloudflare proxy in front of Vercel — UAE TRA blocks Vercel's apex IP `216.198.79.1` directly at the TLS-SNI layer, so Cloudflare's edge IPs front everything (UAE access verified without VPN). DNS migrated from Bluehost to Cloudflare nameservers (`huxley.ns.cloudflare.com` + `kehlani.ns.cloudflare.com`); Bluehost stays the registrar. Cloudflare SSL mode = Full (strict). Apex A record proxied; Resend records DNS-only. **Resend domain verified + sending live** as of 2026-05-09. **Clerk Production + LinkedIn Developer Portal still blocked** on access from boss — Phase D.2. www subdomain deferred (not configured).
+
+- **File storage = Vercel Blob (Phase D.4, 2026-05-09).** Decision changed from the originally-spec'd Cloudflare R2. Reason: R2 requires a card on file even on the free tier; Vercel Blob is one-click on the existing Vercel account with no payment data required. Store `allinfratech-uploads`, region FRA1, public access (URLs are unguessable random strings; logos + screenshots are publicly viewable by design). **Stage 4 Phase C must use the `@vercel/blob` SDK, NOT the originally-spec'd `@aws-sdk/client-s3` (which was R2's S3-compatible interface).** Free-tier limits: 1 GB storage + 1 GB bandwidth/month — monitor and migrate to R2 if approached. TODO before Stage 4 launch: set Vercel bandwidth spend alert. Old `R2_*` env vars are deprecated and removed from this brain (see §13).
+  **Migration trigger:** Migrate to Cloudflare R2 when Vercel Blob bandwidth approaches 800 MB/month (80% of 1 GB free tier) or when projected monthly cost exceeds $5, whichever comes first.
 
 ## 7. SEO Contract (load-bearing)
 
@@ -338,3 +348,6 @@ resolute-directory/
 - Don't skip SEO chores ("we'll add metadata later") — by the time you remember, Google has indexed the bad version.
 - Don't hardcode `infratech-wine.vercel.app` anywhere — production canonical is `allinfratech.com`.
 - Don't use the new `useSignIn` hook from `@clerk/nextjs` for OAuth flows — the new Signal-based hook has no `authenticateWithRedirect`. Use `@clerk/nextjs/legacy`.
+- Don't reach for `@aws-sdk/client-s3` — file storage moved from R2 to Vercel Blob in Phase D.4 (2026-05-09). Use `@vercel/blob`. The original Stage 4 spec said S3-compatible client; that spec is superseded.
+- Don't proxy Resend DNS records through Cloudflare (orange cloud). Mail can't traverse an HTTP proxy — DKIM / SPF / MX / DMARC must be DNS-only (grey cloud). Same for any future MX or mail-related TXT records.
+- Don't add a www CNAME without re-checking Vercel's domain config — www.allinfratech.com is intentionally not configured at the moment.

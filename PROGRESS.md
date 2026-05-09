@@ -2,9 +2,9 @@
 
 Living log of what's done, what's in flight, and what's next. Update at the end of every working session.
 
-## Status: Phase B.1 done, Phase D in progress
+## Status: Phase B.1 done; Phase D mostly landed (D.2 blocked, D.5 deferred)
 
-Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 underway — Phase A (real Clerk auth) and Phase B.1 (vendors / vendor_members schema split) both landed. Production-domain switch (Phase D) running in parallel: site renamed end-to-end to **AllInfratech**, custom domain `allinfratech.com` claimed in Vercel, Cloudflare proxy planned to fix UAE TLS-SNI block.
+Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 underway — Phase A (real Clerk auth) and Phase B.1 (vendors / vendor_members schema split) both landed. Production-domain switch (Phase D) is now live for everything except Clerk Production: `allinfratech.com` is reachable globally (UAE-included via Cloudflare proxy), Resend domain verified and sending, Vercel Blob storage provisioned. Only D.2 (Clerk Prod + LinkedIn Developer Portal) remains blocked on access from boss.
 
 ## Brand decisions (closed)
 
@@ -96,10 +96,12 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 - [ ] Wire `/dashboard/onboarding/page.tsx` form to API + legal checkbox (full visible block)
 - [ ] Tests: onboarding + legal acceptance coverage
 
-### Phase C — file uploads to R2 ⬜ later
-- [ ] Install `@aws-sdk/client-s3`
-- [ ] `/api/uploads/sign` presigned URL endpoint
-- [ ] Wire `components/dashboard/logo-upload.tsx` + `gallery-upload.tsx` to R2
+### Phase C — file uploads to Vercel Blob ⬜ later
+**Storage choice changed in Phase D.4 (2026-05-09): Vercel Blob, not R2.** Use the `@vercel/blob` SDK, NOT `@aws-sdk/client-s3` as the original spec said.
+- [ ] Install `@vercel/blob`
+- [ ] `/api/uploads/sign` endpoint (Vercel Blob client uploads work differently from S3 presigned URLs — likely uses `handleUpload` server action or `put()` from server)
+- [ ] Wire `components/dashboard/logo-upload.tsx` + `gallery-upload.tsx` to the Blob store `allinfratech-uploads`
+- [ ] Enforce logo upload constraints from BACKLOG (square, ≥256×256, ≤2MB, alt text)
 
 ### Phase D — submission wizard wired to DB ⬜ later
 - [ ] `POST /api/submissions` with validation + honeypot + rate limit
@@ -118,14 +120,15 @@ Inbox detail view, per-app view + click metrics, vendor dashboard reads.
 ## Stage 7 — Polish & growth ⬜ deferred
 Distributed rate limiting (Redis/Upstash) replacing the per-instance in-memory limiter, performance review, comparison tool (only if 50+ apps).
 
-## Phase D — production switch (parallel to Stage 4) 🟡 in progress
+## Phase D — production switch (parallel to Stage 4) 🟡 mostly landed
 
-- [x] **D.0** — Site rename `InfratechDatabase` / `InfraTechDB` → `AllInfratech` across 13 files (header, dashboard chrome, admin chrome, login, onboarding h1, layout SITE_NAME, page metadata, vendor pages openGraph + JSON-LD, email templates, FROM display name, mock messages)
-- [🟡] **D.1** — Vercel custom domain. `allinfratech.com` resolves and serves, but UAE blocks the new Vercel anycast IP `216.198.79.1` at the TLS-SNI layer. Resolution: Cloudflare proxy in front. DNS to migrate Bluehost → Cloudflare nameservers; A record proxied (orange cloud), Resend records DNS-only (grey cloud).
-- [⬜] **D.2** — Clerk Production instance. Blocked on LinkedIn Developer Portal "Sign in with LinkedIn using OpenID Connect" product review (1–72 h SLA).
-- [🟡] **D.3** — Resend domain verification. Records added in Bluehost (will migrate to Cloudflare in D.1). Awaiting Resend verification status.
-- [⬜] **D.4** — R2 bucket custom subdomain `assets.allinfratech.com`. Will simplify post-Cloudflare migration.
-- [⬜] **D.5** — Final smoke test on production.
+- [x] **D.0** — Site rename `InfratechDatabase` / `InfraTechDB` → `AllInfratech` across 13 files (header, dashboard chrome, admin chrome, login, onboarding h1, layout SITE_NAME, page metadata, vendor pages openGraph + JSON-LD, email templates, FROM display name, mock messages). Locked 2026-05-08.
+- [x] **D.1** — Vercel apex domain (2026-05-09). `allinfratech.com` live with SSL. Apex A `@ → 216.198.79.1` (Vercel project IP). www subdomain deferred (not added; no CNAME). **Issue + fix:** SSL HTTP-01 challenge cycled "Generating SSL → Invalid Configuration" repeatedly; remove → wait full 30s → re-add worked.
+- [x] **D.1.5** — Cloudflare DNS migration (2026-05-09 — new sub-phase, not in original plan). Bluehost stays the registrar; nameservers swapped to `huxley.ns.cloudflare.com` + `kehlani.ns.cloudflare.com`. Cloudflare SSL/TLS = Full (strict). Apex A is Proxied (orange cloud); all Resend records are DNS only (grey cloud — mail can't proxy). UAE access verified working without VPN. Reason: Vercel's apex IP `216.198.79.1` was blocked by UAE ISPs (Etisalat / du) at the TLS-SNI layer.
+- [🔒] **D.2** — Clerk Production. Blocked on Resolute LinkedIn Developer Portal account access from boss. Once unblocked: register LinkedIn app, request "Sign in with LinkedIn using OpenID Connect" product (1–72 h LinkedIn review), switch Clerk dev → prod, swap pk_test_/sk_test_ → pk_live_/sk_live_ on Vercel, point webhook at `https://allinfratech.com/api/webhooks/clerk`.
+- [x] **D.3** — Resend domain verified (2026-05-09). Domain `allinfratech.com`, region `us-east-1` (North Virginia). 4 DNS records added: DKIM TXT, SPF MX, SPF TXT, DMARC TXT. Status: ready to send. EMAIL_FROM = `directory@allinfratech.com` env update on Vercel + redeploy still pending (was using sandbox `onboarding@resend.dev` — switch lands in next deploy).
+- [x] **D.4** — File storage: **Vercel Blob** (decision changed from R2). Store `allinfratech-uploads`, region FRA1, public access. `BLOB_READ_WRITE_TOKEN` auto-set on Vercel for Production + Preview + Development. **Stage 4 Phase C must use `@vercel/blob` SDK, not `@aws-sdk/client-s3`.** Free-tier limits: 1 GB storage + 1 GB bandwidth/month — TODO set Vercel bandwidth spend alert before Stage 4 launch; migrate to R2 if approached.
+- [⏳] **D.5** — Final smoke test. Deferred until D.2 lands — needs the real Clerk + LinkedIn flow end-to-end.
 
 ## Out of scope for v1 (deliberately)
 
