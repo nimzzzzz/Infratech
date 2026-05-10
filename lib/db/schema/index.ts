@@ -5,3 +5,4 @@ export * from "./submissions";
 export * from "./audit";
 export * from "./messages";
 export * from "./analytics";
+export * from "./legal";

@@ -149,16 +149,20 @@ export async function getVendorSession(opts?: {
   const { vendor, vendorMember } = result;
   if (vendorMember.suspended) redirect("/login?error=suspended");
 
-  if (requireOnboarded && !vendorMember.onboarded) {
-    redirect("/dashboard/onboarding");
-  }
+  // PR B.2.1 — onboarding is now a modal mounted in the dashboard
+  // layout, not a page redirect. Letting !onboarded users render
+  // dashboard pages underneath the modal is intentional: the modal
+  // blocks all interaction until they accept legal, then the page
+  // re-renders cleanly via router.refresh(). The previous redirect
+  // here would interrupt the layout SSR before the modal could mount.
 
   if (requireOnboarded) {
-    // Defensive: the onboarded gate above implies a vendor_id is set
-    // (the onboarding flow only flips onboarded=true after creating
-    // and linking a vendor). If somehow a member is onboarded with
-    // no vendor, treat the session as broken and bounce back to
-    // onboarding rather than handing the caller a null vendor.
+    // Closed-shape callers still need a non-null vendor row. After
+    // legal acceptance the user typically has onboarded=true but no
+    // vendor row yet (the company-info wizard is a separate step);
+    // bounce them to the onboarding welcome page so they can start
+    // the wizard. The welcome page itself uses the open shape and
+    // tolerates vendor=null.
     if (!vendor) redirect("/dashboard/onboarding");
     return {
       vendor,

@@ -89,12 +89,24 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 - [x] `vendors.clerk_user_id` and `vendors.onboarded` dropped (migration `0009`)
 - [x] Tests rewritten: 14 vendor-session cases (real Clerk path × 4, onboarded gate × 3, error paths × 3, lazy-create × 2, DEMO_MODE × 5) + queries/vendors join-shape
 
-### Phase B.2 — onboarding wiring + legal acceptance ⬜ next
-- [ ] `vendor_member_legal_acceptances` table
-- [ ] `lib/legal/terms-version.ts` constant
-- [ ] Confirm-company API endpoint (Zod, INSERT vendors + UPDATE vendor_member.vendor_id + INSERT acceptance)
-- [ ] Wire `/dashboard/onboarding/page.tsx` form to API + legal checkbox (full visible block)
-- [ ] Tests: onboarding + legal acceptance coverage
+### Phase B.2 — onboarding wiring + legal acceptance 🟡 PR 1 done, PR 2 next
+
+**PR 1 — Onboarding modal + legal acceptance + legal pages ✅ done (2026-05-10)**
+- [x] `vendor_member_legal_acceptances` table (migration `0011`, hand-written after drizzle-kit auto-gen tried to redo every prior migration)
+- [x] `lib/legal/terms-version.ts` constant (`TERMS_VERSION = "2026-05-10"`)
+- [x] Four legal pages with full v1.0 content — Terms of Service, Vendor Terms, Privacy Policy, Cookie Policy. AED 500 liability cap, DIFC-LCIA arbitration, single arbitrator, English. Lawyer review tracked in CLAUDE.md §14.
+- [x] `lib/rate-limit/vendor-member.ts` — per-instance in-memory limiter keyed on `vendor_member.id` (5/hr), mirrors `lib/email/rate-limit.ts` pattern
+- [x] `POST /api/onboarding/confirm` — Zod (in `app/api/onboarding/confirm/schema.ts` so route.ts only exports POST), honeypot `website2`, idempotent on `onboarded=true`, version-mismatch 409, transaction over `vendor_members.onboarded` flip + audit row insert
+- [x] `components/onboarding/legal-acceptance-modal.tsx` — blocking client modal, sign-out via `useClerk().signOut`, body-scroll lock, sr-only honeypot, `router.refresh()` on success
+- [x] Wired into `app/dashboard/layout.tsx` — open-shape session, real `unreadCount` from `countUnreadForVendor(vendor.id)` replacing the hardcoded `0`, modal mounted below `<main>`
+- [x] `lib/auth/session.ts` — removed `!onboarded` redirect (modal handles this); closed-shape `!vendor` retargeted to `/dashboard/onboarding` (welcome) so the wizard can pick up
+- [x] Tests: 19 new (Zod unit × 3, rate-limit util × 3, integration happy path, auth/lookup × 4, body validation × 3, honeypot, rate-limit through HTTP, modal renders/doesn't × 3); all pass; 14 vendor-session tests still green
+
+**PR 2 — Vendor row creation + wizard wire-up ⬜ next**
+- [ ] `POST /api/submissions` (Zod + honeypot + rate limit) — creates vendor row when `vendorId` is null, then submission row
+- [ ] Wire `components/dashboard/submit-wizard.tsx` `handleSubmit` to the API
+- [ ] File uploads (deferred from PR 1) — depends on Phase C
+- [ ] Re-acceptance flow on `TERMS_VERSION` bumps (modal currently fires 409 on mismatch but no re-accept UI)
 
 ### Phase C — file uploads to Vercel Blob ⬜ later
 **Storage choice changed in Phase D.4 (2026-05-09): Vercel Blob, not R2.** Use the `@vercel/blob` SDK, NOT `@aws-sdk/client-s3` as the original spec said.
