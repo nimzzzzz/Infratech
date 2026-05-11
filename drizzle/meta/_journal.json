@@ -78,6 +78,13 @@
       "when": 1778420000000,
       "tag": "0010_seed_logo_urls",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1778370218541,
+      "tag": "0011_add_vendor_member_legal_acceptances",
+      "breakpoints": true
     }
   ]
 }
