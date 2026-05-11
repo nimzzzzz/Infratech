@@ -6,30 +6,38 @@ import { useClerk } from "@clerk/nextjs";
 import { TERMS_VERSION } from "@/lib/legal/terms-version";
 
 /**
- * Blocking onboarding modal — first-sign-in legal acceptance.
+ * Blocking legal-acceptance modal.
  *
- * Visibility:
- *   • initialOnboarded=true  → never renders
- *   • initialOnboarded=false → renders as a full-screen overlay; the
- *     only ways out are (a) accept and confirm, or (b) sign out.
- *     No close button, no backdrop click, no Escape.
+ * Two render triggers:
+ *   • !initialOnboarded → first-sign-in flow (Phase B.2 PR 1)
+ *   • needsReacceptance → existing user whose latest accepted version
+ *     is older than the live TERMS_VERSION (Phase B.2 PR 2). Re-accept
+ *     mode shows different copy and hides the sign-out button — the
+ *     user already has an account and shouldn't be forced out for a
+ *     terms bump.
  *
  * Submission:
  *   • POSTs to /api/onboarding/confirm with the live TERMS_VERSION
  *     and a hidden honeypot field "website2".
- *   • On 200 we router.refresh() so the layout re-reads the session
- *     and the modal unmounts on next render. The page underneath is
- *     the wizard step 1, which the user can now interact with.
+ *   • The route INSERTs an additive vendor_member_legal_acceptances
+ *     row keyed on the current version; if one already exists for
+ *     this member+version, it 200s with no write (idempotency).
+ *   • On 200 we router.refresh() so the layout re-reads the
+ *     acceptance state and the modal unmounts on next render.
  */
 
 export type LegalAcceptanceModalProps = {
   initialOnboarded: boolean;
+  /** True iff the member has accepted before, but their latest
+   *  acceptance is older than the live TERMS_VERSION. */
+  needsReacceptance?: boolean;
   /** Optional first name for greeting; falls back to a generic phrase. */
   firstName?: string | null;
 };
 
 export function LegalAcceptanceModal({
   initialOnboarded,
+  needsReacceptance = false,
   firstName,
 }: LegalAcceptanceModalProps) {
   const router = useRouter();
@@ -40,24 +48,27 @@ export function LegalAcceptanceModal({
   const [error, setError] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
+  const shouldRender = !initialOnboarded || needsReacceptance;
+  const isReaccept = initialOnboarded && needsReacceptance;
+
   // Lock background scroll while the modal is up.
   useEffect(() => {
-    if (initialOnboarded) return;
+    if (!shouldRender) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [initialOnboarded]);
+  }, [shouldRender]);
 
   // Focus the card on mount so screen readers and keyboard users
   // land somewhere reasonable.
   useEffect(() => {
-    if (initialOnboarded) return;
+    if (!shouldRender) return;
     cardRef.current?.focus();
-  }, [initialOnboarded]);
+  }, [shouldRender]);
 
-  if (initialOnboarded) return null;
+  if (!shouldRender) return null;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,18 +136,22 @@ export function LegalAcceptanceModal({
         className="w-full max-w-2xl border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 shadow-2xl outline-none md:p-10"
       >
         <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
-          One last thing
+          {isReaccept ? "Updated terms" : "One last thing"}
         </p>
         <h2
           id="onboarding-modal-title"
           className="mt-4 font-heading text-[28px] leading-tight tracking-tight text-[var(--color-ink)] md:text-[32px]"
         >
-          {firstName ? `Welcome, ${firstName}.` : "Welcome to AllInfratech."}
+          {isReaccept
+            ? "Our terms have been updated."
+            : firstName
+              ? `Welcome, ${firstName}.`
+              : "Welcome to AllInfratech."}
         </h2>
         <p className="mt-4 max-w-[58ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
-          Before you set up your listing, please confirm you accept the
-          terms that govern using AllInfratech as a vendor. We log your
-          acceptance for our records.
+          {isReaccept
+            ? "We've updated the terms that govern using AllInfratech as a vendor since you last accepted. Please review and re-accept to continue."
+            : "Before you set up your listing, please confirm you accept the terms that govern using AllInfratech as a vendor. We log your acceptance for our records."}
         </p>
 
         <form onSubmit={onSubmit} className="mt-7 space-y-5">
@@ -215,21 +230,36 @@ export function LegalAcceptanceModal({
             </p>
           ) : null}
 
-          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              type="button"
-              onClick={onSignOut}
-              disabled={submitting}
-              className="inline-flex h-10 items-center justify-center px-4 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] transition-colors hover:text-[var(--color-ink)] disabled:opacity-60"
-            >
-              Sign out
-            </button>
+          <div
+            className={
+              isReaccept
+                ? "flex justify-end pt-2"
+                : "flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between"
+            }
+          >
+            {/* In re-accept mode the user already has an account —
+                forcing them through sign-out for a terms bump is
+                hostile. The submit button stays the only action. */}
+            {isReaccept ? null : (
+              <button
+                type="button"
+                onClick={onSignOut}
+                disabled={submitting}
+                className="inline-flex h-10 items-center justify-center px-4 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] transition-colors hover:text-[var(--color-ink)] disabled:opacity-60"
+              >
+                Sign out
+              </button>
+            )}
             <button
               type="submit"
               disabled={submitting || !accepted}
               className="inline-flex h-11 items-center justify-center bg-[var(--color-ink)] px-6 text-[12px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {submitting ? "Confirming…" : "Accept and continue"}
+              {submitting
+                ? "Confirming…"
+                : isReaccept
+                  ? "Accept updated terms"
+                  : "Accept and continue"}
             </button>
           </div>
 

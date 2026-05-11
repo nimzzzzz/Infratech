@@ -102,11 +102,23 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 - [x] `lib/auth/session.ts` — removed `!onboarded` redirect (modal handles this); closed-shape `!vendor` retargeted to `/dashboard/onboarding` (welcome) so the wizard can pick up
 - [x] Tests: 19 new (Zod unit × 3, rate-limit util × 3, integration happy path, auth/lookup × 4, body validation × 3, honeypot, rate-limit through HTTP, modal renders/doesn't × 3); all pass; 14 vendor-session tests still green
 
-**PR 2 — Vendor row creation + wizard wire-up ⬜ next**
-- [ ] `POST /api/submissions` (Zod + honeypot + rate limit) — creates vendor row when `vendorId` is null, then submission row
-- [ ] Wire `components/dashboard/submit-wizard.tsx` `handleSubmit` to the API
-- [ ] File uploads (deferred from PR 1) — depends on Phase C
-- [ ] Re-acceptance flow on `TERMS_VERSION` bumps (modal currently fires 409 on mismatch but no re-accept UI)
+**PR 2 — Vendor row creation + wizard wire-up ✅ done (2026-05-11)**
+- [x] `POST /api/submissions` — Zod (sibling `schema.ts`), honeypot `website3`, vendor-member rate limit, transaction: optional INSERT vendors + INSERT submissions
+- [x] Server-side slug generation + uniqueness check on `apps.slug` AND `vendors.slug` → 409 `slug_taken`
+- [x] Re-acceptance gate: 409 `version_mismatch` if member's latest acceptance is older than `TERMS_VERSION`
+- [x] Wired `components/dashboard/submit-wizard.tsx` `handleSubmit` to real API; loading state, inline 4xx error rendering, network-error retry copy
+- [x] Re-acceptance UI in `legal-acceptance-modal.tsx` (new `needsReacceptance` prop; layout reads `getLatestAcceptedVersion()` and triggers the modal in re-accept mode; sign-out button hidden in re-accept mode)
+- [x] `/api/onboarding/confirm` idempotency lifted from "member.onboarded === true" → per-version check; re-acceptance writes an additive audit row
+- [x] Removed Guard 3 (`!vendor` redirect at `submit/page.tsx:49`); fixed stale `skipCompanyStep` heuristic (`vendorMember.onboarded` → `vendor != null`)
+- [x] Dashboard Guard 2 replaced with empty-state component (`DashboardEmptyState`) — renders welcome/pending-review state instead of redirecting away
+- [x] `/dashboard/onboarding/submitted` confirmation page (personalised with product name + primary email); legacy `/dashboard/onboarding/complete` deleted
+- [x] Logo uploads: rendered as "Logo uploads are coming soon" notice in the wizard pending Phase C
+- [x] Tests: 12 new on `/api/submissions`, 1 new on `/api/onboarding/confirm` re-acceptance, 6 on `lib/legal/check-acceptance`, 2 wizard render smokes; all pass
+
+**PR 2 follow-ups deferred to later phases:**
+- Vendor logo uploads (Phase C — Vercel Blob)
+- End-to-end browser test for the wizard submit flow (when Playwright/Cypress lands)
+- Lawyer review of v1.0 legal copy (CLAUDE.md §14)
 
 ### Phase C — file uploads to Vercel Blob ⬜ later
 **Storage choice changed in Phase D.4 (2026-05-09): Vercel Blob, not R2.** Use the `@vercel/blob` SDK, NOT `@aws-sdk/client-s3` as the original spec said.

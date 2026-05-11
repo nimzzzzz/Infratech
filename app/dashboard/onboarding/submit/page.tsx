@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import { SubmitWizard } from "@/components/dashboard/submit-wizard";
@@ -42,16 +41,19 @@ export default async function SubmitPage({
     requireOnboarded: false,
   });
 
-  // The wizard's prefill assumes a vendor exists. If the human
-  // hasn't completed company-confirm yet (vendor still null), bounce
-  // them to /dashboard/onboarding to do that first. B.2 will make
-  // that page the company-confirm form.
-  if (!vendor) redirect("/dashboard/onboarding");
+  // Phase B.2 PR 2 — vendor-less users are now welcome here. The
+  // wizard's CompanyStep collects the company info and the submit
+  // endpoint creates the vendors row + submission in one transaction.
+  // The previous redirect-to-/dashboard/onboarding bounce was the
+  // root cause of the post-D.2 fresh-signup loop (see PR 1 audit).
 
-  // ?as=returning  → skips the "Your company" step (vendor profile
-  // already on file). For real vendors, derive from the onboarded
-  // flag on their member row.
-  const skipCompanyStep = asParam === "returning" || vendorMember.onboarded;
+  // ?as=returning → skips the "Your company" step (vendor profile
+  // already on file). Otherwise: skip iff a vendor row already
+  // exists. The previous heuristic used `vendorMember.onboarded`,
+  // which is wrong post-B.1 schema split — `onboarded` now means
+  // "accepted legal terms", which is independent of "has a vendor
+  // row" (the modal can be accepted before the wizard runs).
+  const skipCompanyStep = asParam === "returning" || vendor != null;
 
   return (
     <Container className="max-w-3xl py-10 md:py-14">
@@ -75,8 +77,8 @@ export default async function SubmitPage({
 
       <SubmitWizard
         prefill={{
-          vendor: vendor.name,
-          domain: domainFrom(vendor.websiteUrl),
+          vendor: vendor?.name ?? "",
+          domain: vendor ? domainFrom(vendor.websiteUrl) : "",
         }}
         skipCompanyStep={skipCompanyStep}
       />

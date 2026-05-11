@@ -5,6 +5,7 @@ import {
   getDashboardHeaderData,
   getVendorSession,
 } from "@/lib/auth/session";
+import { needsReacceptance } from "@/lib/legal/check-acceptance";
 import { countUnreadForVendor } from "@/lib/queries/messages";
 
 export const metadata: Metadata = {
@@ -26,6 +27,13 @@ export default async function DashboardLayout({
   const unreadCount = session.vendor
     ? await countUnreadForVendor(session.vendor.id)
     : 0;
+  // Re-acceptance trigger (Phase B.2 PR 2): an already-onboarded
+  // member whose latest accepted version is older than the live
+  // TERMS_VERSION needs to re-accept. Skip the DB hit when the
+  // member hasn't onboarded yet — the first-sign-in flow covers it.
+  const reaccept = session.vendorMember.onboarded
+    ? await needsReacceptance(session.vendorMember.id)
+    : false;
   const firstName = session.vendorMember.name.split(" ")[0] ?? null;
 
   return (
@@ -42,6 +50,7 @@ export default async function DashboardLayout({
       </main>
       <LegalAcceptanceModal
         initialOnboarded={session.vendorMember.onboarded}
+        needsReacceptance={reaccept}
         firstName={firstName}
       />
     </div>

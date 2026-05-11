@@ -177,11 +177,20 @@ describe("POST /api/onboarding/confirm — auth & lookup", () => {
     expect(res.status).toBe(403);
   });
 
-  it("200 idempotent when already onboarded — no second audit row", async () => {
+  it("200 idempotent when current version already accepted — no second audit row", async () => {
+    // Per-version idempotency (Phase B.2 PR 2): an already-onboarded
+    // member who has an audit row for the CURRENT terms version sees
+    // the route 200 without writing a duplicate. Members whose latest
+    // accepted version is OLDER fall through to an additive INSERT
+    // (re-acceptance flow).
     const { POST } = await import("@/app/api/onboarding/confirm/route");
     const member = await seedMember({
       clerkUserId: "user_already",
       onboarded: true,
+    });
+    await db.insert(vendorMemberLegalAcceptances).values({
+      vendorMemberId: member.id,
+      termsVersion: TERMS_VERSION,
     });
     authMock.userId = "user_already";
 
@@ -191,7 +200,34 @@ describe("POST /api/onboarding/confirm — auth & lookup", () => {
       .select({ n: sql<number>`count(*)::int` })
       .from(vendorMemberLegalAcceptances)
       .where(eq(vendorMemberLegalAcceptances.vendorMemberId, member.id));
-    expect(n).toBe(0);
+    // Should remain at 1 — the pre-seeded row only.
+    expect(n).toBe(1);
+  });
+
+  it("re-acceptance: stale audit row + current-version POST → 200 + additive insert", async () => {
+    // Mirror of the above for the re-acceptance path. Member's only
+    // existing audit row is for an old version; the route should
+    // INSERT a new row at TERMS_VERSION rather than 200-no-op.
+    const { POST } = await import("@/app/api/onboarding/confirm/route");
+    const member = await seedMember({
+      clerkUserId: "user_reaccept",
+      onboarded: true,
+    });
+    await db.insert(vendorMemberLegalAcceptances).values({
+      vendorMemberId: member.id,
+      termsVersion: "1999-01-01",
+      acceptedAt: new Date("1999-01-01"),
+    });
+    authMock.userId = "user_reaccept";
+
+    const res = await POST(makeRequest(validBody()));
+    expect(res.status).toBe(200);
+    const rows = await db
+      .select()
+      .from(vendorMemberLegalAcceptances)
+      .where(eq(vendorMemberLegalAcceptances.vendorMemberId, member.id));
+    expect(rows.length).toBe(2);
+    expect(rows.some((r) => r.termsVersion === TERMS_VERSION)).toBe(true);
   });
 });
 

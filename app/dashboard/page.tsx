@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import {
   ArrowRight,
   EnvelopeSimple,
@@ -19,8 +18,10 @@ import {
   listMessagesForVendor,
   countUnreadForVendor,
 } from "@/lib/queries/messages";
+import { listPendingSubmissionsForVendor } from "@/lib/queries/submissions";
 import { relativeDays } from "@/lib/browse/dates";
 import { cn } from "@/lib/utils";
+import { DashboardEmptyState } from "@/components/dashboard/empty-state";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -40,9 +41,33 @@ export default async function DashboardOverviewPage({
   const { vendor, user } = await getVendorSession({ demoOverride });
 
   const listings = await listAppsForOwnerVendor(vendor.id);
+  const pendingSubmissions = listings.length === 0
+    ? await listPendingSubmissionsForVendor(vendor.id)
+    : [];
 
+  // Empty state: vendor exists but has neither published listings nor
+  // anything pending in the queue (e.g. they just confirmed their
+  // company but haven't started a submission yet). Render an inviting
+  // dashboard rather than bouncing them away from a route they
+  // explicitly navigated to — Phase B.2 PR 2 decision, was a redirect
+  // pre-PR-2.
   if (listings.length === 0) {
-    redirect("/dashboard/onboarding");
+    return (
+      <DashboardEmptyState
+        firstName={user.name.split(" ")[0]}
+        vendorName={vendor.name}
+        pendingSubmissions={pendingSubmissions.map((s) => ({
+          id: s.id,
+          // listPendingSubmissionsForVendor already filters to
+          // pending|in_review only — narrow the type here so the
+          // empty-state component's prop contract holds.
+          status: s.status as "pending" | "in_review",
+          submittedAt: s.submittedAt,
+          productName:
+            (s.payload as { name?: string } | null)?.name ?? "Untitled product",
+        }))}
+      />
+    );
   }
 
   const allMessages = await listMessagesForVendor(vendor.id);
