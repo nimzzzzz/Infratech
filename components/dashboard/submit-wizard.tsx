@@ -17,8 +17,33 @@ import {
   pricingModels,
   regions,
 } from "@/lib/data/taxonomy";
+import {
+  companyStepSchema,
+  productStepSchema,
+} from "@/app/api/submissions/schema";
 import { cn } from "@/lib/utils";
 import { CountrySelect } from "./country-select";
+
+/**
+ * Per-field validation error map. Keys are FormState field names.
+ * Empty / missing means "no error for this field". Multiple messages
+ * possible per field but we render the first only in the UI.
+ */
+type FieldErrors = Partial<Record<string, string[]>>;
+
+/**
+ * Small renderer for a single field-level error. Coral color, sits
+ * directly under the input — matches the inline error styling on the
+ * legal-acceptance modal.
+ */
+function FieldError({ message }: { message?: string | null }) {
+  if (!message) return null;
+  return (
+    <p role="alert" className="mt-1 text-[12px] text-[var(--color-coral)]">
+      {message}
+    </p>
+  );
+}
 
 /**
  * Logo uploads ship in Phase C (Vercel Blob). The submission endpoint
@@ -119,53 +144,30 @@ export function SubmitWizard({
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Honeypot — sr-only input; bots fill every input they see.
   const [website3, setWebsite3] = useState("");
+  // Per-field validation errors. Populated by validateStep() on
+  // Continue / Submit clicks; cleared on the affected field's next
+  // change so the red border doesn't linger after the user fixes it.
+  const [errors, setErrors] = useState<FieldErrors>({});
+
+  const clearError = (key: string) => {
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
   // Where to scroll on the next step change. Reset after each effect run.
   const scrollTargetRef = useRef<string | null>(null);
-  // Suppress browser-back popstate handling once after we sync state from it.
-  const skipPopRef = useRef(false);
 
-  // Take over scroll restoration while the wizard is mounted — the browser's
-  // default behavior would restore the bottom-of-page scroll position from
-  // wherever you clicked Continue, fighting with our scroll-to-top.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const prev = window.history.scrollRestoration;
-    window.history.scrollRestoration = "manual";
-    return () => {
-      window.history.scrollRestoration = prev;
-    };
-  }, []);
-
-  // Push a history entry per step so the browser Back button steps back
-  // through the wizard instead of navigating to the page we came from.
-  // We tag entries with { wizardStep } so popstate can restore the right step.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (skipPopRef.current) {
-      skipPopRef.current = false;
-      return;
-    }
-    const current = window.history.state as { wizardStep?: number } | null;
-    if (current?.wizardStep === step) return;
-    if (current?.wizardStep == null) {
-      window.history.replaceState({ wizardStep: step }, "");
-    } else {
-      window.history.pushState({ wizardStep: step }, "");
-    }
-  }, [step]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const onPop = (e: PopStateEvent) => {
-      const next = (e.state as { wizardStep?: number } | null)?.wizardStep;
-      if (typeof next === "number" && next >= minStep && next <= TOTAL_STEPS) {
-        skipPopRef.current = true;
-        setStep(next);
-      }
-    };
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  }, [minStep]);
+  // Note: a previous implementation pushed a history entry per step
+  // change and listened for popstate to keep browser-back in sync.
+  // That machinery raced with the in-page Back button and could
+  // pop step state all the way to step 1 on a single click. Removed
+  // (fix/wizard-and-signout-ux). Browser-back now navigates away
+  // from the wizard with in-progress state lost — standard
+  // form-wizard behaviour. URL-driven step state (?step=N) is the
+  // right solution if step-aware browser nav comes back as a need.
 
   // Scroll to top (or a specific section) AFTER the new step has rendered.
   // useLayoutEffect runs synchronously after DOM commit and before paint, so
@@ -213,44 +215,78 @@ export function SubmitWizard({
       [customKeyOf(key)]: d[customKeyOf(key)].filter((v) => v !== value),
     }));
 
-  const pricingValid = (): boolean => {
-    if (data.pricing === CUSTOM_PRICING_SLUG)
-      return data.customPricing.trim().length > 0;
-    return Boolean(data.pricing);
+  /**
+   * Build the Zod input object for the given step from the wizard's
+   * FormState. Step 1 reads the company-* fields; step 2 reads the
+   * product-level fields. Both are run against the per-step schemas
+   * imported from app/api/submissions/schema.ts — same source of
+   * truth as the server-side check, so the rules can't drift.
+   */
+  const buildStepInput = (stepNo: number): Record<string, unknown> => {
+    if (stepNo === 1) {
+      return {
+        companyName: data.companyName,
+        companyWebsite: data.companyWebsite,
+        companyFounded: data.companyFounded,
+        companyHeadquarters: data.companyHeadquarters,
+        companyRegions: data.companyRegions,
+        companyDescription: data.companyDescription,
+      };
+    }
+    return {
+      name: data.name,
+      url: data.url,
+      tagline: data.tagline,
+      description: data.description,
+      stages: data.stages,
+      capabilities: data.capabilities,
+      customCapabilities: data.customCapabilities,
+      industries: data.industries,
+      customIndustries: data.customIndustries,
+      pricing: data.pricing,
+      customPricing:
+        data.pricing === CUSTOM_PRICING_SLUG ? data.customPricing : undefined,
+    };
   };
 
-  const stepValid = (): boolean => {
-    if (step === 1) {
-      const baseOk = Boolean(
-        data.companyName &&
-          data.companyWebsite &&
-          data.companyFounded &&
-          data.companyHeadquarters &&
-          data.companyRegions.length > 0 &&
-          data.companyDescription,
-      );
-      const logoOk =
-        !data.companyLogoFile || data.companyLogoAlt.trim().length > 0;
-      return baseOk && logoOk;
+  /**
+   * Validate the current step using the relevant Zod subschema. On
+   * failure, set per-field errors, scroll the first errored input
+   * into view, and return false. On success, apply schema transforms
+   * (URL normalisation) back into state and return true.
+   *
+   * Returns true for step 3 (review) — submit-time slug uniqueness
+   * is the only check that can fail there, and it lives server-side.
+   */
+  const validateStep = (stepNo: number): boolean => {
+    if (stepNo >= TOTAL_STEPS) return true;
+    const schema = stepNo === 1 ? companyStepSchema : productStepSchema;
+    const result = schema.safeParse(buildStepInput(stepNo));
+    if (!result.success) {
+      const flat = result.error.flatten().fieldErrors as FieldErrors;
+      setErrors(flat);
+      const firstKey = Object.keys(flat)[0];
+      if (firstKey) {
+        // Defer one frame so the just-painted error border is in the
+        // layout before we try to scroll to it.
+        requestAnimationFrame(() => {
+          document
+            .getElementById(firstKey)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
+      }
+      return false;
     }
-    if (step === 2) {
-      const basicsOk =
-        Boolean(data.name && data.url) &&
-        (!data.logoFile || data.logoAlt.trim().length > 0);
-      const descOk = Boolean(data.tagline && data.description);
-      const taxonomyOk =
-        data.stages.length > 0 &&
-        (data.capabilities.length > 0 || data.customCapabilities.length > 0);
-      const industryPricingOk =
-        (data.industries.length > 0 || data.customIndustries.length > 0) &&
-        pricingValid();
-      return basicsOk && descOk && taxonomyOk && industryPricingOk;
-    }
+    // Schema transforms (URL normalisation) — copy normalised values
+    // back into state so the user sees "https://example.com" on
+    // Review instead of the raw "example.com" they typed.
+    setData((d) => ({ ...d, ...(result.data as Partial<FormState>) }));
+    setErrors({});
     return true;
   };
 
   const next = () => {
-    if (!stepValid()) return;
+    if (!validateStep(step)) return;
     scrollTargetRef.current = null;
     setStep((s) => Math.min(TOTAL_STEPS, s + 1));
   };
@@ -302,21 +338,67 @@ export function SubmitWizard({
       });
       if (!res.ok) {
         let message = "Something went wrong. Please try again.";
+        let code: string | undefined;
+        let which: string | undefined;
         try {
           const json = (await res.json()) as {
             error?: string;
             code?: string;
+            which?: string;
             currentVersion?: string;
           };
           if (json.error) message = json.error;
+          code = json.code;
+          which = json.which;
           // version_mismatch → refresh so the layout re-reads the
           // acceptance state and the re-acceptance modal renders.
-          if (json.code === "version_mismatch") {
+          if (code === "version_mismatch") {
             router.refresh();
           }
         } catch {
           // ignore parse failure; default message stands
         }
+
+        // slug_taken on the product name comes back from the server
+        // because uniqueness needs a DB lookup. Surface it as a
+        // field-level error under `name` — same UX as client-side
+        // step validation — with a hint the user can actually act on.
+        if (code === "slug_taken" && which === "app") {
+          setErrors({
+            name: [
+              "A product with this name already exists. Try a slight variation (e.g. \"Acme Tasks\" instead of \"Acme\").",
+            ],
+          });
+          // Bounce the user back to the product step so the error
+          // is visible — they're on the review step when this fires.
+          setStep(minStep === 2 ? 2 : 2);
+          requestAnimationFrame(() => {
+            document
+              .getElementById("name")
+              ?.scrollIntoView({ behavior: "smooth", block: "center" });
+          });
+          setSubmitting(false);
+          return;
+        }
+
+        // slug_taken on the vendor slug — fresh signup edge case.
+        // Same treatment under the companyName field.
+        if (code === "slug_taken" && which === "vendor") {
+          setErrors({
+            companyName: [
+              "A company with this name already exists. Try a slight variation.",
+            ],
+          });
+          setStep(1);
+          requestAnimationFrame(() => {
+            document
+              .getElementById("companyName")
+              ?.scrollIntoView({ behavior: "smooth", block: "center" });
+          });
+          setSubmitting(false);
+          return;
+        }
+
         setSubmitError(message);
         setSubmitting(false);
         return;
@@ -340,7 +422,9 @@ export function SubmitWizard({
         toggle={toggle}
         addCustom={addCustom}
         removeCustom={removeCustom}
-        pricingValid={pricingValid}
+        errors={errors}
+        clearError={clearError}
+        validateStep={validateStep}
         submitting={submitting}
         submitError={submitError}
         website3={website3}
@@ -356,18 +440,34 @@ export function SubmitWizard({
 
       <div className="mt-10">
         {step === 1 ? (
-          <CompanyStep data={data} update={update} toggle={toggle} />
+          <CompanyStep
+            data={data}
+            update={update}
+            toggle={toggle}
+            errors={errors}
+            clearError={clearError}
+          />
         ) : null}
         {step === 2 ? (
           <div className="space-y-14">
             <div id="section-basics" className="scroll-mt-24">
               <Section title="Product basics" n={1}>
-                <ToolBasicsStep data={data} update={update} />
+                <ToolBasicsStep
+                  data={data}
+                  update={update}
+                  errors={errors}
+                  clearError={clearError}
+                />
               </Section>
             </div>
             <div id="section-description" className="scroll-mt-24">
               <Section title="Product description" n={2}>
-                <ToolDescStep data={data} update={update} />
+                <ToolDescStep
+                  data={data}
+                  update={update}
+                  errors={errors}
+                  clearError={clearError}
+                />
               </Section>
             </div>
             <div id="section-taxonomy" className="scroll-mt-24">
@@ -377,6 +477,8 @@ export function SubmitWizard({
                   toggle={toggle}
                   addCustom={addCustom}
                   removeCustom={removeCustom}
+                  errors={errors}
+                  clearError={clearError}
                 />
               </Section>
             </div>
@@ -388,6 +490,8 @@ export function SubmitWizard({
                   update={update}
                   addCustom={addCustom}
                   removeCustom={removeCustom}
+                  errors={errors}
+                  clearError={clearError}
                 />
               </Section>
             </div>
@@ -448,16 +552,13 @@ export function SubmitWizard({
         </button>
 
         {step < TOTAL_STEPS ? (
+          // Continue stays enabled so a click triggers validation
+          // and surfaces inline errors. Disabling on presence checks
+          // hides what the user needs to fix.
           <button
             type="button"
             onClick={next}
-            disabled={!stepValid()}
-            className={cn(
-              "group inline-flex h-11 items-center gap-2 px-5 text-[12px] font-medium uppercase tracking-[0.2em] transition active:translate-y-[1px]",
-              stepValid()
-                ? "bg-[var(--color-ink)] text-[var(--color-canvas)]"
-                : "cursor-not-allowed bg-[var(--color-line)] text-[var(--color-ink-3)]",
-            )}
+            className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-canvas)] transition active:translate-y-[1px]"
           >
             Continue
             <ArrowRight
@@ -660,7 +761,9 @@ function SinglePageSubmit({
   toggle,
   addCustom,
   removeCustom,
-  pricingValid,
+  errors,
+  clearError,
+  validateStep,
   submitting,
   submitError,
   website3,
@@ -675,7 +778,9 @@ function SinglePageSubmit({
   ) => void;
   addCustom: (key: CustomKey, value: string) => void;
   removeCustom: (key: CustomKey, value: string) => void;
-  pricingValid: () => boolean;
+  errors: FieldErrors;
+  clearError: (key: string) => void;
+  validateStep: (stepNo: number) => boolean;
   submitting: boolean;
   submitError: string | null;
   website3: string;
@@ -684,18 +789,6 @@ function SinglePageSubmit({
 }) {
   const [view, setView] = useState<"edit" | "review">("edit");
   const scrollTargetRef = useRef<string | null>(null);
-
-  const basicsOk =
-    Boolean(data.name && data.url) &&
-    (!data.logoFile || data.logoAlt.trim().length > 0);
-  const descOk = Boolean(data.tagline && data.description);
-  const taxonomyOk =
-    data.stages.length > 0 &&
-    (data.capabilities.length > 0 || data.customCapabilities.length > 0);
-  const industryPricingOk =
-    (data.industries.length > 0 || data.customIndustries.length > 0) &&
-    pricingValid();
-  const allValid = basicsOk && descOk && taxonomyOk && industryPricingOk;
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
@@ -880,12 +973,22 @@ function SinglePageSubmit({
       <div className="mt-12 space-y-14">
         <div id="section-basics" className="scroll-mt-24">
           <Section title="Product basics" n={1}>
-            <ToolBasicsStep data={data} update={update} />
+            <ToolBasicsStep
+              data={data}
+              update={update}
+              errors={errors}
+              clearError={clearError}
+            />
           </Section>
         </div>
         <div id="section-description" className="scroll-mt-24">
           <Section title="Product description" n={2}>
-            <ToolDescStep data={data} update={update} />
+            <ToolDescStep
+              data={data}
+              update={update}
+              errors={errors}
+              clearError={clearError}
+            />
           </Section>
         </div>
         <div id="section-taxonomy" className="scroll-mt-24">
@@ -895,6 +998,8 @@ function SinglePageSubmit({
               toggle={toggle}
               addCustom={addCustom}
               removeCustom={removeCustom}
+              errors={errors}
+              clearError={clearError}
             />
           </Section>
         </div>
@@ -906,6 +1011,8 @@ function SinglePageSubmit({
               update={update}
               addCustom={addCustom}
               removeCustom={removeCustom}
+              errors={errors}
+              clearError={clearError}
             />
           </Section>
         </div>
@@ -913,23 +1020,21 @@ function SinglePageSubmit({
 
       <div className="mt-12 flex flex-col gap-3 border-t border-[var(--color-line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[12px] text-[var(--color-ink-3)]">
-          {allValid
-            ? "All set. Continue to review your submission."
-            : "Fill the required fields above to continue."}
+          Continue when you&rsquo;re ready &mdash; we&rsquo;ll flag anything
+          that needs your attention.
         </p>
+        {/* Continue stays enabled; clicking runs validation and
+            surfaces inline errors if needed. */}
         <button
           type="button"
           onClick={() => {
+            // Step 2 is the only step the SinglePageSubmit renders;
+            // validate it, then flip to review on success.
+            if (!validateStep(2)) return;
             scrollTargetRef.current = null;
             setView("review");
           }}
-          disabled={!allValid}
-          className={cn(
-            "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.2em] transition active:translate-y-[1px]",
-            allValid
-              ? "bg-[var(--color-ink)] text-[var(--color-canvas)]"
-              : "cursor-not-allowed bg-[var(--color-line)] text-[var(--color-ink-3)]",
-          )}
+          className="group inline-flex h-12 items-center justify-center gap-2 bg-[var(--color-ink)] px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-canvas)] transition active:translate-y-[1px]"
         >
           Continue to review
           <ArrowRight
@@ -972,12 +1077,14 @@ function Field({
   htmlFor,
   required,
   hint,
+  error,
   children,
 }: {
   label: string;
   htmlFor: string;
   required?: boolean;
   hint?: string;
+  error?: string | null;
   children: React.ReactNode;
 }) {
   return (
@@ -990,7 +1097,9 @@ function Field({
         {required ? <span className="text-[var(--color-magenta)]"> *</span> : null}
       </label>
       {children}
-      {hint ? (
+      {error ? (
+        <FieldError message={error} />
+      ) : hint ? (
         <p className="text-[12px] text-[var(--color-ink-3)]">{hint}</p>
       ) : null}
     </div>
@@ -999,6 +1108,28 @@ function Field({
 
 const inputCls =
   "h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none";
+
+/** Append the coral error border to an input class string when the
+ *  field has an error. Cheaper than a per-field cn() at each call. */
+function inputClsWithError(err?: string | null): string {
+  return err
+    ? `${inputCls} border-[var(--color-coral)] focus:border-[var(--color-coral)]`
+    : inputCls;
+}
+
+const textareaCls =
+  "border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2.5 text-[14px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none";
+
+function textareaClsWithError(err?: string | null): string {
+  return err
+    ? `${textareaCls} border-[var(--color-coral)] focus:border-[var(--color-coral)]`
+    : textareaCls;
+}
+
+/** Pick the first error message for a field, or null. */
+function err(errors: FieldErrors, key: string): string | null {
+  return errors[key]?.[0] ?? null;
+}
 
 // ──────────────────────────────────────────────────────────────────────
 // STEP 1 — Your company
@@ -1009,6 +1140,8 @@ function CompanyStep({
   data,
   update,
   toggle,
+  errors,
+  clearError,
 }: {
   data: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
@@ -1016,7 +1149,18 @@ function CompanyStep({
     key: "stages" | "capabilities" | "industries" | "companyRegions",
     slug: string,
   ) => void;
+  errors: FieldErrors;
+  clearError: (key: string) => void;
 }) {
+  // Local helpers to keep onChange handlers terse — update state +
+  // clear that field's error so the red border doesn't linger after
+  // the user fixes the input.
+  const setField = <K extends keyof FormState>(key: K) =>
+    (value: FormState[K]) => {
+      update(key, value);
+      clearError(key as string);
+    };
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <p className="md:col-span-2 -mt-2 text-[13px] leading-relaxed text-[var(--color-ink-2)]">
@@ -1034,38 +1178,53 @@ function CompanyStep({
           htmlFor="companyName"
           required
           hint="Pre-filled from LinkedIn — edit if it should display differently."
+          error={err(errors, "companyName")}
         >
           <input
             id="companyName"
             type="text"
             value={data.companyName}
-            onChange={(e) => update("companyName", e.target.value)}
-            className={inputCls}
+            onChange={(e) => setField("companyName")(e.target.value)}
+            className={inputClsWithError(err(errors, "companyName"))}
+            aria-invalid={!!err(errors, "companyName")}
           />
         </Field>
       </div>
 
-      <Field label="Company website" htmlFor="companyWebsite" required>
+      <Field
+        label="Company website"
+        htmlFor="companyWebsite"
+        required
+        error={err(errors, "companyWebsite")}
+        hint="example.com or https://example.com — we'll add https:// if you skip it."
+      >
         <input
           id="companyWebsite"
-          type="url"
+          type="text"
           value={data.companyWebsite}
-          onChange={(e) => update("companyWebsite", e.target.value)}
-          placeholder="https://"
-          className={inputCls}
+          onChange={(e) => setField("companyWebsite")(e.target.value)}
+          placeholder="example.com"
+          className={inputClsWithError(err(errors, "companyWebsite"))}
+          aria-invalid={!!err(errors, "companyWebsite")}
         />
       </Field>
-      <Field label="Year founded" htmlFor="companyFounded" required>
+      <Field
+        label="Year founded"
+        htmlFor="companyFounded"
+        required
+        error={err(errors, "companyFounded")}
+      >
         <input
           id="companyFounded"
           type="number"
           inputMode="numeric"
           value={data.companyFounded}
-          onChange={(e) => update("companyFounded", e.target.value)}
+          onChange={(e) => setField("companyFounded")(e.target.value)}
           placeholder="e.g. 2017"
           min={1900}
           max={new Date().getFullYear()}
-          className={cn(inputCls, "num")}
+          className={cn(inputClsWithError(err(errors, "companyFounded")), "num")}
+          aria-invalid={!!err(errors, "companyFounded")}
         />
       </Field>
 
@@ -1074,22 +1233,27 @@ function CompanyStep({
         htmlFor="companyHeadquarters"
         required
         hint="Where the company is legally based."
+        error={err(errors, "companyHeadquarters")}
       >
         <CountrySelect
           id="companyHeadquarters"
           value={data.companyHeadquarters}
-          onChange={(v) => update("companyHeadquarters", v)}
+          onChange={(v) => setField("companyHeadquarters")(v)}
         />
       </Field>
 
-      <div className="md:col-span-2">
+      <div id="companyRegions" className="md:col-span-2 scroll-mt-24">
         <ChipGroup
           label="Regions you operate in"
           required
           hint="Pick every region where the company actively serves customers. Choose Global if you serve worldwide."
           options={regions}
           selected={data.companyRegions}
-          onToggle={(slug) => toggle("companyRegions", slug)}
+          onToggle={(slug) => {
+            toggle("companyRegions", slug);
+            clearError("companyRegions");
+          }}
+          error={err(errors, "companyRegions")}
         />
       </div>
 
@@ -1099,15 +1263,17 @@ function CompanyStep({
           htmlFor="companyDescription"
           required
           hint="Two short paragraphs at most. What the company does, who it's for, founding context. Plain English — no marketing language."
+          error={err(errors, "companyDescription")}
         >
           <textarea
             id="companyDescription"
             rows={6}
             value={data.companyDescription}
-            onChange={(e) => update("companyDescription", e.target.value)}
+            onChange={(e) => setField("companyDescription")(e.target.value)}
             placeholder="What does the company actually build? What's the founding story or distinctive angle?"
             maxLength={1500}
-            className="border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2.5 text-[14px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+            className={textareaClsWithError(err(errors, "companyDescription"))}
+            aria-invalid={!!err(errors, "companyDescription")}
           />
           <p className="text-[11px] text-[var(--color-ink-3)]">
             <span className="num">{data.companyDescription.length}</span> /{" "}
@@ -1135,33 +1301,56 @@ function CompanyStep({
 function ToolBasicsStep({
   data,
   update,
+  errors,
+  clearError,
 }: {
   data: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  errors: FieldErrors;
+  clearError: (key: string) => void;
 }) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <div className="md:col-span-2">
-        <Field label="Product name" htmlFor="name" required>
+        <Field
+          label="Product name"
+          htmlFor="name"
+          required
+          error={err(errors, "name")}
+        >
           <input
             id="name"
             type="text"
             value={data.name}
-            onChange={(e) => update("name", e.target.value)}
+            onChange={(e) => {
+              update("name", e.target.value);
+              clearError("name");
+            }}
             placeholder="e.g. Northstrand Field"
-            className={inputCls}
+            className={inputClsWithError(err(errors, "name"))}
+            aria-invalid={!!err(errors, "name")}
           />
         </Field>
       </div>
       <div className="md:col-span-2">
-        <Field label="Product website" htmlFor="url" required>
+        <Field
+          label="Product website"
+          htmlFor="url"
+          required
+          error={err(errors, "url")}
+          hint="example.com or https://example.com — we'll add https:// if you skip it."
+        >
           <input
             id="url"
-            type="url"
+            type="text"
             value={data.url}
-            onChange={(e) => update("url", e.target.value)}
-            placeholder="https://"
-            className={inputCls}
+            onChange={(e) => {
+              update("url", e.target.value);
+              clearError("url");
+            }}
+            placeholder="example.com"
+            className={inputClsWithError(err(errors, "url"))}
+            aria-invalid={!!err(errors, "url")}
           />
         </Field>
       </div>
@@ -1190,9 +1379,13 @@ function ToolBasicsStep({
 function ToolDescStep({
   data,
   update,
+  errors,
+  clearError,
 }: {
   data: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  errors: FieldErrors;
+  clearError: (key: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -1201,15 +1394,20 @@ function ToolDescStep({
         htmlFor="tagline"
         required
         hint="One sentence, plain English. Describe the product, not the company. Avoid 'elevate', 'seamless', 'next-gen'."
+        error={err(errors, "tagline")}
       >
         <input
           id="tagline"
           type="text"
           value={data.tagline}
-          onChange={(e) => update("tagline", e.target.value)}
+          onChange={(e) => {
+            update("tagline", e.target.value);
+            clearError("tagline");
+          }}
           placeholder="e.g. Schedule risk analysis trained on completed projects."
           maxLength={140}
-          className={inputCls}
+          className={inputClsWithError(err(errors, "tagline"))}
+          aria-invalid={!!err(errors, "tagline")}
         />
         <p className="text-[11px] text-[var(--color-ink-3)]">
           <span className="num">{data.tagline.length}</span> /{" "}
@@ -1222,15 +1420,20 @@ function ToolDescStep({
         htmlFor="description"
         required
         hint="Two short paragraphs at most. Product capabilities and where it fits — not company background. Editorial team may copy-edit before publishing."
+        error={err(errors, "description")}
       >
         <textarea
           id="description"
           rows={6}
           value={data.description}
-          onChange={(e) => update("description", e.target.value)}
+          onChange={(e) => {
+            update("description", e.target.value);
+            clearError("description");
+          }}
           placeholder="What does the product actually do? What's distinctive? Skip the marketing language."
           maxLength={1200}
-          className="border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2.5 text-[14px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+          className={textareaClsWithError(err(errors, "description"))}
+          aria-invalid={!!err(errors, "description")}
         />
         <p className="text-[11px] text-[var(--color-ink-3)]">
           <span className="num">{data.description.length}</span> /{" "}
@@ -1250,6 +1453,8 @@ function TaxonomyStep({
   toggle,
   addCustom,
   removeCustom,
+  errors,
+  clearError,
 }: {
   data: FormState;
   toggle: (
@@ -1258,29 +1463,46 @@ function TaxonomyStep({
   ) => void;
   addCustom: (key: CustomKey, value: string) => void;
   removeCustom: (key: CustomKey, value: string) => void;
+  errors: FieldErrors;
+  clearError: (key: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-10">
-      <ChipGroup
-        label="Project stages"
-        required
-        hint="Pick every stage your product actively supports. Stages are the directory's primary axis and aren't open for new proposals."
-        options={stages.map((s) => ({ slug: s.slug, name: s.name }))}
-        selected={data.stages}
-        onToggle={(slug) => toggle("stages", slug)}
-      />
-      <ChipGroup
-        label="Capabilities"
-        required
-        hint="What the product actually does. Pick up to five for clarity. Don't see one? Suggest it — admins review proposed tags before they go live."
-        options={capabilities}
-        selected={data.capabilities}
-        onToggle={(slug) => toggle("capabilities", slug)}
-        customSelected={data.customCapabilities}
-        onAddCustom={(v) => addCustom("capabilities", v)}
-        onRemoveCustom={(v) => removeCustom("capabilities", v)}
-        scrollable
-      />
+      <div id="stages" className="scroll-mt-24">
+        <ChipGroup
+          label="Project stages"
+          required
+          hint="Pick every stage your product actively supports. Stages are the directory's primary axis and aren't open for new proposals."
+          options={stages.map((s) => ({ slug: s.slug, name: s.name }))}
+          selected={data.stages}
+          onToggle={(slug) => {
+            toggle("stages", slug);
+            clearError("stages");
+          }}
+          error={err(errors, "stages")}
+        />
+      </div>
+      <div id="capabilities" className="scroll-mt-24">
+        <ChipGroup
+          label="Capabilities"
+          required
+          hint="What the product actually does. Pick up to five for clarity. Don't see one? Suggest it — admins review proposed tags before they go live."
+          options={capabilities}
+          selected={data.capabilities}
+          onToggle={(slug) => {
+            toggle("capabilities", slug);
+            clearError("capabilities");
+          }}
+          customSelected={data.customCapabilities}
+          onAddCustom={(v) => {
+            addCustom("capabilities", v);
+            clearError("capabilities");
+          }}
+          onRemoveCustom={(v) => removeCustom("capabilities", v)}
+          scrollable
+          error={err(errors, "capabilities")}
+        />
+      </div>
     </div>
   );
 }
@@ -1295,6 +1517,8 @@ function IndustryPricingStep({
   update,
   addCustom,
   removeCustom,
+  errors,
+  clearError,
 }: {
   data: FormState;
   toggle: (
@@ -1304,23 +1528,34 @@ function IndustryPricingStep({
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
   addCustom: (key: CustomKey, value: string) => void;
   removeCustom: (key: CustomKey, value: string) => void;
+  errors: FieldErrors;
+  clearError: (key: string) => void;
 }) {
   const customSelected = data.pricing === CUSTOM_PRICING_SLUG;
   return (
     <div className="flex flex-col gap-10">
-      <ChipGroup
-        label="Industries"
-        required
-        hint="Don't see your industry? Suggest one — admins review before it joins the canonical list."
-        options={industries}
-        selected={data.industries}
-        onToggle={(slug) => toggle("industries", slug)}
-        customSelected={data.customIndustries}
-        onAddCustom={(v) => addCustom("industries", v)}
-        onRemoveCustom={(v) => removeCustom("industries", v)}
-      />
+      <div id="industries" className="scroll-mt-24">
+        <ChipGroup
+          label="Industries"
+          required
+          hint="Don't see your industry? Suggest one — admins review before it joins the canonical list."
+          options={industries}
+          selected={data.industries}
+          onToggle={(slug) => {
+            toggle("industries", slug);
+            clearError("industries");
+          }}
+          customSelected={data.customIndustries}
+          onAddCustom={(v) => {
+            addCustom("industries", v);
+            clearError("industries");
+          }}
+          onRemoveCustom={(v) => removeCustom("industries", v)}
+          error={err(errors, "industries")}
+        />
+      </div>
 
-      <div>
+      <div id="pricing" className="scroll-mt-24">
         <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
           Pricing model <span className="text-[var(--color-magenta)]">*</span>
         </p>
@@ -1336,7 +1571,10 @@ function IndustryPricingStep({
                 <PricingCard
                   checked={checked}
                   label={p.name}
-                  onClick={() => update("pricing", p.slug)}
+                  onClick={() => {
+                    update("pricing", p.slug);
+                    clearError("pricing");
+                  }}
                 />
               </li>
             );
@@ -1350,29 +1588,41 @@ function IndustryPricingStep({
                   : "Other (describe)"
               }
               proposed
-              onClick={() => update("pricing", CUSTOM_PRICING_SLUG)}
+              onClick={() => {
+                update("pricing", CUSTOM_PRICING_SLUG);
+                clearError("pricing");
+              }}
             />
           </li>
         </ul>
+        <FieldError message={err(errors, "pricing")} />
 
         {customSelected ? (
-          <div className="mt-4">
+          <div id="customPricing" className="mt-4 scroll-mt-24">
             <label
-              htmlFor="customPricing"
+              htmlFor="customPricing-input"
               className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]"
             >
               Describe the pricing model
             </label>
             <input
-              id="customPricing"
+              id="customPricing-input"
               type="text"
               autoFocus
               value={data.customPricing}
-              onChange={(e) => update("customPricing", e.target.value)}
+              onChange={(e) => {
+                update("customPricing", e.target.value);
+                clearError("customPricing");
+              }}
               placeholder="e.g. Outcome-based — % of cost saved per project"
               maxLength={80}
-              className="mt-2 h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+              className={cn(
+                "mt-2",
+                inputClsWithError(err(errors, "customPricing")),
+              )}
+              aria-invalid={!!err(errors, "customPricing")}
             />
+            <FieldError message={err(errors, "customPricing")} />
             <p className="mt-2 text-[11px] text-[var(--color-ink-3)]">
               Flagged for editorial review. We may rename or merge into a
               canonical model.
@@ -1589,6 +1839,7 @@ function ChipGroup({
   customSelected,
   onAddCustom,
   onRemoveCustom,
+  error,
 }: {
   label: string;
   required?: boolean;
@@ -1600,6 +1851,7 @@ function ChipGroup({
   customSelected?: string[];
   onAddCustom?: (value: string) => void;
   onRemoveCustom?: (value: string) => void;
+  error?: string | null;
 }) {
   const allowCustom = Boolean(onAddCustom && onRemoveCustom);
   const customs = customSelected ?? [];
@@ -1612,7 +1864,9 @@ function ChipGroup({
           <span className="text-[var(--color-magenta)]"> *</span>
         ) : null}
       </p>
-      {hint ? (
+      {error ? (
+        <FieldError message={error} />
+      ) : hint ? (
         <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">{hint}</p>
       ) : null}
       <ul

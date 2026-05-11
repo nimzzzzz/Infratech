@@ -384,6 +384,82 @@ describe("POST /api/submissions — honeypot, rate limit, re-acceptance", () => 
   });
 });
 
+describe("POST /api/submissions — URL normalisation", () => {
+  it("accepts a bare hostname and normalises to https:// in the persisted payload", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    const vendorId = await seedVendor("test-url-norm");
+    await seedMember({ clerkUserId: "user_url_norm", vendorId });
+    authMock.userId = "user_url_norm";
+
+    const res = await POST(
+      makeRequest({
+        ...validCompany(),
+        ...validProduct({
+          name: "UrlNorm Product",
+          // No scheme — the schema's .transform(normaliseUrl).pipe(z.url())
+          // should accept this, prepend https://, then pass URL validation.
+          url: "example.com",
+        }),
+      }),
+    );
+    expect(res.status).toBe(200);
+
+    const [latest] = await db
+      .select()
+      .from(submissions)
+      .where(eq(submissions.submitterVendorId, vendorId))
+      .orderBy(desc(submissions.submittedAt))
+      .limit(1);
+    const payload = latest.payload as { url: string };
+    expect(payload.url).toBe("https://example.com");
+  });
+
+  it("rejects truly malformed URL strings", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    const vendorId = await seedVendor("test-bad-url");
+    await seedMember({ clerkUserId: "user_bad_url", vendorId });
+    authMock.userId = "user_bad_url";
+
+    // "not a url" → "https://not a url" → fails URL parse → 400.
+    const res = await POST(
+      makeRequest({
+        ...validCompany(),
+        ...validProduct({ url: "not a url" }),
+      }),
+    );
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.fieldErrors.url).toBeTruthy();
+  });
+
+  it("preserves an already-prefixed URL untouched", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    const vendorId = await seedVendor("test-keep-url");
+    await seedMember({ clerkUserId: "user_keep_url", vendorId });
+    authMock.userId = "user_keep_url";
+
+    const res = await POST(
+      makeRequest({
+        ...validCompany(),
+        ...validProduct({
+          name: "Keep Url",
+          url: "https://kept.example.com/path",
+        }),
+      }),
+    );
+    expect(res.status).toBe(200);
+
+    const [latest] = await db
+      .select()
+      .from(submissions)
+      .where(eq(submissions.submitterVendorId, vendorId))
+      .orderBy(desc(submissions.submittedAt))
+      .limit(1);
+    const payload = latest.payload as { url: string };
+    expect(payload.url).toBe("https://kept.example.com/path");
+  });
+});
+
 describe("POST /api/submissions — query result fingerprint", () => {
   it("payload preserves stages + capabilities + custom proposals", async () => {
     const { POST } = await import("@/app/api/submissions/route");
