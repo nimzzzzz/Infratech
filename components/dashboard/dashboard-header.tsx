@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useClerk } from "@clerk/nextjs";
 import { SignOut } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +39,30 @@ export function DashboardHeader({
   unreadCount,
 }: DashboardHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const clerk = useClerk();
   const isOnboarding = pathname.startsWith("/dashboard/onboarding");
+
+  const onSignOut = async () => {
+    try {
+      // Clears the Clerk session cookie and navigates to redirectUrl.
+      // The previous implementation was a bare <Link href="/"> which
+      // navigated without touching Clerk — the session cookie
+      // survived, so the dashboard remained reachable and the public
+      // header still rendered the signed-in shape.
+      await clerk.signOut({ redirectUrl: "/" });
+      // signOut handles the navigation itself, but router.refresh()
+      // is belt-and-braces so the public-chrome header rerenders with
+      // the signed-out shape immediately rather than after the next
+      // hard reload.
+      router.refresh();
+    } catch (err) {
+      console.error("[dashboard-header] signOut failed", err);
+      // Hard fallback if Clerk's signOut rejects — get the user off
+      // the dashboard one way or another.
+      window.location.href = "/";
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
@@ -113,13 +137,14 @@ export function DashboardHeader({
               </span>
             </div>
           </div>
-          <Link
-            href="/"
+          <button
+            type="button"
+            onClick={onSignOut}
             className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5"
           >
             <SignOut size={11} weight="regular" />
             <span className="hidden sm:inline">Sign out</span>
-          </Link>
+          </button>
         </div>
       </div>
 
