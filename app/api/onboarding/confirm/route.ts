@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   vendorMembers,
@@ -102,13 +102,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true });
   }
 
-  // Idempotent: already onboarded → 200 without re-writing the audit
-  // row. Re-acceptance on a version bump goes through the same modal
-  // but the user wouldn't be "already onboarded" with the OLD version
-  // at that point — Stage 7 will introduce a separate re-accept path.
-  if (member.onboarded) {
-    return NextResponse.json({ success: true });
-  }
+  // Idempotency moved to a per-version check below (Phase B.2 PR 2).
+  // Previously this short-circuited any "onboarded" member to 200,
+  // which blocked re-acceptance after a TERMS_VERSION bump. Now we
+  // INSERT an additive audit row whenever the live version isn't
+  // already on file for this member; "already onboarded" alone is no
+  // longer a stop signal.
 
   if (body.termsVersion !== TERMS_VERSION) {
     return NextResponse.json(
@@ -134,6 +133,24 @@ export async function POST(req: Request) {
     );
   }
 
+  // Per-version idempotency: if THIS exact version is already on file
+  // for THIS member, no-op 200 (handles double-click / retry). Members
+  // who accepted an OLDER version still fall through to the INSERT
+  // below — that's how re-acceptance audit rows get written.
+  const [existing] = await db
+    .select({ id: vendorMemberLegalAcceptances.id })
+    .from(vendorMemberLegalAcceptances)
+    .where(
+      and(
+        eq(vendorMemberLegalAcceptances.vendorMemberId, member.id),
+        eq(vendorMemberLegalAcceptances.termsVersion, TERMS_VERSION),
+      ),
+    )
+    .limit(1);
+  if (existing) {
+    return NextResponse.json({ success: true });
+  }
+
   const ipAddress =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") ||
@@ -142,9 +159,13 @@ export async function POST(req: Request) {
 
   try {
     await db.transaction(async (tx) => {
+      // Always set onboarded=true. For first acceptance this flips
+      // false→true. For re-acceptance it's a no-op write (already
+      // true). Either way the audit row insert is what carries the
+      // legal weight.
       await tx
         .update(vendorMembers)
-        .set({ onboarded: true })
+        .set({ onboarded: true, updatedAt: new Date() })
         .where(eq(vendorMembers.id, member.id));
       await tx.insert(vendorMemberLegalAcceptances).values({
         vendorMemberId: member.id,

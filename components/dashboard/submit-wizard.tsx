@@ -19,7 +19,22 @@ import {
 } from "@/lib/data/taxonomy";
 import { cn } from "@/lib/utils";
 import { CountrySelect } from "./country-select";
-import { LogoUpload } from "./logo-upload";
+
+/**
+ * Logo uploads ship in Phase C (Vercel Blob). The submission endpoint
+ * already accepts logo-less submissions; the wizard surfaces a small
+ * notice explaining the path forward instead of rendering the upload
+ * widget. When Phase C lands, restore the LogoUpload import from
+ * `./logo-upload` and swap LogoUploadComingSoon for it.
+ */
+function LogoUploadComingSoon() {
+  return (
+    <div className="border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-4 text-[12px] leading-relaxed text-[var(--color-ink-2)]">
+      Logo uploads are coming soon. After our team reviews your
+      submission, we&rsquo;ll email you a link to add your logo.
+    </div>
+  );
+}
 
 const CUSTOM_PRICING_SLUG = "__custom__";
 
@@ -101,6 +116,9 @@ export function SubmitWizard({
     initialState(prefill.vendor, prefill.domain),
   );
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  // Honeypot — sr-only input; bots fill every input they see.
+  const [website3, setWebsite3] = useState("");
   // Where to scroll on the next step change. Reset after each effect run.
   const scrollTargetRef = useRef<string | null>(null);
   // Suppress browser-back popstate handling once after we sync state from it.
@@ -246,19 +264,70 @@ export function SubmitWizard({
     setStep(targetStep);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (submitting) return;
     setSubmitting(true);
-    if (typeof window !== "undefined") {
-      // eslint-disable-next-line no-console
-      console.info("[mock submission]", data);
+    setSubmitError(null);
+
+    const pricingIsCustom = data.pricing === CUSTOM_PRICING_SLUG;
+    const body = {
+      // Company block — server only consumes these when vendor_id IS NULL
+      companyName: data.companyName,
+      companyWebsite: data.companyWebsite,
+      companyFounded: data.companyFounded,
+      companyHeadquarters: data.companyHeadquarters,
+      companyRegions: data.companyRegions,
+      companyDescription: data.companyDescription,
+      // Product block
+      name: data.name,
+      url: data.url,
+      tagline: data.tagline,
+      description: data.description,
+      stages: data.stages,
+      capabilities: data.capabilities,
+      industries: data.industries,
+      pricing: pricingIsCustom ? CUSTOM_PRICING_SLUG : data.pricing,
+      customCapabilities: data.customCapabilities,
+      customIndustries: data.customIndustries,
+      customPricing: pricingIsCustom ? data.customPricing : undefined,
+      // Honeypot — must stay empty for real users.
+      website3: website3,
+    };
+
+    try {
+      const res = await fetch("/api/submissions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        let message = "Something went wrong. Please try again.";
+        try {
+          const json = (await res.json()) as {
+            error?: string;
+            code?: string;
+            currentVersion?: string;
+          };
+          if (json.error) message = json.error;
+          // version_mismatch → refresh so the layout re-reads the
+          // acceptance state and the re-acceptance modal renders.
+          if (json.code === "version_mismatch") {
+            router.refresh();
+          }
+        } catch {
+          // ignore parse failure; default message stands
+        }
+        setSubmitError(message);
+        setSubmitting(false);
+        return;
+      }
+      const json = (await res.json()) as { redirectUrl?: string };
+      router.push(json.redirectUrl ?? "/dashboard");
+    } catch (err) {
+      console.error("[submit-wizard] submit failed", err);
+      setSubmitError("Network error. Please try again.");
+      setSubmitting(false);
     }
-    // Returning vendors land back on their dashboard; first-time vendors see
-    // the onboarding "thanks, we'll review" page since this is their first
-    // submission and they haven't seen the dashboard yet.
-    const target = skipCompanyStep
-      ? "/dashboard?submitted=1"
-      : "/dashboard/onboarding/complete";
-    setTimeout(() => router.push(target), 400);
   };
 
   // Returning vendors already have a company profile — render the entire
@@ -273,6 +342,9 @@ export function SubmitWizard({
         removeCustom={removeCustom}
         pricingValid={pricingValid}
         submitting={submitting}
+        submitError={submitError}
+        website3={website3}
+        setWebsite3={setWebsite3}
         onSubmit={handleSubmit}
       />
     );
@@ -329,6 +401,30 @@ export function SubmitWizard({
           />
         ) : null}
       </div>
+
+      {/* Honeypot — sr-only; bots fill every input. Real users never
+          see this, so any non-empty value is a near-perfect spam
+          signal and the API silent-200s. */}
+      <div className="sr-only" aria-hidden="true">
+        <label htmlFor="submission-website3">Website</label>
+        <input
+          id="submission-website3"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={website3}
+          onChange={(e) => setWebsite3(e.target.value)}
+        />
+      </div>
+
+      {submitError ? (
+        <p
+          role="alert"
+          className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
+        >
+          {submitError}
+        </p>
+      ) : null}
 
       {/* navigation */}
       <div className="mt-12 flex items-center justify-between border-t border-[var(--color-line)] pt-6">
@@ -566,6 +662,9 @@ function SinglePageSubmit({
   removeCustom,
   pricingValid,
   submitting,
+  submitError,
+  website3,
+  setWebsite3,
   onSubmit,
 }: {
   data: FormState;
@@ -578,6 +677,9 @@ function SinglePageSubmit({
   removeCustom: (key: CustomKey, value: string) => void;
   pricingValid: () => boolean;
   submitting: boolean;
+  submitError: string | null;
+  website3: string;
+  setWebsite3: (v: string) => void;
   onSubmit: () => void;
 }) {
   const [view, setView] = useState<"edit" | "review">("edit");
@@ -697,6 +799,28 @@ function SinglePageSubmit({
             />
           </ReviewBlock>
         </div>
+
+        {/* Honeypot — sr-only; bots fill every input. */}
+        <div className="sr-only" aria-hidden="true">
+          <label htmlFor="submission-website3-single">Website</label>
+          <input
+            id="submission-website3-single"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={website3}
+            onChange={(e) => setWebsite3(e.target.value)}
+          />
+        </div>
+
+        {submitError ? (
+          <p
+            role="alert"
+            className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
+          >
+            {submitError}
+          </p>
+        ) : null}
 
         <div className="mt-12 flex items-center justify-between border-t border-[var(--color-line)] pt-6">
           <button
@@ -992,12 +1116,14 @@ function CompanyStep({
         </Field>
       </div>
 
-      <LogoUpload
-        file={data.companyLogoFile}
-        alt={data.companyLogoAlt}
-        onFileChange={(f) => update("companyLogoFile", f)}
-        onAltChange={(v) => update("companyLogoAlt", v)}
-      />
+      <div className="md:col-span-2">
+        <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
+          Company logo
+        </p>
+        <div className="mt-2">
+          <LogoUploadComingSoon />
+        </div>
+      </div>
     </div>
   );
 }
@@ -1050,12 +1176,7 @@ function ToolBasicsStep({
           Skip if your product uses the same brand mark as the company.
         </p>
         <div className="mt-2">
-          <LogoUpload
-            file={data.logoFile}
-            alt={data.logoAlt}
-            onFileChange={(f) => update("logoFile", f)}
-            onAltChange={(v) => update("logoAlt", v)}
-          />
+          <LogoUploadComingSoon />
         </div>
       </div>
     </div>

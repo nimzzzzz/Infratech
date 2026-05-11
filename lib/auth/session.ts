@@ -42,7 +42,7 @@ export type DemoOverride = "new" | "returning";
  * `requireOnboarded` defaults to TRUE — every dashboard page is
  * assumed to need a fully onboarded vendor unless it opts out. The
  * onboarding pages (/dashboard/onboarding, /dashboard/onboarding/
- * submit, /dashboard/onboarding/complete) MUST pass
+ * submit, /dashboard/onboarding/submitted) MUST pass
  * `requireOnboarded: false` or they redirect-loop.
  *
  * The strict default is deliberate: future dashboard subroutes
