@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { normaliseUrl } from "@/lib/submissions/url";
+import { hasRealHostname, normaliseUrl } from "@/lib/submissions/url";
 
 /**
  * Body schema for POST /api/submissions, plus per-step subschemas the
@@ -51,13 +51,21 @@ const plainText = (max: number) =>
 const optionalPlainText = (max: number) =>
   plainText(max).optional().or(z.literal(""));
 
+const HOSTNAME_ERROR = "Enter a valid web address (e.g. example.com)";
+
 const url = (max: number) =>
   z
     .string()
     .trim()
     .min(1, "Required")
     .transform(normaliseUrl)
-    .pipe(z.string().url("Enter a valid web address").max(max));
+    .pipe(z.string().url(HOSTNAME_ERROR).max(max))
+    // Defence beyond z.url(): hostnames with no dot ("rr", "example",
+    // "localhost") parse as valid URLs but are never real websites
+    // for our use case. hasRealHostname checks the URL's hostname for
+    // a dot + 2+ char TLD. Lives in lib/submissions/url.ts so the
+    // rule is reusable and unit-testable.
+    .refine(hasRealHostname, { message: HOSTNAME_ERROR });
 
 const optionalUrl = (max: number) =>
   z
@@ -69,8 +77,11 @@ const optionalUrl = (max: number) =>
     .pipe(
       z
         .string()
-        .url("Enter a valid web address")
+        .url(HOSTNAME_ERROR)
         .max(max)
+        // Same hostname rule as `url()` above, applied only when a
+        // value is present. Empty strings pass through unchecked.
+        .refine(hasRealHostname, { message: HOSTNAME_ERROR })
         .optional()
         .or(z.literal("")),
     );

@@ -384,6 +384,76 @@ describe("POST /api/submissions — honeypot, rate limit, re-acceptance", () => 
   });
 });
 
+describe("hasRealHostname (unit) — rejects dotless hostnames", () => {
+  it("rejects bare hostnames with no dot", async () => {
+    const { hasRealHostname, normaliseUrl } = await import(
+      "@/lib/submissions/url"
+    );
+    // "rr" → "https://rr" → parses but hostname has no dot.
+    expect(hasRealHostname(normaliseUrl("rr"))).toBe(false);
+    expect(hasRealHostname(normaliseUrl("example"))).toBe(false);
+    expect(hasRealHostname(normaliseUrl("localhost"))).toBe(false);
+  });
+
+  it("accepts hostnames with a dot + alphabetic TLD ≥2 chars", async () => {
+    const { hasRealHostname, normaliseUrl } = await import(
+      "@/lib/submissions/url"
+    );
+    expect(hasRealHostname(normaliseUrl("example.com"))).toBe(true);
+    expect(hasRealHostname("https://example.co.uk")).toBe(true);
+    expect(hasRealHostname("https://sub.example.com/path?q=1")).toBe(true);
+  });
+
+  it("rejects raw IPv4 addresses (TLD would be numeric)", async () => {
+    const { hasRealHostname } = await import("@/lib/submissions/url");
+    expect(hasRealHostname("https://192.168.1.1")).toBe(false);
+  });
+
+  it("rejects unparseable strings", async () => {
+    const { hasRealHostname } = await import("@/lib/submissions/url");
+    expect(hasRealHostname("not a url")).toBe(false);
+    expect(hasRealHostname("")).toBe(false);
+  });
+});
+
+describe("POST /api/submissions — hostname refinement (integration)", () => {
+  it("rejects a dotless hostname even though it parses as a URL", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    const vendorId = await seedVendor("test-rr-host");
+    await seedMember({ clerkUserId: "user_rr_host", vendorId });
+    authMock.userId = "user_rr_host";
+
+    const res = await POST(
+      makeRequest({
+        ...validCompany(),
+        ...validProduct({ url: "rr" }),
+      }),
+    );
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.fieldErrors.url).toBeTruthy();
+    expect(json.fieldErrors.url[0]).toMatch(/valid web address/i);
+  });
+
+  it("accepts a multi-part TLD like .co.uk end-to-end", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    const vendorId = await seedVendor("test-couk-host");
+    await seedMember({ clerkUserId: "user_couk_host", vendorId });
+    authMock.userId = "user_couk_host";
+
+    const res = await POST(
+      makeRequest({
+        ...validCompany(),
+        ...validProduct({
+          name: "Co Uk Product",
+          url: "https://example.co.uk",
+        }),
+      }),
+    );
+    expect(res.status).toBe(200);
+  });
+});
+
 describe("POST /api/submissions — URL normalisation", () => {
   it("accepts a bare hostname and normalises to https:// in the persisted payload", async () => {
     const { POST } = await import("@/app/api/submissions/route");
