@@ -73,7 +73,8 @@ async function main() {
         contact_messages, submissions,
         app_screenshots, app_pricing_models, app_industries,
         app_capabilities, app_stages,
-        apps, vendor_regions, vendors,
+        apps, vendor_regions,
+        vendor_member_legal_acceptances, vendor_members, vendors,
         admins,
         stages, capabilities, industries, pricing_models, regions
       RESTART IDENTITY CASCADE
@@ -245,13 +246,21 @@ async function main() {
     );
 
     // 6. Seed demo admin so /admin renders in DEMO_MODE.
-    await tx.insert(schema.admins).values({
-      clerkUserId: "demo_admin_seed",
-      name: "Sara Pellegrini",
-      email: "sara@resolute.example",
-      role: "admin",
-    });
-    console.log(`  admins: 1 (demo)`);
+    // Phase A.1 single-human-table model: admin is a vendor_members
+    // row with is_admin=true. The legacy admins table is dormant —
+    // no seed row required there anymore.
+    await tx
+      .insert(schema.vendorMembers)
+      .values({
+        vendorId: null,
+        clerkUserId: "demo_admin_seed",
+        name: "Sara Pellegrini",
+        primaryEmail: "sara@resolute.example",
+        onboarded: true,
+        isAdmin: true,
+      })
+      .onConflictDoNothing({ target: schema.vendorMembers.clerkUserId });
+    console.log(`  admins: 1 (demo, via vendor_members.is_admin)`);
   });
 
   console.log("Seed complete.");

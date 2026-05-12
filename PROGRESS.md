@@ -135,8 +135,39 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 - [ ] `listVendorSubmissions`, `listVendorApps`, `countVendorUnreadMessages`
 - [ ] Dashboard reads from real queries
 
-## Stage 5 — Admin ⬜ not started
-Real admin auth (email + password + 2FA), submission review queue, taxonomy management, content management, vendor management.
+## Stage 5 — Admin 🟡 in progress
+
+### Phase A.1 — Admin auth + shell ✅ done (2026-05-12)
+- [x] `is_admin` column on `vendor_members` (migration `0012`); legacy `admins` table dormant
+- [x] `CLERK_ADMIN_EMAILS` env allowlist with verified-primary-only security boundary
+- [x] Webhook rewritten to single-table model; **promote-only** semantics on user.updated (manual UPDATEs survive)
+- [x] `/post-signin` server page — canonical post-OAuth landing, redirects to `/admin` or `/dashboard` based on `is_admin`
+- [x] Middleware admin↔dashboard cross-redirects with JWT claim + DB fallback
+- [x] `lib/auth/admin-session.ts` rewritten to query `vendor_members WHERE is_admin = true` with lazy-create
+- [x] Admin shell nav placeholders (Overview / Submissions / Vendors / Inquiries / Analytics / Settings); sign-out via `useClerk().signOut()`
+- [x] Seed migrated; legacy `tests/queries/admins.test.ts` removed
+- [x] Tests: 8 unit cases for allowlist matcher + 5 webhook is_admin integration cases
+
+### Phase A.2 — Admin submission review queue ⬜ next
+- [ ] `/admin/queue` wired to real `submissions` rows with status filtering
+- [ ] Approve / reject / changes-requested actions write to `audit_log`
+- [ ] Approval converts submission to `apps` row + taxonomy joins (the workflow lives here, not in `/api/submissions`)
+
+### Phase A.3 — Vendor management ⬜ later
+- [ ] `/admin/vendors` list + detail; suspend / unsuspend; edit company fields
+- [ ] Member management (suspend a vendor_member without touching the vendor row)
+
+### Phase A.4 — Taxonomy management ⬜ later
+- [ ] Stage / capability / industry / pricing CRUD (chips admin sees vs canonical taxonomy)
+- [ ] Promotion of proposed taxonomy values from `submissions.payload`
+
+### Phase A.5 — Inquiry inbox + analytics ⬜ later
+- [ ] `/admin/inquiries` — read-only view of `contact_messages` across all vendors
+- [ ] `/admin/analytics` — `app_views` + `outbound_clicks` rollups
+
+### Phase A.6 — Polish ⬜ later
+- [ ] Audit-log surface
+- [ ] `audit_log.admin_id` FK retarget at `vendor_members.id`; drop the legacy `admins` table
 
 ## Stage 6 — Vendor inbox + analytics ⬜ not started
 Inbox detail view, per-app view + click metrics, vendor dashboard reads.

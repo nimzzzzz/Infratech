@@ -48,11 +48,17 @@ const clerkSchema = z
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
     CLERK_SECRET_KEY: z.string().min(1),
     CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1),
+    // Comma-separated list of email addresses that automatically get
+    // is_admin=true on user.created / user.updated. Phase A.1. Empty
+    // string (or unset) means no auto-admins — admin onboarding goes
+    // through manual UPDATE in Neon SQL Editor (see PR runbook).
+    CLERK_ADMIN_EMAILS: z.string().default(""),
   })
   .transform((v) => ({
     publishableKey: v.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     secretKey: v.CLERK_SECRET_KEY,
     webhookSigningSecret: v.CLERK_WEBHOOK_SIGNING_SECRET,
+    adminEmails: v.CLERK_ADMIN_EMAILS,
   }));
 
 const resendSchema = z.object({

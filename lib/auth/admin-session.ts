@@ -1,14 +1,22 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { auth, clerkClient } from "@clerk/nextjs/server";
+import { eq, and } from "drizzle-orm";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db/client";
-import { admins, type Admin } from "@/lib/db/schema";
-import { getAdminByClerkUserId } from "@/lib/queries/admins";
+import { vendorMembers, type VendorMember } from "@/lib/db/schema";
+import { isAdminEmail } from "@/lib/auth/admin-allowlist";
 
+/**
+ * Phase A.1: admins are vendor_members rows with is_admin=true.
+ * The legacy `admins` table is dormant — no readers in this file.
+ *
+ * AdminSession returns the matching vendor_members row directly; the
+ * old Admin shape (separate table, email field non-null) is preserved
+ * via a thin adapter on the user object.
+ */
 export type AdminSession = {
-  admin: Admin;
+  admin: VendorMember;
   user: {
     id: string;
     name: string;
@@ -19,43 +27,61 @@ export type AdminSession = {
 /**
  * Resolve the current admin session.
  *
- * In demo mode (NEXT_PUBLIC_DEMO_MODE=true and not production) we return
- * the first admin row found in the DB so the admin UI is browsable
- * without going through Clerk. Outside demo mode we require a real
- * Clerk session whose publicMetadata.role === "admin"; the middleware
- * additionally enforces 2FA.
+ * In demo mode (NEXT_PUBLIC_DEMO_MODE=true and not production) we
+ * return the first vendor_members row with is_admin=true so the
+ * admin UI is browsable without going through Clerk. Outside demo
+ * mode we require a real Clerk session whose vendor_members row has
+ * is_admin=true; the middleware additionally enforces 2FA on
+ * /admin/** routes.
+ *
+ * Lazy-create mirrors the vendor session pattern: if the Clerk
+ * session exists but no vendor_members row does (webhook missed
+ * delivery, signing-secret rotation, etc.), insert a row inline
+ * with is_admin computed from the same email allowlist. Same
+ * security boundary: only the *verified* primary email is checked.
  */
 export async function getAdminSession(): Promise<AdminSession> {
   if (env.DEMO_MODE) {
-    const [admin] = await db.select().from(admins).limit(1);
-    if (admin) {
+    const [member] = await db
+      .select()
+      .from(vendorMembers)
+      .where(eq(vendorMembers.isAdmin, true))
+      .limit(1);
+    if (member) {
       return {
-        admin,
+        admin: member,
         user: {
-          id: admin.clerkUserId,
-          name: admin.name,
-          email: admin.email,
+          id: member.clerkUserId,
+          name: member.name,
+          email: member.primaryEmail,
         },
       };
     }
   }
 
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
   if (!userId) redirect("/admin/login");
 
-  const role = (sessionClaims?.publicMetadata as { role?: string } | undefined)
-    ?.role;
-  if (role !== "admin") redirect("/?error=forbidden");
+  let [member] = await db
+    .select()
+    .from(vendorMembers)
+    .where(eq(vendorMembers.clerkUserId, userId))
+    .limit(1);
 
-  const admin = await getAdminByClerkUserId(userId);
-  if (!admin) redirect("/admin/login?error=no_admin");
+  if (!member) {
+    member = (await lazyCreateAdminMember(userId)) ?? undefined!;
+  }
+
+  if (!member) redirect("/admin/login?error=no_admin");
+  if (!member.isAdmin) redirect("/?error=forbidden");
+  if (member.suspended) redirect("/admin/login?error=suspended");
 
   return {
-    admin,
+    admin: member,
     user: {
       id: userId,
-      name: admin.name,
-      email: admin.email,
+      name: member.name,
+      email: member.primaryEmail,
     },
   };
 }
@@ -68,12 +94,21 @@ export async function getAdminHeaderData(): Promise<{
   try {
     const { userId } = await auth();
     if (userId) {
-      const admin = await getAdminByClerkUserId(userId);
-      if (admin) {
+      const [member] = await db
+        .select()
+        .from(vendorMembers)
+        .where(
+          and(
+            eq(vendorMembers.clerkUserId, userId),
+            eq(vendorMembers.isAdmin, true),
+          ),
+        )
+        .limit(1);
+      if (member) {
         return {
-          name: admin.name,
-          email: admin.email,
-          initials: initialsOf(admin.name),
+          name: member.name,
+          email: member.primaryEmail,
+          initials: initialsOf(member.name),
         };
       }
     }
@@ -82,12 +117,16 @@ export async function getAdminHeaderData(): Promise<{
   }
 
   if (env.DEMO_MODE) {
-    const [admin] = await db.select().from(admins).limit(1);
-    if (admin) {
+    const [member] = await db
+      .select()
+      .from(vendorMembers)
+      .where(eq(vendorMembers.isAdmin, true))
+      .limit(1);
+    if (member) {
       return {
-        name: admin.name,
-        email: admin.email,
-        initials: initialsOf(admin.name),
+        name: member.name,
+        email: member.primaryEmail,
+        initials: initialsOf(member.name),
       };
     }
   }
@@ -102,4 +141,56 @@ function initialsOf(name: string): string {
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+/**
+ * Webhook-failure fallback for admins. Same shape as the
+ * lazyCreateVendorMemberFromClerk path in lib/auth/session.ts, with
+ * is_admin computed from the verified primary email vs the
+ * CLERK_ADMIN_EMAILS allowlist. ON CONFLICT DO NOTHING so a
+ * concurrent webhook insert can't deadlock.
+ */
+async function lazyCreateAdminMember(
+  userId: string,
+): Promise<VendorMember | null> {
+  try {
+    const cc = await clerkClient();
+    const u = await cc.users.getUser(userId);
+    const name =
+      [u.firstName, u.lastName].filter(Boolean).join(" ") || "Unnamed";
+    const primary = u.emailAddresses.find(
+      (e) => e.id === u.primaryEmailAddressId,
+    );
+    const primaryEmail =
+      primary?.emailAddress ??
+      u.emailAddresses[0]?.emailAddress ??
+      `${userId}@unknown.example`;
+    const verifiedEmail =
+      primary?.verification?.status === "verified"
+        ? primary.emailAddress
+        : null;
+    const isAdmin = isAdminEmail(verifiedEmail);
+
+    await db
+      .insert(vendorMembers)
+      .values({
+        vendorId: null,
+        clerkUserId: userId,
+        name,
+        primaryEmail,
+        onboarded: false,
+        isAdmin,
+      })
+      .onConflictDoNothing({ target: vendorMembers.clerkUserId });
+
+    const [row] = await db
+      .select()
+      .from(vendorMembers)
+      .where(eq(vendorMembers.clerkUserId, userId))
+      .limit(1);
+    return row ?? null;
+  } catch (err) {
+    console.error("[admin-session] lazyCreateAdminMember failed", err);
+    return null;
+  }
 }

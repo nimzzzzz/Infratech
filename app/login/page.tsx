@@ -57,10 +57,13 @@ export default async function LoginPage({
 
   const sp = await searchParams;
   const intentParam = Array.isArray(sp.intent) ? sp.intent[0] : sp.intent;
+  // Always land at /post-signin first — that server page reads the
+  // vendor_members row and branches on is_admin / intent. The
+  // ?intent=submit carry-through preserves the "list your product"
+  // deep-link → returning-vendor wizard flow for vendors (admins
+  // ignore the intent and land on /admin regardless).
   const linkedInRedirectComplete =
-    intentParam === "submit"
-      ? "/dashboard/onboarding/submit?as=returning"
-      : "/dashboard";
+    intentParam === "submit" ? "/post-signin?intent=submit" : "/post-signin";
 
   const heroImage = findHeroImage();
 

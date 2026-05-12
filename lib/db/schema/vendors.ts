@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   serial,
@@ -86,6 +87,19 @@ export const vendorMembers = pgTable(
     role: text("role"),
     onboarded: boolean("onboarded").notNull().default(false),
     suspended: boolean("suspended").notNull().default(false),
+    /**
+     * Admin flag (Phase A.1, 2026-05-12). The single-human-table model
+     * supersedes the legacy `admins` table: every authenticated human
+     * is a vendor_members row, distinguished by is_admin. The legacy
+     * `admins` table is retained for audit_log FK compatibility but
+     * has no readers or writers post-A.1.
+     *
+     * Set by the Clerk webhook against CLERK_ADMIN_EMAILS (email
+     * allowlist) on user.created / user.updated, or by manual UPDATE
+     * for invited admins whose sign-in email differs from their
+     * allowlisted address.
+     */
+    isAdmin: boolean("is_admin").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -97,6 +111,12 @@ export const vendorMembers = pgTable(
     uniqueIndex("ux_vendor_members_clerk_user_id").on(t.clerkUserId),
     index("ix_vendor_members_vendor").on(t.vendorId),
     index("ix_vendor_members_suspended").on(t.suspended),
+    // Partial index — only the few admin rows are indexed, the rest
+    // (vast majority is_admin=false) are skipped. Supports admin
+    // lookups and admin-list pages without bloating storage.
+    index("ix_vendor_members_is_admin")
+      .on(t.isAdmin)
+      .where(sql`is_admin = true`),
   ],
 );
 

@@ -114,6 +114,7 @@ export async function getVendorSession(opts?: {
       role: null,
       onboarded: false,
       suspended: false,
+      isAdmin: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -215,6 +216,7 @@ function syntheticMember(vendor: Vendor): VendorMember {
     role: null,
     onboarded: true,
     suspended: false,
+    isAdmin: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
