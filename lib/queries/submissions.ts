@@ -48,6 +48,40 @@ export async function listSubmissions(opts?: {
  * Filters out terminal states (approved / rejected / changes_requested)
  * because those don't represent "in flight" work.
  */
+/**
+ * Phase A.2 PR 2 — dashboard surface dispatch helper.
+ *
+ * Returns the vendor's single most-recent submission (any status,
+ * any type) for the dashboard page to inspect. The page renders
+ * different cards based on the status:
+ *
+ *   - edited_awaiting_vendor_approval → SubmissionEditedCard with diff
+ *   - rejected                        → SubmissionRejectedCard
+ *   - published / pending_review       → no card (existing surfaces
+ *                                       already cover these states)
+ *
+ * Returns null when the vendor has never submitted. Multi-product
+ * vendors only see the card for their LATEST submission — older
+ * lifecycles aren't surfaced (admin queue / inbox is the right
+ * place to chase a stuck submission deeper in history).
+ */
+export async function getMostRecentSubmissionForVendor(vendorId: number) {
+  const [row] = await db
+    .select({
+      id: submissions.id,
+      status: submissions.status,
+      payload: submissions.payload,
+      adminEdits: submissions.adminEdits,
+      rejectionReason: submissions.rejectionReason,
+      submittedAt: submissions.submittedAt,
+    })
+    .from(submissions)
+    .where(eq(submissions.submitterVendorId, vendorId))
+    .orderBy(desc(submissions.submittedAt))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function listPendingSubmissionsForVendor(vendorId: number) {
   return db
     .select({

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { submissions } from "@/lib/db/schema";
@@ -11,6 +11,7 @@ import {
   InvalidTransitionError,
   type SubmissionStatus,
 } from "@/lib/submissions/state-machine";
+import { sendSubmissionEditedAwaitingApprovalEmail } from "@/lib/email/send-submission-status";
 import { editBodySchema } from "./schema";
 
 /**
@@ -138,6 +139,26 @@ export async function POST(
     }
     console.error("[admin.edit] tx failed", err);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+  }
+
+  // Fire the "we've polished your listing" email after the
+  // transaction commits. Best-effort via after(); Resend latency
+  // must not gate the API response. PR 2 wiring (PR 1 shipped the
+  // state transition without notifying the vendor).
+  const contactEmail = ctx.vendor.contactEmail;
+  if (contactEmail) {
+    const firstName = ctx.vendor.name.split(" ")[0] ?? "there";
+    const productName =
+      (adminEdits as { name?: string })?.name ??
+      (submission.payload as { name?: string })?.name ??
+      "your product";
+    after(async () => {
+      await sendSubmissionEditedAwaitingApprovalEmail({
+        to: contactEmail,
+        firstName,
+        productName,
+      });
+    });
   }
 
   return NextResponse.json({

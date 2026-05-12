@@ -160,12 +160,14 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 - [x] Legacy `/admin/queue` redirects to `/admin/submissions`; admin header nav updated
 - [x] Audit-log row for every transition (action, actor, before/after status)
 
-**PR 2 — Vendor lifecycle ⬜ next**
-- [ ] `POST /api/submissions/[id]/(vendor-approve|vendor-request-changes|resubmit)` endpoints
-- [ ] Vendor dashboard surfaces: edited-awaiting card with diff view; rejected card with reason + Edit & resubmit
-- [ ] "We've polished your listing — please review" email template
-- [ ] Re-acceptance gate on `resubmit` if TERMS_VERSION has moved since the original submission
-- [ ] Tests for all three endpoints + the diff component
+**PR 2 — Vendor lifecycle ✅ done (2026-05-12)**
+- [x] `POST /api/submissions/[id]/(vendor-approve|vendor-request-changes|resubmit)` endpoints
+- [x] Vendor dashboard surfaces: `SubmissionEditedCard` (diff view + Approve/Request-changes), `SubmissionRejectedCard` (reason + Edit & resubmit)
+- [x] `SubmissionDiffView` — field whitelist + unchanged-fields toggle + mobile stack
+- [x] "We've polished your listing — please review" email template (`submission-edited-awaiting-approval.tsx`); wired into the admin.edit route via `next/server.after()`
+- [x] Re-acceptance gate on resubmit (returns 409 `version_mismatch` if vendor's latest acceptance < TERMS_VERSION; layout-mounted modal handles the re-accept UI)
+- [x] Wizard extended with `initialValues` + `submitUrl` props for the resubmit branch at `/dashboard/onboarding/submit?resubmit=<id>`
+- [x] Tests: 7 unit cases on `diffPayload`, 4 component cases on `SubmissionDiffView`, 11 integration cases across the three vendor endpoints (happy + ownership + state + version_mismatch + rate-limit)
 
 ### Phase A.3 — Vendor management ⬜ later
 - [ ] `/admin/vendors` list + detail; suspend / unsuspend; edit company fields
