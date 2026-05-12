@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
+import { vendorMembers } from "./vendors";
 
 /**
  * Admin user table + immutable audit_log.
@@ -50,10 +51,24 @@ export const auditLog = pgTable(
   "audit_log",
   {
     id: serial("id").primaryKey(),
-    /** NULL for system-level actions (e.g. GDPR-triggered deletes). */
+    /** Legacy admins-table FK. NULL on all Phase A.2+ writes; kept
+     *  for back-compat (Phase A.6 retargets the FK and drops the
+     *  admins table). NEW writers populate actorVendorMemberId. */
     adminId: integer("admin_id").references(() => admins.id, {
       onDelete: "set null",
     }),
+    /**
+     * Phase A.2: the vendor_member.id who performed the action.
+     * NULL for system-level actions (GDPR-triggered deletes,
+     * webhook metadata-sync failures). Replaces adminId for new
+     * writes — works for admin AND vendor actors since the
+     * single-human-table model (Phase A.1) put both in
+     * vendor_members.
+     */
+    actorVendorMemberId: integer("actor_vendor_member_id").references(
+      () => vendorMembers.id,
+      { onDelete: "set null" },
+    ),
     /** dot-namespaced action key, e.g. "submission.approve", "vendor.gdpr_delete". */
     action: text("action").notNull(),
     targetType: text("target_type").notNull(),
@@ -67,6 +82,7 @@ export const auditLog = pgTable(
   (t) => [
     index("ix_audit_target").on(t.targetType, t.targetId),
     index("ix_audit_admin_created").on(t.adminId, t.createdAt),
+    index("ix_audit_actor_created").on(t.actorVendorMemberId, t.createdAt),
   ],
 );
 

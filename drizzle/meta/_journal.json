@@ -92,6 +92,13 @@
       "when": 1778600000000,
       "tag": "0012_add_is_admin_to_vendor_members",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1778700000000,
+      "tag": "0013_submissions_review_lifecycle",
+      "breakpoints": true
     }
   ]
 }

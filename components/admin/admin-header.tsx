@@ -19,10 +19,11 @@ export type AdminHeaderProps = {
 const nav = [
   { href: "/admin", label: "Overview", placeholder: false, match: (p: string) => p === "/admin" },
   {
-    href: "/admin/queue",
+    href: "/admin/submissions",
     label: "Submissions",
     placeholder: false,
-    match: (p: string) => p.startsWith("/admin/queue"),
+    match: (p: string) =>
+      p.startsWith("/admin/submissions") || p.startsWith("/admin/queue"),
   },
   {
     href: "/admin/apps",

@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   submissions,
@@ -60,10 +60,115 @@ export async function listPendingSubmissionsForVendor(vendorId: number) {
     .where(
       and(
         eq(submissions.submitterVendorId, vendorId),
-        inArray(submissions.status, ["pending", "in_review"]),
+        inArray(submissions.status, ["pending_review", "in_review"]),
       ),
     )
     .orderBy(desc(submissions.submittedAt));
+}
+
+/**
+ * Admin-side list with filter + search. Phase A.2 — used by
+ * /admin/submissions to populate the queue tabs.
+ *
+ * Filters:
+ *   - status[] — array of statuses to include. Empty / omitted →
+ *     defaults to admin's queue (pending_review + edited_awaiting).
+ *   - q — case-insensitive substring match on product name (from
+ *     payload.name OR admin_edits.name) or vendor name. Cheap ILIKE
+ *     for now; tsvector upgrade if volume warrants.
+ */
+export type AdminSubmissionListItem = {
+  id: number;
+  status: SubmissionStatus;
+  submittedAt: Date;
+  reviewedAt: Date | null;
+  payload: unknown;
+  adminEdits: unknown;
+  rejectionReason: string | null;
+  vendor: {
+    id: number;
+    name: string;
+    contactEmail: string | null;
+  };
+};
+
+export async function listSubmissionsForAdmin(opts?: {
+  statuses?: SubmissionStatus[];
+  q?: string;
+}): Promise<AdminSubmissionListItem[]> {
+  const statuses =
+    opts?.statuses && opts.statuses.length > 0
+      ? opts.statuses
+      : (["pending_review", "edited_awaiting_vendor_approval"] as const);
+
+  const conditions = [inArray(submissions.status, statuses as SubmissionStatus[])];
+  const q = opts?.q?.trim();
+  if (q && q.length > 0) {
+    // Match on vendor name OR the payload's "name" field. The JSONB
+    // `->>` operator extracts the string value; ILIKE for case-
+    // insensitive substring. The admin edits override the payload
+    // name when present — match both so a search on the edited name
+    // still finds the row.
+    const pattern = `%${q}%`;
+    conditions.push(
+      or(
+        ilike(vendors.name, pattern),
+        sql`${submissions.payload}->>'name' ILIKE ${pattern}`,
+        sql`${submissions.adminEdits}->>'name' ILIKE ${pattern}`,
+      )!,
+    );
+  }
+
+  const rows = await db
+    .select({
+      id: submissions.id,
+      status: submissions.status,
+      submittedAt: submissions.submittedAt,
+      reviewedAt: submissions.reviewedAt,
+      payload: submissions.payload,
+      adminEdits: submissions.adminEdits,
+      rejectionReason: submissions.rejectionReason,
+      vendorId: vendors.id,
+      vendorName: vendors.name,
+      vendorContactEmail: vendors.contactEmail,
+    })
+    .from(submissions)
+    .innerJoin(vendors, eq(vendors.id, submissions.submitterVendorId))
+    .where(and(...conditions))
+    .orderBy(desc(submissions.submittedAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    status: r.status,
+    submittedAt: r.submittedAt,
+    reviewedAt: r.reviewedAt,
+    payload: r.payload,
+    adminEdits: r.adminEdits,
+    rejectionReason: r.rejectionReason,
+    vendor: {
+      id: r.vendorId,
+      name: r.vendorName,
+      contactEmail: r.vendorContactEmail,
+    },
+  }));
+}
+
+/**
+ * Admin-side single-submission lookup with joined vendor. Used by
+ * /admin/submissions/[id]. Returns null if not found.
+ */
+export async function getSubmissionForAdmin(id: number) {
+  const [row] = await db
+    .select({
+      submission: submissions,
+      vendor: vendors,
+    })
+    .from(submissions)
+    .innerJoin(vendors, eq(vendors.id, submissions.submitterVendorId))
+    .where(eq(submissions.id, id))
+    .limit(1);
+  if (!row) return null;
+  return { ...row.submission, vendor: row.vendor };
 }
 
 export async function getSubmissionById(id: number) {

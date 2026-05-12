@@ -40,11 +40,11 @@ export default async function AdminOverviewPage() {
   const [pendingRow] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(submissions)
-    .where(eq(submissions.status, "pending"));
+    .where(eq(submissions.status, "pending_review"));
   const [inReviewRow] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(submissions)
-    .where(eq(submissions.status, "in_review"));
+    .where(eq(submissions.status, "edited_awaiting_vendor_approval"));
   const [publishedAppsRow] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(apps)
@@ -89,7 +89,7 @@ export default async function AdminOverviewPage() {
         <span className="num text-[var(--color-ink)]">{pending}</span> new
         submissions waiting on you.{" "}
         <Link
-          href="/admin/queue"
+          href="/admin/submissions"
           className="underline underline-offset-4 hover:text-[var(--color-ink)]"
         >
           Open the queue &rarr;
@@ -101,13 +101,13 @@ export default async function AdminOverviewPage() {
           icon={Tray}
           label="Pending"
           value={pending}
-          href="/admin/queue?status=pending"
+          href="/admin/submissions?tab=queue"
         />
         <StatCard
           icon={ClipboardText}
-          label="In review"
+          label="Awaiting vendor"
           value={inReview}
-          href="/admin/queue?status=in-review"
+          href="/admin/submissions?tab=queue"
         />
         <StatCard
           icon={Stack}
@@ -129,7 +129,7 @@ export default async function AdminOverviewPage() {
             Recent activity
           </h2>
           <Link
-            href="/admin/queue"
+            href="/admin/submissions"
             className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
           >
             All activity
@@ -150,7 +150,7 @@ export default async function AdminOverviewPage() {
             return (
               <li key={sub.id}>
                 <Link
-                  href={`/admin/queue#${sub.id}`}
+                  href={`/admin/submissions/${sub.id}`}
                   className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[100px_1fr_auto_72px] md:gap-6 md:px-3"
                 >
                   <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
@@ -185,11 +185,20 @@ export default async function AdminOverviewPage() {
 }
 
 function mapStatusForPill(
-  s: "pending" | "in_review" | "changes_requested" | "approved" | "rejected",
+  s:
+    | "pending_review"
+    | "in_review"
+    | "changes_requested"
+    | "published"
+    | "edited_awaiting_vendor_approval"
+    | "rejected",
 ): "pending" | "in-review" | "changes-requested" | "approved" | "rejected" {
+  if (s === "pending_review") return "pending";
   if (s === "in_review") return "in-review";
+  if (s === "edited_awaiting_vendor_approval") return "in-review";
   if (s === "changes_requested") return "changes-requested";
-  return s;
+  if (s === "published") return "approved";
+  return "rejected";
 }
 
 function StatCard({

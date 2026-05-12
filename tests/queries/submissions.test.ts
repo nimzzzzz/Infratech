@@ -19,8 +19,8 @@ describe("submission queries", () => {
   });
 
   it("listSubmissions filters by status", async () => {
-    const pending = await listSubmissions({ status: "pending" });
-    for (const s of pending) expect(s.status).toBe("pending");
+    const pending = await listSubmissions({ status: "pending_review" });
+    for (const s of pending) expect(s.status).toBe("pending_review");
   });
 
   it("getSubmissionById returns full submission + submitter", async () => {

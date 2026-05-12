@@ -249,7 +249,7 @@ export async function POST(req: Request) {
         .insert(submissions)
         .values({
           type: "new",
-          status: "pending",
+          status: "pending_review",
           submitterVendorId: vendorId as number,
           payload: {
             slug: appSlug,
