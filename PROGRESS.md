@@ -148,6 +148,14 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 - [x] Seed migrated; legacy `tests/queries/admins.test.ts` removed
 - [x] Tests: 8 unit cases for allowlist matcher + 5 webhook is_admin integration cases
 
+### Phase A.1.1 — View-as-vendor toggle + dashboard header nav ✅ done (2026-05-13)
+- [x] `enterVendorView` / `exitVendorView` server actions at `lib/admin/view-as-vendor.ts` set / clear a `view_as_vendor=true` cookie (HttpOnly, Secure-in-prod, SameSite=Lax, 4h Max-Age)
+- [x] `middleware-decision.ts` accepts a new `viewAsVendor` field; admin + cookie on `/dashboard/**` → next (loosens the existing admin→/admin redirect rule). Cookie alone is still meaningless without `is_admin === true`.
+- [x] `ViewAsVendorBanner` — amber strip mounted by `app/dashboard/layout.tsx` when an admin has the cookie set; "Return to admin view" button clears + redirects to `/admin`
+- [x] Admin header: "View as vendor" button next to Sign Out (form-action wiring, no client state)
+- [x] Dashboard header: wordmark becomes Link to `/` (matches public-site header); new "Browse directory →" link on non-onboarding routes; sign-out handlers in both headers fire `POST /api/admin/exit-vendor-view` before Clerk's signOut so a stale cookie doesn't leak to the next user on the same browser
+- [x] Tests: 5 new middleware-decision cases (admin + cookie passes; admin without cookie still redirects; non-admin + cookie is a no-op; DB fallback fires when claim undefined; cookie has no effect on /admin routes)
+
 ### Phase A.2 — Admin submission review queue 🟡 PR 1 done, PR 2 next
 
 **PR 1 — Admin actions + state machine + lifecycle infra ✅ done (2026-05-12)**

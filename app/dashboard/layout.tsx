@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { LegalAcceptanceModal } from "@/components/onboarding/legal-acceptance-modal";
+import { ViewAsVendorBanner } from "@/components/dashboard/view-as-vendor-banner";
 import {
   getDashboardHeaderData,
   getVendorSession,
@@ -36,8 +38,20 @@ export default async function DashboardLayout({
     : false;
   const firstName = session.vendorMember.name.split(" ")[0] ?? null;
 
+  // Phase A.1.1 — view-as-vendor banner. Renders for admins who
+  // have the cookie set; non-admins never see it (middleware
+  // ensures admins are the only ones who can have a valid
+  // matching session AND a cookie, but we double-check is_admin
+  // here so a stale cookie inherited by a non-admin signing in
+  // on the same browser doesn't render a confusing banner).
+  const viewAsVendorCookie =
+    (await cookies()).get("view_as_vendor")?.value === "true";
+  const showVendorViewBanner =
+    viewAsVendorCookie && session.vendorMember.isAdmin;
+
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[var(--color-canvas)]">
+      {showVendorViewBanner ? <ViewAsVendorBanner /> : null}
       <DashboardHeader
         companyName={header.companyName}
         userName={header.userName}

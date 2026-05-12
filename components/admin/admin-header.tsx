@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
-import { SignOut, ShieldCheck } from "@phosphor-icons/react";
+import { SignOut, ShieldCheck, Eye } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { enterVendorView } from "@/lib/admin/view-as-vendor";
 
 export type AdminHeaderProps = {
   name: string;
@@ -43,6 +44,16 @@ export function AdminHeader({ name, initials, email }: AdminHeaderProps) {
 
   const onSignOut = async () => {
     try {
+      // Phase A.1.1 — clear view_as_vendor cookie in case it was
+      // set (admin currently in vendor view shouldn't see this
+      // header, but signing out from either header should leave
+      // no stale impersonation cookie behind for the next user
+      // on the same browser).
+      try {
+        await fetch("/api/admin/exit-vendor-view", { method: "POST" });
+      } catch {
+        // Network blip is fine — Max-Age cleans up.
+      }
       await clerk.signOut({ redirectUrl: "/" });
       router.refresh();
     } catch (err) {
@@ -125,6 +136,22 @@ export function AdminHeader({ name, initials, email }: AdminHeaderProps) {
               </span>
             </div>
           </div>
+          {/* Phase A.1.1 — View-as-vendor toggle. Form-action wires
+              the server action without client JS state. Sits visually
+              below Sign Out in hierarchy (same border treatment, no
+              fill) but ahead of it in the row so the higher-impact
+              Sign Out is the rightmost element (matches public-site
+              button ordering convention). */}
+          <form action={enterVendorView}>
+            <button
+              type="submit"
+              className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5"
+              title="Open /dashboard as if you were a vendor (for QA)"
+            >
+              <Eye size={11} weight="regular" />
+              <span className="hidden sm:inline">View as vendor</span>
+            </button>
+          </form>
           <button
             type="button"
             onClick={onSignOut}
