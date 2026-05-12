@@ -6,10 +6,10 @@ import { db } from "@/lib/db/client";
 import {
   vendors,
   vendorMembers,
-  admins,
   auditLog,
   apps,
 } from "@/lib/db/schema";
+import { isAdminEmail } from "@/lib/auth/admin-allowlist";
 
 /**
  * Clerk webhook handler.
@@ -52,6 +52,9 @@ type ClerkUser = {
   email_addresses: Array<{
     id: string;
     email_address: string;
+    /** Clerk includes verification status on each address; primary
+     *  must be verified before we honour it for admin promotion. */
+    verification?: { status?: "verified" | "unverified" | string } | null;
   }>;
   primary_email_address_id: string | null;
   first_name: string | null;
@@ -59,7 +62,10 @@ type ClerkUser = {
   external_accounts: Array<{
     provider: string;
   }>;
-  public_metadata: { role?: "vendor" | "admin" } & Record<string, unknown>;
+  public_metadata: { role?: "vendor" | "admin"; is_admin?: boolean } & Record<
+    string,
+    unknown
+  >;
 };
 
 type ClerkDeletedUser = {
@@ -72,13 +78,16 @@ type ClerkEvent =
   | { type: "user.updated"; data: ClerkUser }
   | { type: "user.deleted"; data: ClerkDeletedUser };
 
-type CanonicalRole = "vendor" | "admin";
-
 function fullNameOf(u: ClerkUser): string {
   const parts = [u.first_name, u.last_name].filter(Boolean);
   return parts.length ? parts.join(" ") : "Unnamed vendor";
 }
 
+/**
+ * The user's primary email (any verification state). Used for the
+ * vendor_members row's `primary_email` column — non-null, persists
+ * even before verification because we need *some* contact value.
+ */
 function primaryEmailOf(u: ClerkUser): string | null {
   const primary = u.email_addresses.find(
     (e) => e.id === u.primary_email_address_id,
@@ -86,43 +95,69 @@ function primaryEmailOf(u: ClerkUser): string | null {
   return primary?.email_address ?? u.email_addresses[0]?.email_address ?? null;
 }
 
-function canonicalRoleOf(user: ClerkUser): CanonicalRole {
-  // Admin is opt-in via invitation metadata. Everything else (LinkedIn,
-  // email, missing) defaults to vendor.
-  return user.public_metadata?.role === "admin" ? "admin" : "vendor";
+/**
+ * The user's *verified* primary email — null if the primary address
+ * isn't verified yet. Only this value should be checked against the
+ * admin allowlist. Phase A.1 security boundary: an attacker who can
+ * add an unverified email to their account must not gain admin via
+ * the allowlist trip.
+ */
+function verifiedPrimaryEmailOf(u: ClerkUser): string | null {
+  const primary = u.email_addresses.find(
+    (e) => e.id === u.primary_email_address_id,
+  );
+  if (!primary) return null;
+  if (primary.verification?.status !== "verified") return null;
+  return primary.email_address;
 }
 
 /**
- * Best-effort push of the canonical role back to Clerk publicMetadata.
- * Logs and breadcrumbs on failure — never throws.
+ * Compute is_admin for this user. True iff the primary email is
+ * verified AND matches the CLERK_ADMIN_EMAILS allowlist. Conservative
+ * by design — manual UPDATE in Neon SQL Editor is the path for
+ * admins whose sign-in email isn't in the allowlist.
  */
-async function syncRoleToClerk(
+function computeIsAdmin(user: ClerkUser): boolean {
+  const verified = verifiedPrimaryEmailOf(user);
+  return isAdminEmail(verified);
+}
+
+/**
+ * Best-effort push of is_admin into Clerk publicMetadata so the
+ * middleware can read the flag from the JWT claim without a DB
+ * lookup on the hot path. Logs and breadcrumbs on failure — never
+ * throws.
+ *
+ * Phase A.1 replaces the prior publicMetadata.role string with a
+ * boolean publicMetadata.is_admin — single source of truth, no
+ * enum drift. The legacy `role` key is left untouched (some Clerk
+ * dashboards may still display it) but no production reader uses it.
+ */
+async function syncAdminFlagToClerk(
   userId: string,
-  role: CanonicalRole,
+  isAdmin: boolean,
   existingMeta: Record<string, unknown> | undefined,
 ): Promise<void> {
   try {
     const cc = await clerkClient();
     await cc.users.updateUserMetadata(userId, {
-      publicMetadata: { ...(existingMeta ?? {}), role },
+      publicMetadata: { ...(existingMeta ?? {}), is_admin: isAdmin },
     });
     console.info(
-      `[clerk webhook] synced role=${role} to Clerk metadata for user ${userId}`,
+      `[clerk webhook] synced is_admin=${isAdmin} to Clerk metadata for user ${userId}`,
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(
-      `[clerk webhook] failed to sync role=${role} to Clerk metadata for user ${userId}: ${message}`,
+      `[clerk webhook] failed to sync is_admin=${isAdmin} for user ${userId}: ${message}`,
     );
-    // Breadcrumb so an out-of-band retry job can find these later. Best-effort
-    // even on this insert — the audit log is nice-to-have, never load-bearing.
     try {
       await db.insert(auditLog).values({
         adminId: null,
         action: "clerk.metadata_sync_failed",
-        targetType: role,
+        targetType: isAdmin ? "admin" : "vendor",
         targetId: userId,
-        before: { intendedRole: role },
+        before: { intendedIsAdmin: isAdmin },
         after: { error: message },
       });
     } catch (auditErr) {
@@ -176,67 +211,46 @@ export async function POST(req: Request) {
 }
 
 async function handleUserCreated(user: ClerkUser): Promise<void> {
-  const role = canonicalRoleOf(user);
+  const name = fullNameOf(user);
+  const email = primaryEmailOf(user) ?? `${user.id}@unknown.example`;
+  const isAdmin = computeIsAdmin(user);
 
-  // 1. DB insert first — source of truth.
-  if (role === "admin") {
-    const email = primaryEmailOf(user) ?? `${user.id}@unknown.example`;
-    await db
-      .insert(admins)
-      .values({
-        clerkUserId: user.id,
-        name: fullNameOf(user),
-        email,
-        role: "admin",
-      })
-      .onConflictDoNothing({ target: admins.clerkUserId });
-  } else {
-    const name = fullNameOf(user);
-    const email = primaryEmailOf(user) ?? `${user.id}@unknown.example`;
-    // vendor_id stays NULL — the human hasn't confirmed their company
-    // yet. /dashboard/onboarding inserts a vendors row and repoints.
-    await db
-      .insert(vendorMembers)
-      .values({
-        vendorId: null,
-        clerkUserId: user.id,
-        name,
-        primaryEmail: email,
-        onboarded: false,
-      })
-      .onConflictDoNothing({ target: vendorMembers.clerkUserId });
-  }
+  // Phase A.1 single-human-table model: ALL Clerk users land in
+  // vendor_members. The is_admin flag (computed from the verified
+  // primary email vs CLERK_ADMIN_EMAILS) is the only admin signal.
+  // The legacy `admins` table is intentionally NOT touched — it's
+  // retained for audit_log FK compatibility but has no readers /
+  // writers post-A.1.
+  //
+  // vendor_id stays NULL — even for admins. The wizard at
+  // /dashboard/onboarding/submit is where the vendor row gets
+  // created for non-admin vendors; admins never go through that flow
+  // and their vendor_id stays NULL forever (no impact — admin pages
+  // don't read vendor_id).
+  await db
+    .insert(vendorMembers)
+    .values({
+      vendorId: null,
+      clerkUserId: user.id,
+      name,
+      primaryEmail: email,
+      onboarded: false,
+      isAdmin,
+    })
+    .onConflictDoNothing({ target: vendorMembers.clerkUserId });
 
-  // 2. Best-effort: ensure Clerk metadata reflects canonical role.
-  if (user.public_metadata?.role !== role) {
-    await syncRoleToClerk(user.id, role, user.public_metadata);
+  // Best-effort: push is_admin to Clerk publicMetadata so the
+  // middleware reads it from the JWT without a DB query on the hot
+  // path. Only sync when it differs (avoid noise on every webhook).
+  if (user.public_metadata?.is_admin !== isAdmin) {
+    await syncAdminFlagToClerk(user.id, isAdmin, user.public_metadata);
   }
 }
 
 async function handleUserUpdated(user: ClerkUser): Promise<void> {
   const name = fullNameOf(user);
   const email = primaryEmailOf(user);
-
-  // Find the existing record. Admin first — admin and vendor_member
-  // never collide on clerk_user_id, but admin is the smaller table.
-  const [adminRow] = await db
-    .select()
-    .from(admins)
-    .where(eq(admins.clerkUserId, user.id))
-    .limit(1);
-
-  if (adminRow) {
-    if (email) {
-      await db
-        .update(admins)
-        .set({ name, email })
-        .where(eq(admins.id, adminRow.id));
-    }
-    if (user.public_metadata?.role !== "admin") {
-      await syncRoleToClerk(user.id, "admin", user.public_metadata);
-    }
-    return;
-  }
+  const isAdmin = computeIsAdmin(user);
 
   const [memberRow] = await db
     .select()
@@ -244,51 +258,49 @@ async function handleUserUpdated(user: ClerkUser): Promise<void> {
     .where(eq(vendorMembers.clerkUserId, user.id))
     .limit(1);
 
-  if (memberRow) {
-    // primary_email is NOT NULL — only update if Clerk gave us one.
-    const patch: { name: string; primaryEmail?: string } = { name };
-    if (email) patch.primaryEmail = email;
-    await db
-      .update(vendorMembers)
-      .set(patch)
-      .where(eq(vendorMembers.id, memberRow.id));
-    if (user.public_metadata?.role !== "vendor") {
-      await syncRoleToClerk(user.id, "vendor", user.public_metadata);
-    }
+  if (!memberRow) {
+    // No DB row — defensive: an update for a user we've never seen.
+    // Treat as a created event.
+    console.warn(
+      `[clerk webhook] user.updated for ${user.id} but no DB row exists; treating as created`,
+    );
+    await handleUserCreated(user);
     return;
   }
 
-  // No DB row — defensive: an update for a user we've never seen.
-  // Treat as a created event.
-  console.warn(
-    `[clerk webhook] user.updated for ${user.id} but no DB row exists; treating as created`,
-  );
-  await handleUserCreated(user);
+  // Promote-only semantics on update. The webhook will FLIP
+  // is_admin from false → true if the user's primary email enters
+  // the allowlist, but will NEVER flip true → false on update.
+  // That preserves manual UPDATEs run by an operator for admins
+  // whose sign-in email isn't in CLERK_ADMIN_EMAILS (the runbook
+  // pattern). To revoke admin, run `UPDATE vendor_members SET
+  // is_admin = false WHERE id = X` directly — there is no
+  // automatic demotion path.
+  const nextIsAdmin = memberRow.isAdmin || isAdmin;
+
+  const patch: {
+    name: string;
+    primaryEmail?: string;
+    isAdmin: boolean;
+    updatedAt: Date;
+  } = { name, isAdmin: nextIsAdmin, updatedAt: new Date() };
+  if (email) patch.primaryEmail = email;
+
+  await db
+    .update(vendorMembers)
+    .set(patch)
+    .where(eq(vendorMembers.id, memberRow.id));
+
+  if (user.public_metadata?.is_admin !== nextIsAdmin) {
+    await syncAdminFlagToClerk(user.id, nextIsAdmin, user.public_metadata);
+  }
 }
 
 async function handleUserDeleted(user: ClerkDeletedUser): Promise<void> {
-  // Try admin first — admins hard-delete.
-  const [adminRow] = await db
-    .select()
-    .from(admins)
-    .where(eq(admins.clerkUserId, user.id))
-    .limit(1);
-
-  if (adminRow) {
-    await db.transaction(async (tx) => {
-      await tx.insert(auditLog).values({
-        adminId: null,
-        action: "admin.gdpr_delete",
-        targetType: "admin",
-        targetId: String(adminRow.id),
-        before: adminRow,
-        after: null,
-      });
-      await tx.delete(admins).where(eq(admins.id, adminRow.id));
-    });
-    return;
-  }
-
+  // Single-human-table model: admins are vendor_members rows with
+  // is_admin=true. Anonymisation applies to both — admin or vendor —
+  // following the same audit + suspend pattern. The legacy admins-
+  // table hard-delete branch was removed in Phase A.1.
   const [memberRow] = await db
     .select()
     .from(vendorMembers)

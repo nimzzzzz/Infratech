@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useClerk } from "@clerk/nextjs";
 import { SignOut, ShieldCheck } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -11,22 +12,43 @@ export type AdminHeaderProps = {
   email: string;
 };
 
+// Phase A.1 nav placeholders. Submissions / Vendors / Inquiries /
+// Analytics / Settings land in later sub-phases of Stage 5; until
+// then their hrefs go to /admin (Overview) so a click doesn't
+// 404. Each carries `placeholder: true` for a subtle visual cue.
 const nav = [
-  { href: "/admin", label: "Overview", match: (p: string) => p === "/admin" },
+  { href: "/admin", label: "Overview", placeholder: false, match: (p: string) => p === "/admin" },
   {
     href: "/admin/queue",
-    label: "Queue",
+    label: "Submissions",
+    placeholder: false,
     match: (p: string) => p.startsWith("/admin/queue"),
   },
   {
     href: "/admin/apps",
-    label: "Apps",
-    match: (p: string) => p.startsWith("/admin/apps"),
+    label: "Vendors",
+    placeholder: false,
+    match: (p: string) => p.startsWith("/admin/apps") || p.startsWith("/admin/vendors"),
   },
+  { href: "/admin", label: "Inquiries", placeholder: true, match: () => false },
+  { href: "/admin", label: "Analytics", placeholder: true, match: () => false },
+  { href: "/admin", label: "Settings", placeholder: true, match: () => false },
 ];
 
 export function AdminHeader({ name, initials, email }: AdminHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const clerk = useClerk();
+
+  const onSignOut = async () => {
+    try {
+      await clerk.signOut({ redirectUrl: "/" });
+      router.refresh();
+    } catch (err) {
+      console.error("[admin-header] signOut failed", err);
+      window.location.href = "/";
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
@@ -50,18 +72,25 @@ export function AdminHeader({ name, initials, email }: AdminHeaderProps) {
           {/* nav */}
           <nav aria-label="Admin sections" className="hidden md:block">
             <ul className="ml-3 flex items-center">
-              {nav.map((item) => {
+              {nav.map((item, idx) => {
                 const active = item.match(pathname);
                 return (
-                  <li key={item.href}>
+                  <li key={`${item.label}-${idx}`}>
                     <Link
                       href={item.href}
+                      title={item.placeholder ? "Coming soon" : undefined}
+                      aria-disabled={item.placeholder || undefined}
                       className={cn(
                         "relative inline-flex items-center px-3 py-2 text-[13px] font-medium transition-colors",
                         active
                           ? "text-[var(--color-ink)]"
-                          : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
+                          : item.placeholder
+                            ? "cursor-default text-[var(--color-ink-3)]/70"
+                            : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
                       )}
+                      onClick={
+                        item.placeholder ? (e) => e.preventDefault() : undefined
+                      }
                     >
                       <span className="relative">
                         {item.label}
@@ -95,13 +124,14 @@ export function AdminHeader({ name, initials, email }: AdminHeaderProps) {
               </span>
             </div>
           </div>
-          <Link
-            href="/"
+          <button
+            type="button"
+            onClick={onSignOut}
             className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5"
           >
             <SignOut size={11} weight="regular" />
             <span className="hidden sm:inline">Sign out</span>
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -110,19 +140,26 @@ export function AdminHeader({ name, initials, email }: AdminHeaderProps) {
         aria-label="Admin sections"
         className="border-t border-[var(--color-line)] bg-[var(--color-canvas)]/85 md:hidden"
       >
-        <ul className="mx-auto flex w-full max-w-6xl items-center gap-0 px-5 sm:px-6">
-          {nav.map((item) => {
+        <ul className="mx-auto flex w-full max-w-6xl items-center gap-0 overflow-x-auto px-5 sm:px-6">
+          {nav.map((item, idx) => {
             const active = item.match(pathname);
             return (
-              <li key={item.href}>
+              <li key={`${item.label}-${idx}`}>
                 <Link
                   href={item.href}
+                  title={item.placeholder ? "Coming soon" : undefined}
+                  aria-disabled={item.placeholder || undefined}
                   className={cn(
                     "relative inline-flex items-center px-3 py-3 text-[12px] font-medium transition-colors",
                     active
                       ? "text-[var(--color-ink)]"
-                      : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
+                      : item.placeholder
+                        ? "cursor-default text-[var(--color-ink-3)]/70"
+                        : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
                   )}
+                  onClick={
+                    item.placeholder ? (e) => e.preventDefault() : undefined
+                  }
                 >
                   <span className="relative">
                     {item.label}

@@ -1,163 +1,212 @@
 import { describe, it, expect, vi } from "vitest";
 import { decideRoute } from "@/lib/auth/middleware-decision";
 
-const noopDbLookup = vi.fn().mockResolvedValue(false);
+const noopDb = vi.fn().mockResolvedValue(false);
+const adminDb = vi.fn().mockResolvedValue(true);
 
-describe("decideRoute", () => {
-  it("a) Unauthenticated → /dashboard redirects to /login", async () => {
+/**
+ * Phase A.1 contract: `isAdminClaim` (boolean from JWT
+ * publicMetadata.is_admin) is the hot-path signal; the DB fallback
+ * fires only when the claim is undefined.
+ *
+ * Cross-redirect rules:
+ *   - non-admin on /admin/** → /dashboard (NOT /?error=forbidden;
+ *     keeps signed-in users inside the authenticated area)
+ *   - admin on /dashboard/** → /admin (admins should never see the
+ *     vendor UI; covers bookmarked URLs and stale tabs)
+ */
+
+describe("decideRoute — unauthenticated", () => {
+  it("/dashboard → /login", async () => {
     const d = await decideRoute({
       pathname: "/dashboard",
       userId: null,
-      role: undefined,
+      isAdminClaim: undefined,
       has2FA: false,
-      isAdminInDb: noopDbLookup,
+      isAdminInDb: noopDb,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "redirect", to: "/login" });
   });
 
-  it("b) Unauthenticated → /admin redirects to /admin/login", async () => {
+  it("/admin → /admin/login", async () => {
     const d = await decideRoute({
       pathname: "/admin",
       userId: null,
-      role: undefined,
+      isAdminClaim: undefined,
       has2FA: false,
-      isAdminInDb: noopDbLookup,
+      isAdminInDb: noopDb,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "redirect", to: "/admin/login" });
   });
 
-  it("c) Unauthenticated → / returns next()", async () => {
+  it("/ → next", async () => {
     const d = await decideRoute({
       pathname: "/",
       userId: null,
-      role: undefined,
+      isAdminClaim: undefined,
       has2FA: false,
-      isAdminInDb: noopDbLookup,
+      isAdminInDb: noopDb,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
   });
 
-  it("d) Authenticated as vendor → /admin redirects to /?error=forbidden", async () => {
+  it("/post-signin → /login", async () => {
     const d = await decideRoute({
-      pathname: "/admin",
-      userId: "user_abc",
-      role: "vendor",
+      pathname: "/post-signin",
+      userId: null,
+      isAdminClaim: undefined,
       has2FA: false,
-      isAdminInDb: noopDbLookup,
+      isAdminInDb: noopDb,
       demoMode: false,
     });
-    expect(d).toEqual({ kind: "redirect", to: "/?error=forbidden" });
-    expect(noopDbLookup).not.toHaveBeenCalled();
+    expect(d).toEqual({ kind: "redirect", to: "/login" });
   });
+});
 
-  it("e) Authenticated as admin (with 2FA) → /admin returns next()", async () => {
+describe("decideRoute — /admin/** (authenticated)", () => {
+  it("vendor on /admin → /dashboard (was /?error=forbidden)", async () => {
     const d = await decideRoute({
       pathname: "/admin",
-      userId: "user_admin",
-      role: "admin",
+      userId: "user_v",
+      isAdminClaim: false,
+      has2FA: false,
+      isAdminInDb: noopDb,
+      demoMode: false,
+    });
+    expect(d).toEqual({ kind: "redirect", to: "/dashboard" });
+    expect(noopDb).not.toHaveBeenCalled();
+  });
+
+  it("admin with 2FA on /admin → next", async () => {
+    const d = await decideRoute({
+      pathname: "/admin",
+      userId: "user_a",
+      isAdminClaim: true,
       has2FA: true,
-      isAdminInDb: noopDbLookup,
+      isAdminInDb: noopDb,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
   });
 
-  it("f) Authenticated as admin (without 2FA) → /admin redirects to /admin/2fa-setup", async () => {
+  it("admin WITHOUT 2FA on /admin → /admin/2fa-setup", async () => {
     const d = await decideRoute({
-      pathname: "/admin",
-      userId: "user_admin",
-      role: "admin",
+      pathname: "/admin/queue",
+      userId: "user_a",
+      isAdminClaim: true,
       has2FA: false,
-      isAdminInDb: noopDbLookup,
+      isAdminInDb: noopDb,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "redirect", to: "/admin/2fa-setup" });
   });
 
-  it("g) JWT claim missing role + admins row exists → DB fallback allows /admin", async () => {
-    const dbLookup = vi.fn().mockResolvedValue(true);
+  it("DB fallback fires when claim is undefined", async () => {
     const d = await decideRoute({
       pathname: "/admin",
-      userId: "user_admin",
-      role: undefined,
+      userId: "user_unknown",
+      isAdminClaim: undefined,
       has2FA: true,
-      isAdminInDb: dbLookup,
+      isAdminInDb: adminDb,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
-    expect(dbLookup).toHaveBeenCalledTimes(1);
+    expect(adminDb).toHaveBeenCalled();
   });
 
-  it("g'') JWT claim missing role + DB says NOT admin → still /?error=forbidden", async () => {
-    const dbLookup = vi.fn().mockResolvedValue(false);
-    const d = await decideRoute({
-      pathname: "/admin",
-      userId: "user_admin",
-      role: undefined,
-      has2FA: true,
-      isAdminInDb: dbLookup,
-      demoMode: false,
-    });
-    expect(d).toEqual({ kind: "redirect", to: "/?error=forbidden" });
-    expect(dbLookup).toHaveBeenCalledTimes(1);
-  });
-
-  it("h) DEMO_MODE bypasses ALL auth checks", async () => {
-    // Even unauthenticated /admin should pass through in demo mode.
-    const dbLookup = vi.fn();
-    const d = await decideRoute({
-      pathname: "/admin",
-      userId: null,
-      role: undefined,
-      has2FA: false,
-      isAdminInDb: dbLookup,
-      demoMode: true,
-    });
-    expect(d).toEqual({ kind: "next" });
-    expect(dbLookup).not.toHaveBeenCalled();
-  });
-
-  it("/admin/login is exempt from admin gating (otherwise admins can't log in)", async () => {
+  it("/admin/login is exempt", async () => {
     const d = await decideRoute({
       pathname: "/admin/login",
       userId: null,
-      role: undefined,
+      isAdminClaim: undefined,
       has2FA: false,
-      isAdminInDb: noopDbLookup,
+      isAdminInDb: noopDb,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
   });
 
-  it("/admin/2fa-setup is exempt from the 2FA-required check", async () => {
-    // An admin without 2FA still needs to reach this page to set it up.
+  it("/admin/2fa-setup is exempt", async () => {
     const d = await decideRoute({
       pathname: "/admin/2fa-setup",
-      userId: "user_admin",
-      role: "admin",
+      userId: "user_a",
+      isAdminClaim: false,
       has2FA: false,
-      isAdminInDb: noopDbLookup,
+      isAdminInDb: noopDb,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
   });
+});
 
-  it("trusts JWT claim when present and not 'admin' — does NOT fall back to DB", async () => {
-    const dbLookup = vi.fn().mockResolvedValue(true);
+describe("decideRoute — /dashboard/** (authenticated)", () => {
+  it("vendor on /dashboard → next", async () => {
     const d = await decideRoute({
-      pathname: "/admin",
-      userId: "user_vendor",
-      role: "vendor",
-      has2FA: true,
-      isAdminInDb: dbLookup,
+      pathname: "/dashboard",
+      userId: "user_v",
+      isAdminClaim: false,
+      has2FA: false,
+      isAdminInDb: noopDb,
       demoMode: false,
     });
-    expect(d).toEqual({ kind: "redirect", to: "/?error=forbidden" });
-    // Crucial: if a vendor's JWT says vendor, we don't escalate them
-    // even if the DB has a stale admin row.
-    expect(dbLookup).not.toHaveBeenCalled();
+    expect(d).toEqual({ kind: "next" });
+    expect(noopDb).not.toHaveBeenCalled();
+  });
+
+  it("admin on /dashboard → /admin (cross-redirect)", async () => {
+    const d = await decideRoute({
+      pathname: "/dashboard/messages",
+      userId: "user_a",
+      isAdminClaim: true,
+      has2FA: true,
+      isAdminInDb: noopDb,
+      demoMode: false,
+    });
+    expect(d).toEqual({ kind: "redirect", to: "/admin" });
+  });
+
+  it("DB fallback also fires for /dashboard when claim is undefined", async () => {
+    const lookup = vi.fn().mockResolvedValue(true);
+    const d = await decideRoute({
+      pathname: "/dashboard",
+      userId: "user_unknown",
+      isAdminClaim: undefined,
+      has2FA: false,
+      isAdminInDb: lookup,
+      demoMode: false,
+    });
+    expect(d).toEqual({ kind: "redirect", to: "/admin" });
+    expect(lookup).toHaveBeenCalled();
+  });
+});
+
+describe("decideRoute — /post-signin (authenticated)", () => {
+  it("authenticated → next (page does the branching)", async () => {
+    const d = await decideRoute({
+      pathname: "/post-signin",
+      userId: "user_v",
+      isAdminClaim: false,
+      has2FA: false,
+      isAdminInDb: noopDb,
+      demoMode: false,
+    });
+    expect(d).toEqual({ kind: "next" });
+  });
+});
+
+describe("decideRoute — DEMO_MODE", () => {
+  it("short-circuits everything to next", async () => {
+    const d = await decideRoute({
+      pathname: "/admin",
+      userId: null,
+      isAdminClaim: undefined,
+      has2FA: false,
+      isAdminInDb: vi.fn().mockResolvedValue(false),
+      demoMode: true,
+    });
+    expect(d).toEqual({ kind: "next" });
   });
 });
