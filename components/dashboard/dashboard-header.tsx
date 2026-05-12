@@ -137,13 +137,30 @@ export function DashboardHeader({
               </span>
             </div>
           </div>
+          {/* Sign-out button. On /dashboard/onboarding/** the
+              Overview/Messages nav is hidden, leaving the header
+              sparse — the low-key 10px ink-2 border treatment that
+              works on /dashboard root reads as decorative footer
+              text in the wizard context. Bump the visual weight on
+              isOnboarding so users mid-wizard can actually see this
+              as their way out: stronger border, bigger label,
+              always-visible text. Off isOnboarding keeps the
+              quieter treatment so the dashboard nav has visual
+              primacy. */}
           <button
             type="button"
             onClick={onSignOut}
-            className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5"
+            className={cn(
+              "group inline-flex items-center gap-1.5 border transition-colors active:translate-y-[1px]",
+              isOnboarding
+                ? "h-10 border-[var(--color-ink)] px-4 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
+                : "h-9 border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5",
+            )}
           >
-            <SignOut size={11} weight="regular" />
-            <span className="hidden sm:inline">Sign out</span>
+            <SignOut size={isOnboarding ? 13 : 11} weight="regular" />
+            <span className={isOnboarding ? "inline" : "hidden sm:inline"}>
+              Sign out
+            </span>
           </button>
         </div>
       </div>

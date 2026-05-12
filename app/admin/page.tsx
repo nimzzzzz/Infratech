@@ -15,7 +15,18 @@ import { db } from "@/lib/db/client";
 import { apps, submissions, vendors } from "@/lib/db/schema";
 import { listSubmissions } from "@/lib/queries/submissions";
 import { relativeDays } from "@/lib/browse/dates";
-import type { Submission as MockSubmission } from "@/lib/data/admin-queue";
+
+/**
+ * Minimal projection of the real submission payload shape written by
+ * /api/submissions (Phase B.2 PR 2). The page reads only `name` for
+ * the recent-activity title; everything else comes off the joined
+ * submission row. We project loosely (all fields optional) so a
+ * malformed payload doesn't crash render.
+ */
+type SubmissionPayload = {
+  name?: string;
+  slug?: string;
+};
 
 export const metadata: Metadata = {
   title: "Admin · Overview",
@@ -51,12 +62,20 @@ export default async function AdminOverviewPage() {
   const recentSubs = await listSubmissions();
   const recent = recentSubs.slice(0, 6);
 
-  // Pull payload for each visible row so we can show the title (mock-shape
-  // until Stage 5's queue-list refactor).
+  // Pull payload for each visible row so we can show the product
+  // title. The previous implementation read this as the legacy
+  // MockSubmission shape (`p.submitter.companyName`, `p.app.name`,
+  // discriminated on `p.type`) which crashed once production had its
+  // first real /api/submissions row — real payloads are flat
+  // (see /api/submissions/route.ts:254). Phase A.2 will replace this
+  // ad-hoc projection with a proper submissions-list query that
+  // returns typed rows.
   const payloads = await db
     .select({ id: submissions.id, payload: submissions.payload })
     .from(submissions);
-  const payloadById = new Map(payloads.map((p) => [p.id, p.payload]));
+  const payloadById = new Map(
+    payloads.map((row) => [row.id, row.payload as SubmissionPayload | null]),
+  );
 
   return (
     <Container className="max-w-6xl py-12 md:py-16">
@@ -124,14 +143,10 @@ export default async function AdminOverviewPage() {
 
         <ul className="divide-y divide-[var(--color-line)]">
           {recent.map((sub) => {
-            const p = payloadById.get(sub.id) as MockSubmission | undefined;
+            const p = payloadById.get(sub.id);
             const title =
-              p?.type === "new"
-                ? p.app.name
-                : p?.type === "claim"
-                  ? p.claimAppName
-                  : "—";
-            const company = p?.submitter.companyName ?? sub.submitterName ?? "—";
+              typeof p?.name === "string" && p.name.length > 0 ? p.name : "—";
+            const company = sub.submitterName ?? "—";
             return (
               <li key={sub.id}>
                 <Link
@@ -146,7 +161,7 @@ export default async function AdminOverviewPage() {
                       {title}
                     </p>
                     <p className="mt-0.5 truncate text-[12px] text-[var(--color-ink-3)]">
-                      {p?.submitter.name ?? "—"} &middot; {company}
+                      {company}
                     </p>
                   </div>
                   <StatusPill
