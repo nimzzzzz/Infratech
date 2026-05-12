@@ -22,7 +22,10 @@ import { cn } from "@/lib/utils";
  */
 export type PendingSubmissionSummary = {
   id: number;
-  status: "pending" | "in_review";
+  /** Post-Phase-A.2: `pending_review` replaces the legacy `pending`.
+   *  The legacy `in_review` enum value stays in the schema but no
+   *  writer emits it post-A.2; included here for completeness. */
+  status: "pending_review" | "in_review";
   submittedAt: Date;
   productName: string;
 };
@@ -93,7 +96,7 @@ export function DashboardEmptyState({
                     "bg-[var(--color-coral)]/10 text-[var(--color-coral)] ring-[var(--color-coral)]/40",
                   )}
                 >
-                  {s.status === "pending" ? "In queue" : "In review"}
+                  {s.status === "pending_review" ? "In queue" : "In review"}
                 </span>
               </li>
             ))}

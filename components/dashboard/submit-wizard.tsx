@@ -128,18 +128,28 @@ const TOTAL_STEPS = steps.length;
 export function SubmitWizard({
   prefill,
   skipCompanyStep = false,
+  initialValues,
+  submitUrl = "/api/submissions",
 }: {
   prefill: { vendor: string; domain: string };
   /** Returning vendors already have a published company profile — start at
    *  step 2 (Tool basics) and lock back-navigation out of the company step. */
   skipCompanyStep?: boolean;
+  /** Phase A.2 PR 2 — overrides the default empty FormState. Used by the
+   *  resubmit flow to seed the wizard with the previously rejected
+   *  submission's payload. Merged over `initialState(...)`. */
+  initialValues?: Partial<FormState>;
+  /** POST target. Default: /api/submissions. Resubmit overrides to
+   *  /api/submissions/:id/resubmit. */
+  submitUrl?: string;
 }) {
   const router = useRouter();
   const minStep = skipCompanyStep ? 2 : 1;
   const [step, setStep] = useState(minStep);
-  const [data, setData] = useState<FormState>(
-    initialState(prefill.vendor, prefill.domain),
-  );
+  const [data, setData] = useState<FormState>({
+    ...initialState(prefill.vendor, prefill.domain),
+    ...(initialValues ?? {}),
+  });
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Honeypot — sr-only input; bots fill every input they see.
@@ -331,7 +341,7 @@ export function SubmitWizard({
     };
 
     try {
-      const res = await fetch("/api/submissions", {
+      const res = await fetch(submitUrl, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),

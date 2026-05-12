@@ -18,10 +18,15 @@ import {
   listMessagesForVendor,
   countUnreadForVendor,
 } from "@/lib/queries/messages";
-import { listPendingSubmissionsForVendor } from "@/lib/queries/submissions";
+import {
+  getMostRecentSubmissionForVendor,
+  listPendingSubmissionsForVendor,
+} from "@/lib/queries/submissions";
 import { relativeDays } from "@/lib/browse/dates";
 import { cn } from "@/lib/utils";
 import { DashboardEmptyState } from "@/components/dashboard/empty-state";
+import { SubmissionEditedCard } from "@/components/dashboard/submission-edited-card";
+import { SubmissionRejectedCard } from "@/components/dashboard/submission-rejected-card";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -40,10 +45,54 @@ export default async function DashboardOverviewPage({
   // requireOnboarded defaults to true — implicit on dashboard pages.
   const { vendor, user } = await getVendorSession({ demoOverride });
 
-  const listings = await listAppsForOwnerVendor(vendor.id);
+  const [listings, mostRecentSubmission] = await Promise.all([
+    listAppsForOwnerVendor(vendor.id),
+    getMostRecentSubmissionForVendor(vendor.id),
+  ]);
   const pendingSubmissions = listings.length === 0
     ? await listPendingSubmissionsForVendor(vendor.id)
     : [];
+
+  // Phase A.2 PR 2 — top-of-dashboard lifecycle cards. Rendered for
+  // both the empty-state branch and the main listings view so a
+  // vendor with no published apps yet still sees the edited /
+  // rejected status if their latest submission is in that state.
+  const submissionCard = (() => {
+    if (!mostRecentSubmission) return null;
+    const productName =
+      ((mostRecentSubmission.adminEdits as { name?: string } | null)
+        ?.name as string | undefined) ??
+      ((mostRecentSubmission.payload as { name?: string } | null)
+        ?.name as string | undefined) ??
+      "your product";
+    if (mostRecentSubmission.status === "edited_awaiting_vendor_approval") {
+      return (
+        <SubmissionEditedCard
+          submissionId={mostRecentSubmission.id}
+          productName={productName}
+          payload={
+            mostRecentSubmission.payload as Record<string, unknown> | null
+          }
+          adminEdits={
+            mostRecentSubmission.adminEdits as Record<string, unknown> | null
+          }
+        />
+      );
+    }
+    if (mostRecentSubmission.status === "rejected") {
+      return (
+        <SubmissionRejectedCard
+          submissionId={mostRecentSubmission.id}
+          productName={productName}
+          rejectionReason={
+            mostRecentSubmission.rejectionReason ??
+            "No reason provided. Reach out at team@allinfratech.com if you need clarification."
+          }
+        />
+      );
+    }
+    return null;
+  })();
 
   // Empty state: vendor exists but has neither published listings nor
   // anything pending in the queue (e.g. they just confirmed their
@@ -53,20 +102,27 @@ export default async function DashboardOverviewPage({
   // pre-PR-2.
   if (listings.length === 0) {
     return (
-      <DashboardEmptyState
-        firstName={user.name.split(" ")[0]}
-        vendorName={vendor.name}
-        pendingSubmissions={pendingSubmissions.map((s) => ({
-          id: s.id,
-          // listPendingSubmissionsForVendor already filters to
-          // pending|in_review only — narrow the type here so the
-          // empty-state component's prop contract holds.
-          status: s.status as "pending" | "in_review",
-          submittedAt: s.submittedAt,
-          productName:
-            (s.payload as { name?: string } | null)?.name ?? "Untitled product",
-        }))}
-      />
+      <>
+        {submissionCard ? (
+          <Container className="max-w-6xl pt-12 md:pt-16">
+            {submissionCard}
+          </Container>
+        ) : null}
+        <DashboardEmptyState
+          firstName={user.name.split(" ")[0]}
+          vendorName={vendor.name}
+          pendingSubmissions={pendingSubmissions.map((s) => ({
+            id: s.id,
+            // listPendingSubmissionsForVendor already filters to
+            // pending_review | in_review only — narrow the type here
+            // so the empty-state component's prop contract holds.
+            status: s.status as "pending_review" | "in_review",
+            submittedAt: s.submittedAt,
+            productName:
+              (s.payload as { name?: string } | null)?.name ?? "Untitled product",
+          }))}
+        />
+      </>
     );
   }
 
@@ -82,6 +138,7 @@ export default async function DashboardOverviewPage({
 
   return (
     <Container className="max-w-6xl py-12 md:py-16">
+      {submissionCard}
       <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Vendor dashboard
       </p>
