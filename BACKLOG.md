@@ -35,6 +35,17 @@ The current placeholder favicons (10 of 14 vendors) stay in `public/logos/vendor
 
 Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
 
+### Phase A.1.2 — 2FA setup page for admins
+- **Status (2026-05-12):** middleware 2FA enforcement is **temporarily bypassed** behind `ENFORCE_ADMIN_2FA` env flag (default off). The check at `lib/auth/middleware-decision.ts` lives in code, just gated. Admins currently sign in with LinkedIn only, no second factor. This is acceptable for the pilot admin cohort (3 operators, all internal) but **not for public launch**.
+- **Scope when picked up:**
+  - Build a real `/admin/2fa-setup` page using Clerk's TOTP flow. Admins enroll on first sign-in if no second factor is registered; subsequent sign-ins require the TOTP code at Clerk's hosted prompt.
+  - Wire Clerk's `useReverification` / `userHasTwoFactor` (or equivalent in `@clerk/nextjs/legacy`) to read the factor state into the JWT claim `publicMetadata.twoFactorEnabled` so the middleware check works.
+  - Smoke test that a brand-new admin (Mehdi / Renbo / equivalent) can land on `/admin/2fa-setup` on first sign-in, enroll TOTP, and proceed to `/admin`.
+  - Flip `ENFORCE_ADMIN_2FA=true` on Vercel (Production scope). No code change required — the gate is already wired.
+  - Remove the `TODO(A.1.2)` comments + the env-flag wrapper once enforcement is permanent (or leave the flag for future incident bypass — operator's call at landing time).
+- **Trigger:** before opening admin signups beyond the pilot cohort, OR before any non-Resolute-employee gets admin access.
+- Discussed: 2026-05-12.
+
 ## 🟡 Future ideas — explore later
 
 ### "Did this lead anywhere?" feedback loop

@@ -18,6 +18,9 @@
  *         authenticated area is friendlier than dumping to the public
  *         site; the dashboard layout then handles them)
  *       – !has2FA → redirect to /admin/2fa-setup
+ *         (DISABLED by default until /admin/2fa-setup ships in
+ *          Phase A.1.2 — see BACKLOG. Re-enable by setting
+ *          ENFORCE_ADMIN_2FA=true on Vercel; no code change needed.)
  *       – otherwise → next
  *
  *   • /dashboard/** :
@@ -85,7 +88,11 @@ export async function decideRoute(opts: DecideRouteInput): Promise<Decision> {
       // homepage with an error param.
       return { kind: "redirect", to: "/dashboard" };
     }
-    if (!opts.has2FA) {
+    // TODO(A.1.2): re-enable 2FA enforcement when /admin/2fa-setup
+    // page is built. Tracked in BACKLOG.md. Wrapped in an env flag
+    // so production can flip it back on with a single Vercel env
+    // toggle once the page lands — no code change required.
+    if (process.env.ENFORCE_ADMIN_2FA === "true" && !opts.has2FA) {
       return { kind: "redirect", to: "/admin/2fa-setup" };
     }
     return { kind: "next" };
