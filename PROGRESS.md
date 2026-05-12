@@ -148,10 +148,24 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 - [x] Seed migrated; legacy `tests/queries/admins.test.ts` removed
 - [x] Tests: 8 unit cases for allowlist matcher + 5 webhook is_admin integration cases
 
-### Phase A.2 — Admin submission review queue ⬜ next
-- [ ] `/admin/queue` wired to real `submissions` rows with status filtering
-- [ ] Approve / reject / changes-requested actions write to `audit_log`
-- [ ] Approval converts submission to `apps` row + taxonomy joins (the workflow lives here, not in `/api/submissions`)
+### Phase A.2 — Admin submission review queue 🟡 PR 1 done, PR 2 next
+
+**PR 1 — Admin actions + state machine + lifecycle infra ✅ done (2026-05-12)**
+- [x] Migration `0013`: enum renamed (`pending` → `pending_review`, `approved` → `published`), new value `edited_awaiting_vendor_approval`; new submission columns (`admin_edits`, `rejection_reason`, `vendor_feedback`, `reviewed_by`, `published_at`); `audit_log.actor_vendor_member_id`
+- [x] State machine at `lib/submissions/state-machine.ts` — pure `transition()` function + invalid-transition errors; 23 unit cases (every valid pair + every actor-mismatch + every from-mismatch)
+- [x] `publishSubmissionInTx` helper at `lib/submissions/publish.ts` — creates / updates apps row + 4 taxonomy joins idempotently from a final payload
+- [x] Three admin API endpoints: `POST /api/admin/submissions/[id]/(approve|edit|reject)`. Zod schemas in sibling `schema.ts` files. Optimistic-concurrency precondition on every UPDATE.
+- [x] Two email templates (published / rejected) + send helpers, wired via `next/server.after()`
+- [x] Admin `/admin/submissions` list with status tabs (Queue / Published / Rejected / All) + search; `/admin/submissions/[id]` detail with read/edit modes + reject modal
+- [x] Legacy `/admin/queue` redirects to `/admin/submissions`; admin header nav updated
+- [x] Audit-log row for every transition (action, actor, before/after status)
+
+**PR 2 — Vendor lifecycle ⬜ next**
+- [ ] `POST /api/submissions/[id]/(vendor-approve|vendor-request-changes|resubmit)` endpoints
+- [ ] Vendor dashboard surfaces: edited-awaiting card with diff view; rejected card with reason + Edit & resubmit
+- [ ] "We've polished your listing — please review" email template
+- [ ] Re-acceptance gate on `resubmit` if TERMS_VERSION has moved since the original submission
+- [ ] Tests for all three endpoints + the diff component
 
 ### Phase A.3 — Vendor management ⬜ later
 - [ ] `/admin/vendors` list + detail; suspend / unsuspend; edit company fields

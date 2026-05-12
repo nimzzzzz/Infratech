@@ -41,10 +41,23 @@ const slugify = (s: string) =>
 
 const mapSubStatus = (
   s: string,
-): "pending" | "in_review" | "changes_requested" | "approved" | "rejected" => {
+):
+  | "pending_review"
+  | "in_review"
+  | "changes_requested"
+  | "published"
+  | "edited_awaiting_vendor_approval"
+  | "rejected" => {
+  // Map legacy mock-data strings to the post-A.2 enum values.
+  if (s === "pending") return "pending_review";
+  if (s === "approved") return "published";
   if (s === "in-review") return "in_review";
   if (s === "changes-requested") return "changes_requested";
-  return s as "pending" | "approved" | "rejected";
+  return s as
+    | "pending_review"
+    | "published"
+    | "rejected"
+    | "edited_awaiting_vendor_approval";
 };
 
 async function main() {
