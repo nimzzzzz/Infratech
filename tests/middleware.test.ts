@@ -92,16 +92,46 @@ describe("decideRoute — /admin/** (authenticated)", () => {
     expect(d).toEqual({ kind: "next" });
   });
 
-  it("admin WITHOUT 2FA on /admin → /admin/2fa-setup", async () => {
-    const d = await decideRoute({
-      pathname: "/admin/queue",
-      userId: "user_a",
-      isAdminClaim: true,
-      has2FA: false,
-      isAdminInDb: noopDb,
-      demoMode: false,
-    });
-    expect(d).toEqual({ kind: "redirect", to: "/admin/2fa-setup" });
+  it("admin WITHOUT 2FA on /admin → next (enforcement bypassed by default)", async () => {
+    // Phase A.1.2 (see BACKLOG): 2FA enforcement is gated behind the
+    // ENFORCE_ADMIN_2FA env flag, default off, because the
+    // /admin/2fa-setup page isn't built yet. Admins currently get
+    // through without a second factor. Re-enable by setting the flag
+    // on Vercel — no code change required.
+    const original = process.env.ENFORCE_ADMIN_2FA;
+    delete process.env.ENFORCE_ADMIN_2FA;
+    try {
+      const d = await decideRoute({
+        pathname: "/admin/queue",
+        userId: "user_a",
+        isAdminClaim: true,
+        has2FA: false,
+        isAdminInDb: noopDb,
+        demoMode: false,
+      });
+      expect(d).toEqual({ kind: "next" });
+    } finally {
+      if (original !== undefined) process.env.ENFORCE_ADMIN_2FA = original;
+    }
+  });
+
+  it("admin WITHOUT 2FA on /admin → /admin/2fa-setup when ENFORCE_ADMIN_2FA=true", async () => {
+    const original = process.env.ENFORCE_ADMIN_2FA;
+    process.env.ENFORCE_ADMIN_2FA = "true";
+    try {
+      const d = await decideRoute({
+        pathname: "/admin/queue",
+        userId: "user_a",
+        isAdminClaim: true,
+        has2FA: false,
+        isAdminInDb: noopDb,
+        demoMode: false,
+      });
+      expect(d).toEqual({ kind: "redirect", to: "/admin/2fa-setup" });
+    } finally {
+      if (original === undefined) delete process.env.ENFORCE_ADMIN_2FA;
+      else process.env.ENFORCE_ADMIN_2FA = original;
+    }
   });
 
   it("DB fallback fires when claim is undefined", async () => {
