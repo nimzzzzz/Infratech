@@ -83,96 +83,6 @@ function fullNameOf(u: ClerkUser): string {
   return parts.length ? parts.join(" ") : "Unnamed vendor";
 }
 
-// ────────────────────────────────────────────────────────────────────
-// TEMP DEBUG — Phase A.1.1 follow-up: Renbo's webhook delivered 200
-// but is_admin landed false despite his verified primary email
-// matching CLERK_ADMIN_EMAILS exactly. This block surfaces the exact
-// shape Clerk sends so we can pick between the candidate failure
-// modes (verification.status missing/non-"verified", primary_email_id
-// missing on initial OAuth signup, env not propagated to the function
-// instance, casing/whitespace skew).
-//
-// REMOVE after diagnosis lands a real fix. Tracked on the branch:
-//   debug/admin-allowlist-webhook-trace
-// ────────────────────────────────────────────────────────────────────
-function logAdminAllowlistTrace(
-  source: "user.created" | "user.updated",
-  user: ClerkUser,
-): void {
-  try {
-    const allowlistRaw =
-      typeof process.env.CLERK_ADMIN_EMAILS === "string"
-        ? process.env.CLERK_ADMIN_EMAILS
-        : "(unset)";
-    const allowlistParsed = allowlistRaw
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean);
-    const primary = user.email_addresses.find(
-      (e) => e.id === user.primary_email_address_id,
-    );
-    // Inline the verifiedPrimaryEmailOf logic here so the debug log
-    // doesn't double-call verifiedPrimaryEmailOf / isAdminEmail (the
-    // latter is vi.mock'd in tests with mockReturnValueOnce queues —
-    // an extra call would drain the queue and break the test
-    // expectations). Eyeball the same answer from the raw fields.
-    const verificationStatus =
-      typeof primary?.verification === "object" && primary?.verification
-        ? ((primary.verification as Record<string, unknown>)
-            .status ?? null)
-        : null;
-    const primaryWouldPassVerifiedGate = verificationStatus === "verified";
-    const candidateLowercased =
-      primaryWouldPassVerifiedGate
-        ? primary?.email_address.trim().toLowerCase() ?? null
-        : null;
-    const wouldMatchAllowlist =
-      candidateLowercased !== null &&
-      allowlistParsed.includes(candidateLowercased);
-    console.info(
-      `[TEMP DEBUG admin-allowlist] event=${source}`,
-      JSON.stringify(
-        {
-          event: source,
-          userId: user.id,
-          primary_email_address_id: user.primary_email_address_id,
-          primary_found: !!primary,
-          primary_email_address: primary?.email_address ?? null,
-          primary_verification: primary?.verification ?? null,
-          primary_verification_status: verificationStatus,
-          // Lists every key Clerk's webhook actually sends on the
-          // verification object so we can see whether `status` is
-          // even present (or if Clerk uses a different shape on
-          // webhook payloads vs the REST API user response).
-          primary_verification_keys:
-            typeof primary?.verification === "object" && primary?.verification
-              ? Object.keys(primary.verification as Record<string, unknown>)
-              : [],
-          all_email_addresses: user.email_addresses.map((e) => ({
-            id: e.id,
-            email_address: e.email_address,
-            verification: e.verification ?? null,
-          })),
-          allowlist_raw: allowlistRaw,
-          allowlist_parsed: allowlistParsed,
-          // Mirrors what verifiedPrimaryEmailOf + isAdminEmail would
-          // compute, but inline — no function call, no mock-queue
-          // consumption.
-          primary_would_pass_verified_gate: primaryWouldPassVerifiedGate,
-          candidate_lowercased: candidateLowercased,
-          would_match_allowlist: wouldMatchAllowlist,
-          public_metadata: user.public_metadata,
-        },
-        null,
-        2,
-      ),
-    );
-  } catch (err) {
-    // Logging failures must never break the handler. Note + continue.
-    console.error("[TEMP DEBUG admin-allowlist] log emit failed", err);
-  }
-}
-
 /**
  * The user's primary email (any verification state). Used for the
  * vendor_members row's `primary_email` column — non-null, persists
@@ -301,10 +211,6 @@ export async function POST(req: Request) {
 }
 
 async function handleUserCreated(user: ClerkUser): Promise<void> {
-  // TEMP DEBUG — see logAdminAllowlistTrace docstring; remove with
-  // the fix that emerges from this branch.
-  logAdminAllowlistTrace("user.created", user);
-
   const name = fullNameOf(user);
   const email = primaryEmailOf(user) ?? `${user.id}@unknown.example`;
   const isAdmin = computeIsAdmin(user);
@@ -342,10 +248,6 @@ async function handleUserCreated(user: ClerkUser): Promise<void> {
 }
 
 async function handleUserUpdated(user: ClerkUser): Promise<void> {
-  // TEMP DEBUG — see logAdminAllowlistTrace docstring; remove with
-  // the fix that emerges from this branch.
-  logAdminAllowlistTrace("user.updated", user);
-
   const name = fullNameOf(user);
   const email = primaryEmailOf(user);
   const isAdmin = computeIsAdmin(user);
