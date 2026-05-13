@@ -84,6 +84,7 @@ export default async function PostSigninPage({
           clerkUserId: userId,
           name,
           primaryEmail,
+          avatarUrl: u.imageUrl ?? null,
           onboarded: false,
           isAdmin,
         })

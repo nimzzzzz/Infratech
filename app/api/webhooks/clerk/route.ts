@@ -59,6 +59,10 @@ type ClerkUser = {
   primary_email_address_id: string | null;
   first_name: string | null;
   last_name: string | null;
+  /** V.2 — LinkedIn profile picture URL. Clerk synthesises one from
+   *  the OAuth provider's avatar; missing when the LinkedIn account
+   *  has no picture set. */
+  image_url?: string | null;
   external_accounts: Array<{
     provider: string;
   }>;
@@ -234,6 +238,7 @@ async function handleUserCreated(user: ClerkUser): Promise<void> {
       clerkUserId: user.id,
       name,
       primaryEmail: email,
+      avatarUrl: user.image_url ?? null,
       onboarded: false,
       isAdmin,
     })
@@ -281,9 +286,15 @@ async function handleUserUpdated(user: ClerkUser): Promise<void> {
   const patch: {
     name: string;
     primaryEmail?: string;
+    avatarUrl: string | null;
     isAdmin: boolean;
     updatedAt: Date;
-  } = { name, isAdmin: nextIsAdmin, updatedAt: new Date() };
+  } = {
+    name,
+    avatarUrl: user.image_url ?? null,
+    isAdmin: nextIsAdmin,
+    updatedAt: new Date(),
+  };
   if (email) patch.primaryEmail = email;
 
   await db

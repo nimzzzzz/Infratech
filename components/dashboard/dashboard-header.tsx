@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
 import { SignOut } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/shared/user-avatar";
 
 const nav = [
   {
@@ -22,9 +23,11 @@ const nav = [
 export type DashboardHeaderProps = {
   /** Vendor row name; what the header shows in the user pill. */
   companyName: string;
-  /** Authenticated user's display name + initials. */
+  /** Authenticated user's display name. */
   userName: string;
-  userInitials: string;
+  /** LinkedIn profile picture URL (V.2). Null → UserAvatar renders
+   *  the monogram fallback derived from `userName`. */
+  userAvatarUrl: string | null;
   /** Optional title / subline (LinkedIn role, etc.). */
   userTitle?: string | null;
   /** Unread inquiry badge count. 0 hides the badge. */
@@ -34,7 +37,7 @@ export type DashboardHeaderProps = {
 export function DashboardHeader({
   companyName,
   userName,
-  userInitials,
+  userAvatarUrl,
   userTitle,
   unreadCount,
 }: DashboardHeaderProps) {
@@ -162,9 +165,7 @@ export function DashboardHeader({
             </Link>
           )}
           <div className="hidden items-center gap-2.5 sm:flex">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-canvas-warm)] text-[11px] font-medium uppercase tracking-wider text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">
-              {userInitials}
-            </span>
+            <UserAvatar avatarUrl={userAvatarUrl} name={userName} size={32} />
             <div className="flex flex-col leading-tight">
               <span className="text-[13px] text-[var(--color-ink)]">
                 {userName}

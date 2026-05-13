@@ -88,8 +88,8 @@ export async function getAdminSession(): Promise<AdminSession> {
 
 export async function getAdminHeaderData(): Promise<{
   name: string;
-  initials: string;
   email: string;
+  avatarUrl: string | null;
 }> {
   try {
     const { userId } = await auth();
@@ -108,7 +108,7 @@ export async function getAdminHeaderData(): Promise<{
         return {
           name: member.name,
           email: member.primaryEmail,
-          initials: initialsOf(member.name),
+          avatarUrl: member.avatarUrl,
         };
       }
     }
@@ -126,21 +126,12 @@ export async function getAdminHeaderData(): Promise<{
       return {
         name: member.name,
         email: member.primaryEmail,
-        initials: initialsOf(member.name),
+        avatarUrl: member.avatarUrl,
       };
     }
   }
 
-  return { name: "—", email: "—", initials: "—" };
-}
-
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("");
+  return { name: "—", email: "—", avatarUrl: null };
 }
 
 /**
@@ -178,6 +169,7 @@ async function lazyCreateAdminMember(
         clerkUserId: userId,
         name,
         primaryEmail,
+        avatarUrl: u.imageUrl ?? null,
         onboarded: false,
         isAdmin,
       })

@@ -55,7 +55,7 @@ export default async function DashboardLayout({
       <DashboardHeader
         companyName={header.companyName}
         userName={header.userName}
-        userInitials={header.userInitials}
+        userAvatarUrl={header.userAvatarUrl}
         userTitle={header.userTitle}
         unreadCount={unreadCount}
       />

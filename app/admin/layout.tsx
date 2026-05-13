@@ -17,8 +17,8 @@ export default async function AdminLayout({
     <div className="flex min-h-[100dvh] flex-col bg-[var(--color-canvas)]">
       <AdminHeader
         name={header.name}
-        initials={header.initials}
         email={header.email}
+        avatarUrl={header.avatarUrl}
       />
       <main id="main" className="flex-1">
         {children}

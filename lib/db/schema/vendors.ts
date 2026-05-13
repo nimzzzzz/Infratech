@@ -84,6 +84,13 @@ export const vendorMembers = pgTable(
     name: text("name").notNull(),
     primaryEmail: text("primary_email").notNull(),
     linkedinUrl: text("linkedin_url"),
+    /**
+     * LinkedIn profile picture URL from Clerk (V.2, 2026-05-13).
+     * Set by the webhook from `image_url` on user.created /
+     * user.updated. Nullable — `UserAvatar` falls back to initials
+     * when the URL is missing or the image fetch errors out.
+     */
+    avatarUrl: text("avatar_url"),
     role: text("role"),
     onboarded: boolean("onboarded").notNull().default(false),
     suspended: boolean("suspended").notNull().default(false),
