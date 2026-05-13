@@ -253,6 +253,33 @@ async function handleUserCreated(user: ClerkUser): Promise<void> {
 }
 
 async function handleUserUpdated(user: ClerkUser): Promise<void> {
+  // TEMP DEBUG (debug/avatar-url-payload-shape) — V.2 shipped but
+  // vendor_members.avatar_url stays NULL after real LinkedIn
+  // sign-ins. Dump every image-shaped field in the payload so we
+  // can see what Clerk actually sends here vs. what the ClerkUser
+  // type declares. Revert on a follow-up branch once we know.
+  {
+    const u = user as unknown as Record<string, unknown>;
+    const ea0 = Array.isArray(u.external_accounts)
+      ? (u.external_accounts[0] as Record<string, unknown> | undefined)
+      : undefined;
+    console.info(
+      "[TEMP DEBUG avatar-url] " +
+        JSON.stringify({
+          userId: user.id,
+          top_image_url: u.image_url ?? null,
+          top_profile_image_url: u.profile_image_url ?? null,
+          top_has_image: u.has_image ?? null,
+          top_keys: Object.keys(u).sort(),
+          ea0_image_url: ea0?.image_url ?? null,
+          ea0_avatar_url: ea0?.avatar_url ?? null,
+          ea0_picture: ea0?.picture ?? null,
+          ea0_provider: ea0?.provider ?? null,
+          ea0_keys: ea0 ? Object.keys(ea0).sort() : null,
+        }),
+    );
+  }
+
   const name = fullNameOf(user);
   const email = primaryEmailOf(user);
   const isAdmin = computeIsAdmin(user);
