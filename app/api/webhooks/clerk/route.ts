@@ -59,10 +59,6 @@ type ClerkUser = {
   primary_email_address_id: string | null;
   first_name: string | null;
   last_name: string | null;
-  /** V.2 — LinkedIn profile picture URL. Clerk synthesises one from
-   *  the OAuth provider's avatar; missing when the LinkedIn account
-   *  has no picture set. */
-  image_url?: string | null;
   external_accounts: Array<{
     provider: string;
   }>;
@@ -231,6 +227,14 @@ async function handleUserCreated(user: ClerkUser): Promise<void> {
   // created for non-admin vendors; admins never go through that flow
   // and their vendor_id stays NULL forever (no impact — admin pages
   // don't read vendor_id).
+  // avatar_url is intentionally NOT written here. Clerk's Svix
+  // webhook payload doesn't expose the LinkedIn profile image in a
+  // usable shape — the field that does carry it (imageUrl on the
+  // backend SDK's User object) is only reachable via
+  // clerkClient.users.getUser(). To keep this handler focused on
+  // identity + admin role only, avatar resolution moved to
+  // /post-signin, which runs on every sign-in and is a natural
+  // self-healing surface for picture changes.
   await db
     .insert(vendorMembers)
     .values({
@@ -238,7 +242,6 @@ async function handleUserCreated(user: ClerkUser): Promise<void> {
       clerkUserId: user.id,
       name,
       primaryEmail: email,
-      avatarUrl: user.image_url ?? null,
       onboarded: false,
       isAdmin,
     })
@@ -253,55 +256,6 @@ async function handleUserCreated(user: ClerkUser): Promise<void> {
 }
 
 async function handleUserUpdated(user: ClerkUser): Promise<void> {
-  // TEMP DEBUG (debug/avatar-url-payload-shape) — V.2 shipped but
-  // vendor_members.avatar_url stays NULL after real LinkedIn
-  // sign-ins. Dump every image-shaped field in the payload so we
-  // can see what Clerk actually sends here vs. what the ClerkUser
-  // type declares. Revert on a follow-up branch once we know.
-  {
-    const u = user as unknown as Record<string, unknown>;
-    const ea0 = Array.isArray(u.external_accounts)
-      ? (u.external_accounts[0] as Record<string, unknown> | undefined)
-      : undefined;
-    const snapshot = {
-      top_image_url: u.image_url ?? null,
-      top_profile_image_url: u.profile_image_url ?? null,
-      top_has_image: u.has_image ?? null,
-      top_keys: Object.keys(u).sort(),
-      ea0_present: ea0 != null,
-      ea0_image_url: ea0?.image_url ?? null,
-      ea0_avatar_url: ea0?.avatar_url ?? null,
-      ea0_picture: ea0?.picture ?? null,
-      ea0_provider: ea0?.provider ?? null,
-      ea0_keys: ea0 ? Object.keys(ea0).sort() : null,
-    };
-    console.info(
-      "[TEMP DEBUG avatar-url] " +
-        JSON.stringify({ userId: user.id, ...snapshot }),
-    );
-
-    // TEMP DEBUG (debug/avatar-url-payload-to-db) — Vercel runtime
-    // logs aren't surfacing webhook POST entries, so the console
-    // trace above goes nowhere visible. Mirror the same blob into
-    // webhook_debug_log (created in migration 0015) so we can
-    // inspect it via Neon SQL Editor. Wrapped in try/catch so a
-    // logging failure can't break the production webhook path.
-    // Revert this + migration 0015 + the console trace above on a
-    // follow-up branch once the payload shape is confirmed.
-    try {
-      await db.execute(sql`
-        INSERT INTO webhook_debug_log (event_type, clerk_user_id, payload_snapshot)
-        VALUES (
-          'user.updated',
-          ${user.id},
-          ${JSON.stringify(snapshot)}::jsonb
-        )
-      `);
-    } catch (err) {
-      console.error("[TEMP DEBUG avatar-url] DB insert failed", err);
-    }
-  }
-
   const name = fullNameOf(user);
   const email = primaryEmailOf(user);
   const isAdmin = computeIsAdmin(user);
@@ -332,15 +286,16 @@ async function handleUserUpdated(user: ClerkUser): Promise<void> {
   // automatic demotion path.
   const nextIsAdmin = memberRow.isAdmin || isAdmin;
 
+  // avatar_url is intentionally NOT written here — see the matching
+  // comment in handleUserCreated. /post-signin handles avatar
+  // refresh via clerkClient.users.getUser() on every sign-in.
   const patch: {
     name: string;
     primaryEmail?: string;
-    avatarUrl: string | null;
     isAdmin: boolean;
     updatedAt: Date;
   } = {
     name,
-    avatarUrl: user.image_url ?? null,
     isAdmin: nextIsAdmin,
     updatedAt: new Date(),
   };
