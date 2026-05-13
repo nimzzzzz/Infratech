@@ -109,6 +109,26 @@ export default async function PostSigninPage({
     redirect("/login?error=no_vendor");
   }
 
+  // V.2 avatar refresh. The Clerk Svix webhook payload doesn't
+  // include the LinkedIn profile image in a usable form, so we
+  // fetch it here from the backend SDK (where it surfaces as
+  // user.imageUrl). Self-healing — if LinkedIn updates the
+  // picture, the next sign-in catches it. Best-effort: any failure
+  // here MUST NOT block sign-in, so the redirects below still run.
+  try {
+    const cc = await clerkClient();
+    const u = await cc.users.getUser(userId);
+    const nextAvatarUrl = u.imageUrl ?? null;
+    if (nextAvatarUrl !== member.avatarUrl) {
+      await db
+        .update(vendorMembers)
+        .set({ avatarUrl: nextAvatarUrl, updatedAt: new Date() })
+        .where(eq(vendorMembers.id, member.id));
+    }
+  } catch (err) {
+    console.error("[post-signin] avatar refresh failed", err);
+  }
+
   if (member.suspended) {
     redirect("/login?error=suspended");
   }

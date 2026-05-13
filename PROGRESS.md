@@ -151,11 +151,12 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 ### V.2 — LinkedIn avatars on user pills ✅ done (2026-05-13)
 - [x] Migration `0014_add_avatar_url_to_vendor_members.sql` (nullable TEXT, idempotent — applied via `scripts/apply-0014.mjs`)
 - [x] `vendorMembers.avatarUrl` on the Drizzle schema (nullable, no default)
-- [x] Webhook reads `image_url` from the Clerk user payload and writes it on `user.created` / `user.updated`. Same field flows through the lazy-create paths in `lib/auth/session.ts`, `lib/auth/admin-session.ts`, and `app/post-signin/page.tsx`
+- [x] **Avatar resolution lives on `/post-signin`, NOT the webhook.** Clerk's Svix webhook payload doesn't expose the LinkedIn profile image in a usable shape — the field that carries it (`imageUrl` on the backend SDK's `User`) is only reachable via `clerkClient.users.getUser()`. `/post-signin` runs on every sign-in, calls `getUser()`, and UPDATEs `vendor_members.avatar_url` if the current Clerk image differs from the DB row. Self-healing — if LinkedIn updates the picture, the next sign-in catches it. Failure is best-effort (try/catch) so a Clerk hiccup can never block sign-in. The lazy-create paths in `lib/auth/session.ts`, `lib/auth/admin-session.ts`, and `app/post-signin/page.tsx` also write `u.imageUrl` on first-time insert (same SDK field, same source of truth)
 - [x] `components/shared/user-avatar.tsx` — `"use client"`, raw `<img>`, falls back to monogram initials when `avatarUrl` is null OR the image errors at runtime
 - [x] `getDashboardHeaderData()` + `getAdminHeaderData()` return `avatarUrl: string | null`; layouts pass it through; admin + dashboard headers swap the inline initials span for `<UserAvatar />`. `initials` props removed (UserAvatar derives them from `name`)
 - [x] Backfill script `scripts/backfill-avatar-urls.mjs` — one-shot, idempotent (re-runnable, picks up rows still NULL), skips `deleted-*` and `demo_*` rows
-- [x] Tests: 3 new webhook integration cases (image_url present → avatar_url written; image_url null → NULL; user.updated refreshes); 5 new UserAvatar render cases (image present, fallback, runtime error, multi-token initials, em-dash empty case)
+- [x] Tests: 5 UserAvatar render cases (image present, fallback, runtime error, multi-token initials, em-dash empty case). Webhook avatar-write tests were removed alongside the webhook avatar-write code path
+- [x] Followup migration `0016_drop_webhook_debug_log.sql` removes the diagnostic table created by 0015 while we were chasing the wrong shape
 
 ### Phase A.1.1 — View-as-vendor toggle + dashboard header nav ✅ done (2026-05-13)
 - [x] `enterVendorView` / `exitVendorView` server actions at `lib/admin/view-as-vendor.ts` set / clear a `view_as_vendor=true` cookie (HttpOnly, Secure-in-prod, SameSite=Lax, 4h Max-Age)

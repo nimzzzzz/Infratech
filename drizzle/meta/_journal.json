@@ -113,6 +113,13 @@
       "when": 1778850000000,
       "tag": "0015_webhook_debug_log",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1778900000000,
+      "tag": "0016_drop_webhook_debug_log",
+      "breakpoints": true
     }
   ]
 }
