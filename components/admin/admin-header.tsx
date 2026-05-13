@@ -6,11 +6,12 @@ import { useClerk } from "@clerk/nextjs";
 import { SignOut, ShieldCheck, Eye } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { enterVendorView } from "@/lib/admin/view-as-vendor";
+import { UserAvatar } from "@/components/shared/user-avatar";
 
 export type AdminHeaderProps = {
   name: string;
-  initials: string;
   email: string;
+  avatarUrl: string | null;
 };
 
 // Phase A.1 nav placeholders. Submissions / Vendors / Inquiries /
@@ -37,7 +38,11 @@ const nav = [
   { href: "/admin", label: "Settings", placeholder: true, match: () => false },
 ];
 
-export function AdminHeader({ name, initials, email }: AdminHeaderProps) {
+export function AdminHeader({
+  name,
+  email,
+  avatarUrl,
+}: AdminHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const clerk = useClerk();
@@ -124,9 +129,7 @@ export function AdminHeader({ name, initials, email }: AdminHeaderProps) {
         {/* user pill + sign-out */}
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-2.5 sm:flex">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-canvas-warm)] text-[11px] font-medium uppercase tracking-wider text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">
-              {initials}
-            </span>
+            <UserAvatar avatarUrl={avatarUrl} name={name} size={32} />
             <div className="flex flex-col leading-tight">
               <span className="text-[13px] text-[var(--color-ink)]">
                 {name}

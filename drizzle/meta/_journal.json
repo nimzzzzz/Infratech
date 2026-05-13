@@ -99,6 +99,13 @@
       "when": 1778700000000,
       "tag": "0013_submissions_review_lifecycle",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1778800000000,
+      "tag": "0014_add_avatar_url_to_vendor_members",
+      "breakpoints": true
     }
   ]
 }

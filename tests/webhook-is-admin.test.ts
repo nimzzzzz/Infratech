@@ -56,6 +56,7 @@ function userCreatedPayload(opts: {
   id: string;
   email: string;
   verified?: boolean;
+  imageUrl?: string | null;
 }) {
   return {
     type: "user.created",
@@ -63,6 +64,7 @@ function userCreatedPayload(opts: {
       id: opts.id,
       first_name: "Test",
       last_name: "User",
+      image_url: opts.imageUrl ?? null,
       email_addresses: [
         {
           id: "ea_1",
@@ -83,6 +85,7 @@ function userUpdatedPayload(opts: {
   id: string;
   email: string;
   verified?: boolean;
+  imageUrl?: string | null;
 }) {
   const created = userCreatedPayload(opts);
   return { ...created, type: "user.updated" };
@@ -184,6 +187,78 @@ describe("clerk webhook — is_admin (Phase A.1)", () => {
       .limit(1);
     expect(row?.isAdmin).toBe(true);
     expect(row?.primaryEmail).toBe("new@x.com");
+  });
+
+  // V.2 — avatar_url is mirrored straight from Clerk's image_url
+  // payload field. NULL when missing; updated on every user.updated
+  // event (Clerk re-synthesises image_url on profile changes).
+
+  it("user.created writes avatar_url from image_url when present", async () => {
+    allowlistMock.isAdminEmail.mockReturnValue(false);
+    const res = await POST(
+      signedRequest(
+        userCreatedPayload({
+          id: "user_v2_avatar_a",
+          email: "withavatar@x.com",
+          imageUrl: "https://img.clerk.com/avatar_a.jpg",
+        }),
+      ),
+    );
+    expect(res.status).toBe(200);
+    const [row] = await db
+      .select()
+      .from(vendorMembers)
+      .where(eq(vendorMembers.clerkUserId, "user_v2_avatar_a"))
+      .limit(1);
+    expect(row?.avatarUrl).toBe("https://img.clerk.com/avatar_a.jpg");
+  });
+
+  it("user.created writes NULL avatar_url when image_url is missing", async () => {
+    allowlistMock.isAdminEmail.mockReturnValue(false);
+    const res = await POST(
+      signedRequest(
+        userCreatedPayload({
+          id: "user_v2_avatar_b",
+          email: "noavatar@x.com",
+          imageUrl: null,
+        }),
+      ),
+    );
+    expect(res.status).toBe(200);
+    const [row] = await db
+      .select()
+      .from(vendorMembers)
+      .where(eq(vendorMembers.clerkUserId, "user_v2_avatar_b"))
+      .limit(1);
+    expect(row?.avatarUrl).toBeNull();
+  });
+
+  it("user.updated refreshes avatar_url on every event", async () => {
+    allowlistMock.isAdminEmail.mockReturnValue(false);
+    await POST(
+      signedRequest(
+        userCreatedPayload({
+          id: "user_v2_avatar_c",
+          email: "rotate@x.com",
+          imageUrl: "https://img.clerk.com/avatar_v1.jpg",
+        }),
+      ),
+    );
+    await POST(
+      signedRequest(
+        userUpdatedPayload({
+          id: "user_v2_avatar_c",
+          email: "rotate@x.com",
+          imageUrl: "https://img.clerk.com/avatar_v2.jpg",
+        }),
+      ),
+    );
+    const [row] = await db
+      .select()
+      .from(vendorMembers)
+      .where(eq(vendorMembers.clerkUserId, "user_v2_avatar_c"))
+      .limit(1);
+    expect(row?.avatarUrl).toBe("https://img.clerk.com/avatar_v2.jpg");
   });
 
   it("user.updated does NOT demote true → false (promote-only, preserves manual UPDATEs)", async () => {

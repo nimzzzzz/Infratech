@@ -111,6 +111,7 @@ export async function getVendorSession(opts?: {
       name: "Demo New User",
       primaryEmail: "demo+new@example.com",
       linkedinUrl: null,
+      avatarUrl: null,
       role: null,
       onboarded: false,
       suspended: false,
@@ -213,6 +214,7 @@ function syntheticMember(vendor: Vendor): VendorMember {
     name: vendor.name,
     primaryEmail: vendor.contactEmail ?? `demo_${vendor.id}@unknown.example`,
     linkedinUrl: null,
+    avatarUrl: null,
     role: null,
     onboarded: true,
     suspended: false,
@@ -239,7 +241,7 @@ function syntheticMember(vendor: Vendor): VendorMember {
 export async function getDashboardHeaderData(): Promise<{
   companyName: string;
   userName: string;
-  userInitials: string;
+  userAvatarUrl: string | null;
   userTitle?: string | null;
 }> {
   try {
@@ -251,7 +253,7 @@ export async function getDashboardHeaderData(): Promise<{
         return {
           companyName: vendor?.name ?? "—",
           userName: vendorMember.name,
-          userInitials: initialsOf(vendorMember.name),
+          userAvatarUrl: vendorMember.avatarUrl,
           userTitle: vendorMember.role,
         };
       }
@@ -272,7 +274,7 @@ export async function getDashboardHeaderData(): Promise<{
       return {
         companyName: row.vendor.name,
         userName: row.member.name,
-        userInitials: initialsOf(row.member.name),
+        userAvatarUrl: row.member.avatarUrl,
         userTitle: row.member.role,
       };
     }
@@ -286,21 +288,16 @@ export async function getDashboardHeaderData(): Promise<{
       return {
         companyName: vendorRow.name,
         userName: vendorRow.name,
-        userInitials: initialsOf(vendorRow.name),
+        userAvatarUrl: null,
       };
     }
   }
 
-  return { companyName: "—", userName: "—", userInitials: "—" };
-}
-
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("");
+  return {
+    companyName: "—",
+    userName: "—",
+    userAvatarUrl: null,
+  };
 }
 
 /**
@@ -346,6 +343,7 @@ async function lazyCreateVendorMemberFromClerk(
         clerkUserId: userId,
         name: fullName,
         primaryEmail: email,
+        avatarUrl: u.imageUrl ?? null,
         onboarded: false,
       })
       .onConflictDoNothing({ target: vendorMembers.clerkUserId });
