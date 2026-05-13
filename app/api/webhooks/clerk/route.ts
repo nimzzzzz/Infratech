@@ -263,21 +263,43 @@ async function handleUserUpdated(user: ClerkUser): Promise<void> {
     const ea0 = Array.isArray(u.external_accounts)
       ? (u.external_accounts[0] as Record<string, unknown> | undefined)
       : undefined;
+    const snapshot = {
+      top_image_url: u.image_url ?? null,
+      top_profile_image_url: u.profile_image_url ?? null,
+      top_has_image: u.has_image ?? null,
+      top_keys: Object.keys(u).sort(),
+      ea0_present: ea0 != null,
+      ea0_image_url: ea0?.image_url ?? null,
+      ea0_avatar_url: ea0?.avatar_url ?? null,
+      ea0_picture: ea0?.picture ?? null,
+      ea0_provider: ea0?.provider ?? null,
+      ea0_keys: ea0 ? Object.keys(ea0).sort() : null,
+    };
     console.info(
       "[TEMP DEBUG avatar-url] " +
-        JSON.stringify({
-          userId: user.id,
-          top_image_url: u.image_url ?? null,
-          top_profile_image_url: u.profile_image_url ?? null,
-          top_has_image: u.has_image ?? null,
-          top_keys: Object.keys(u).sort(),
-          ea0_image_url: ea0?.image_url ?? null,
-          ea0_avatar_url: ea0?.avatar_url ?? null,
-          ea0_picture: ea0?.picture ?? null,
-          ea0_provider: ea0?.provider ?? null,
-          ea0_keys: ea0 ? Object.keys(ea0).sort() : null,
-        }),
+        JSON.stringify({ userId: user.id, ...snapshot }),
     );
+
+    // TEMP DEBUG (debug/avatar-url-payload-to-db) — Vercel runtime
+    // logs aren't surfacing webhook POST entries, so the console
+    // trace above goes nowhere visible. Mirror the same blob into
+    // webhook_debug_log (created in migration 0015) so we can
+    // inspect it via Neon SQL Editor. Wrapped in try/catch so a
+    // logging failure can't break the production webhook path.
+    // Revert this + migration 0015 + the console trace above on a
+    // follow-up branch once the payload shape is confirmed.
+    try {
+      await db.execute(sql`
+        INSERT INTO webhook_debug_log (event_type, clerk_user_id, payload_snapshot)
+        VALUES (
+          'user.updated',
+          ${user.id},
+          ${JSON.stringify(snapshot)}::jsonb
+        )
+      `);
+    } catch (err) {
+      console.error("[TEMP DEBUG avatar-url] DB insert failed", err);
+    }
   }
 
   const name = fullNameOf(user);
