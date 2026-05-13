@@ -45,6 +45,16 @@ export function DashboardHeader({
 
   const onSignOut = async () => {
     try {
+      // Phase A.1.1 — clear the view_as_vendor cookie before
+      // Clerk's signOut redirects away. Without this, a different
+      // admin signing in on the same browser within the 4-hour
+      // cookie window would inherit vendor view. Best-effort; if
+      // the fetch fails the cookie still expires on its own.
+      try {
+        await fetch("/api/admin/exit-vendor-view", { method: "POST" });
+      } catch {
+        // Network blip is fine — Max-Age cleans up.
+      }
       // Clears the Clerk session cookie and navigates to redirectUrl.
       // The previous implementation was a bare <Link href="/"> which
       // navigated without touching Clerk — the session cookie
@@ -68,18 +78,29 @@ export function DashboardHeader({
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-6 md:h-18 md:px-8">
         <div className="flex items-center gap-5">
-          <Link href="/dashboard" className="group flex items-center gap-2.5">
-            <span className="relative inline-flex h-2 w-2">
-              <span className="absolute inset-0 rounded-full bloom" />
-              <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
-            </span>
-            <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)]">
-              AllInfratech
-            </span>
-            <span className="ml-1 text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+          {/* Phase A.1.1 — wordmark links to the public landing
+              (matches the public-site header). The "/ Vendor"
+              suffix stays as a contextual indicator but lives
+              outside the link so clicking it doesn't navigate
+              away from the dashboard context. */}
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/"
+              aria-label="AllInfratech home"
+              className="group flex items-center gap-2.5"
+            >
+              <span className="relative inline-flex h-2 w-2">
+                <span className="absolute inset-0 rounded-full bloom" />
+                <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
+              </span>
+              <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)]">
+                AllInfratech
+              </span>
+            </Link>
+            <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
               / Vendor
             </span>
-          </Link>
+          </div>
 
           {!isOnboarding && (
             <nav aria-label="Dashboard sections" className="hidden md:block">
@@ -123,6 +144,23 @@ export function DashboardHeader({
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Phase A.1.1 — Browse directory link gives vendors a
+              quiet way back to the public site without forcing
+              them to click the small wordmark. Hidden on the
+              wizard (isOnboarding) where the form is the focus,
+              and on mobile (<sm) where the user pill itself is
+              hidden — saves horizontal space. */}
+          {!isOnboarding && (
+            <Link
+              href="/"
+              className="group hidden items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)] sm:inline-flex"
+            >
+              Browse directory
+              <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">
+                →
+              </span>
+            </Link>
+          )}
           <div className="hidden items-center gap-2.5 sm:flex">
             <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-canvas-warm)] text-[11px] font-medium uppercase tracking-wider text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">
               {userInitials}
