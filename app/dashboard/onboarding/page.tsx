@@ -60,6 +60,7 @@ export default async function OnboardingLandingPage({
         <li>
           <Link
             href="/dashboard/onboarding/submit"
+            prefetch
             className="group relative grid grid-cols-[auto_1fr_auto] items-start gap-5 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 transition-colors hover:border-[var(--color-ink)]/40 md:p-8"
           >
             <span className="grid h-12 w-12 place-items-center bg-[var(--color-canvas)] text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">

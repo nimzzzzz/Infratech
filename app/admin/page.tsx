@@ -74,6 +74,7 @@ export default async function AdminOverviewPage() {
         submissions waiting on you.{" "}
         <Link
           href="/admin/submissions"
+          prefetch
           className="underline underline-offset-4 hover:text-[var(--color-ink)]"
         >
           Open the queue &rarr;
@@ -114,6 +115,7 @@ export default async function AdminOverviewPage() {
           </h2>
           <Link
             href="/admin/submissions"
+            prefetch
             className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
           >
             All activity
@@ -136,6 +138,7 @@ export default async function AdminOverviewPage() {
               <li key={sub.id}>
                 <Link
                   href={`/admin/submissions/${sub.id}`}
+                  prefetch
                   className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[100px_1fr_auto_72px] md:gap-6 md:px-3"
                 >
                   <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
@@ -205,6 +208,7 @@ function StatCard({
     <li>
       <Link
         href={href}
+        prefetch
         className="group flex h-full flex-col justify-between gap-6 bg-[var(--color-surface)] p-5 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:p-6"
       >
         <div className="flex items-center justify-between">

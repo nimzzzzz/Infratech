@@ -75,6 +75,7 @@ export default async function AdminSubmissionsPage({
         </h1>
         <Link
           href="/admin"
+          prefetch
           className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
         >
           Overview

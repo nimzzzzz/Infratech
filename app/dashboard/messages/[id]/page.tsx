@@ -60,6 +60,7 @@ export default async function MessageDetailPage({
     <Container className="max-w-3xl py-10 md:py-14">
       <Link
         href="/dashboard/messages"
+        prefetch
         className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
       >
         <ArrowLeft

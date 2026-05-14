@@ -76,6 +76,7 @@ export default async function OnboardingSubmittedPage({
       <div className="mx-auto mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
         <Link
           href="/dashboard"
+          prefetch
           className="group inline-flex h-11 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
         >
           View dashboard
@@ -87,6 +88,7 @@ export default async function OnboardingSubmittedPage({
         </Link>
         <Link
           href="/dashboard/onboarding/submit?as=returning"
+          prefetch
           className="group inline-flex h-11 items-center justify-center gap-1.5 bg-[var(--color-ink)] px-5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-90"
         >
           <Plus size={11} weight="bold" />
