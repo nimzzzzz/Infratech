@@ -46,8 +46,3 @@ export const stages: Stage[] = [
     index: "06",
   },
 ];
-
-export const stageLookup = (slug: string): Stage | undefined =>
-  stages.find((s) => s.slug === slug);
-
-export const stageNameMap = new Map(stages.map((s) => [s.slug, s.name]));

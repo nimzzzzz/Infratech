@@ -10,6 +10,7 @@ import { StatusPill } from "@/components/admin/status-pill";
 import { getAdminSession } from "@/lib/auth/admin-session";
 import { listApps } from "@/lib/queries/apps";
 import { relativeDays } from "@/lib/browse/dates";
+import { formatStageLabel } from "@/lib/stages/format";
 
 export const metadata: Metadata = {
   title: "Admin · Apps",
@@ -66,7 +67,7 @@ export default async function AdminAppsPage() {
             </div>
 
             <p className="hidden truncate text-[12px] text-[var(--color-ink-2)] md:block">
-              {app.stages.map((s) => s.name).join(" · ")}
+              {app.stages.map((s) => formatStageLabel(s.slug)).join(" · ")}
             </p>
             <StatusPill status="live" className="hidden md:inline-flex" />
 

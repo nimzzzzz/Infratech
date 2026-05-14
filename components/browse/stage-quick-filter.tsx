@@ -9,6 +9,7 @@ import {
   toggleInArray,
 } from "@/lib/browse/filters";
 import { stages } from "@/lib/data/stages";
+import { formatStageLabel } from "@/lib/stages/format";
 import { cn } from "@/lib/utils";
 
 /**
@@ -97,10 +98,7 @@ export function StageQuickFilter() {
                   )}
                 >
                   {checked ? <Check size={11} weight="bold" /> : null}
-                  <span className="num text-[10px] uppercase tracking-[0.18em] opacity-60">
-                    {stage.index}
-                  </span>
-                  <span>{stage.name}</span>
+                  <span>{formatStageLabel(stage.slug)}</span>
                 </button>
               </li>
             );
