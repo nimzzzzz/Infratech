@@ -32,10 +32,10 @@ describe("SubmitWizard", () => {
     render(
       <SubmitWizard prefill={{ vendor: "", domain: "" }} skipCompanyStep={false} />,
     );
-    // Step indicator should say "New listing" eyebrow + "First, about your company." headline.
+    // Step indicator should say "New listing" eyebrow + "Your company." headline.
     expect(screen.getByText(/new listing/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/first, about your company/i),
+      screen.getByRole("heading", { name: /^your company\.$/i }),
     ).toBeInTheDocument();
     // Company name input rendered.
     expect(screen.getByLabelText(/company name/i)).toBeInTheDocument();
@@ -54,10 +54,10 @@ describe("SubmitWizard", () => {
     );
     // Eyebrow is "Add a product" (returning flow), not "New listing".
     expect(screen.getByText(/^Add a product$/i)).toBeInTheDocument();
-    // The "Tell us about the new product" headline marks the
+    // The "Your new product." headline marks the
     // returning-vendor entry view.
     expect(
-      screen.getByText(/tell us about the new product/i),
+      screen.getByRole("heading", { name: /^your new product\.$/i }),
     ).toBeInTheDocument();
     // Product logo notice is the "coming soon" placeholder.
     expect(

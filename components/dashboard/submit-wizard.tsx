@@ -56,8 +56,8 @@ function FieldError({ message }: { message?: string | null }) {
 function LogoUploadComingSoon() {
   return (
     <div className="border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-4 text-[12px] leading-relaxed text-[var(--color-ink-2)]">
-      Logo uploads are coming soon. After our team reviews your
-      submission, we&rsquo;ll email you a link to add your logo.
+      Logo uploads are coming soon. After we review your submission,
+      we&rsquo;ll email you a link to add your logo.
     </div>
   );
 }
@@ -615,9 +615,9 @@ function ProgressRail({
 }) {
   const headlineFor = (n: number): string => {
     switch (n) {
-      case 1: return "First, about your company.";
-      case 2: return "Now, the product itself.";
-      default: return "Look it over before submitting.";
+      case 1: return "Your company.";
+      case 2: return "The product.";
+      default: return "Review before submitting.";
     }
   };
 
@@ -825,11 +825,12 @@ function SinglePageSubmit({
           Add a product &middot; Review
         </p>
         <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
-          Look it over before submitting.
+          Review before submitting.
         </h1>
         <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
-          Edit any block to jump back. Editorial review usually takes two
-          business days &mdash; we&rsquo;ll email you when it&rsquo;s live.
+          Edit any block to jump back. Editorial review typically takes two
+          business days; we&rsquo;ll email you when your listing is
+          published.
         </p>
 
         <div className="mt-10 space-y-8 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
@@ -970,11 +971,11 @@ function SinglePageSubmit({
         Add a product
       </p>
       <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
-        Tell us about the new product.
+        Your new product.
       </h1>
       <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
-        Fill everything in on this page, then review before submitting.
-        Editorial review usually takes two business days.
+        Complete every section, then review before submitting. Editorial
+        review typically takes two business days.
       </p>
 
       <div className="mt-12 space-y-14">
@@ -1171,12 +1172,12 @@ function CompanyStep({
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <p className="md:col-span-2 -mt-2 text-[13px] leading-relaxed text-[var(--color-ink-2)]">
-        This step builds your company&rsquo;s public profile at{" "}
+        This step builds your public company profile at{" "}
         <code className="rounded bg-[var(--color-canvas-warm)] px-1.5 py-0.5 text-[12px] text-[var(--color-ink)]">
-          stagecraft/vendors/your-company
+          allinfratech.com/vendors/your-company
         </code>
-        . You&rsquo;ll only see this step once &mdash; future product submissions
-        skip straight to the product details.
+        . You&rsquo;ll only see it once; subsequent product submissions
+        skip straight to product details.
       </p>
 
       <div className="md:col-span-2">
@@ -1277,7 +1278,7 @@ function CompanyStep({
             rows={6}
             value={data.companyDescription}
             onChange={(e) => setField("companyDescription")(e.target.value)}
-            placeholder="What does the company actually build? What's the founding story or distinctive angle?"
+            placeholder="What the company builds. Founding context or distinctive angle."
             maxLength={1500}
             className={textareaClsWithError(err(errors, "companyDescription"))}
             aria-invalid={!!err(errors, "companyDescription")}
@@ -1426,7 +1427,7 @@ function ToolDescStep({
         label="What the product does"
         htmlFor="description"
         required
-        hint="Two short paragraphs at most. Product capabilities and where it fits — not company background. Editorial team may copy-edit before publishing."
+        hint="Two short paragraphs at most. Product capabilities and where it fits — not company background. Editorial may copy-edit before publishing."
         error={err(errors, "description")}
       >
         <textarea
@@ -1437,7 +1438,7 @@ function ToolDescStep({
             update("description", e.target.value);
             clearError("description");
           }}
-          placeholder="What does the product actually do? What's distinctive? Skip the marketing language."
+          placeholder="What the product does. What's distinctive. Skip marketing language."
           maxLength={1200}
           className={textareaClsWithError(err(errors, "description"))}
           aria-invalid={!!err(errors, "description")}
@@ -1496,7 +1497,7 @@ function TaxonomyStep({
         <ChipGroup
           label="Capabilities"
           required
-          hint="What the product actually does. Pick up to five for clarity. Don't see one? Suggest it — admins review proposed tags before they go live."
+          hint="What the product does. Pick up to five. Don't see one? Suggest it — admins review proposed tags before publishing."
           options={capabilities}
           selected={data.capabilities}
           onToggle={(slug) => {
@@ -1570,8 +1571,9 @@ function IndustryPricingStep({
           Pricing model <span className="text-[var(--color-magenta)]">*</span>
         </p>
         <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
-          One that best describes how customers buy. We don&rsquo;t display
-          actual prices. Pick &ldquo;Other&rdquo; if none of these fit.
+          Pick the model that best describes how customers buy. We
+          don&rsquo;t display actual prices. Choose &ldquo;Other&rdquo; if
+          none of these fit.
         </p>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
           {pricingModels.map((p) => {
