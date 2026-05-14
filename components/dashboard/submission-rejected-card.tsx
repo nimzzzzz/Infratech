@@ -42,7 +42,7 @@ export function SubmissionRejectedCard({
         <Link
           href={`/dashboard/onboarding/submit?resubmit=${submissionId}`}
           prefetch
-          className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-90"
+          className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
         >
           <PencilSimple size={13} weight="regular" />
           Edit &amp; resubmit

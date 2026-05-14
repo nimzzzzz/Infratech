@@ -253,7 +253,7 @@ export function LegalAcceptanceModal({
             <button
               type="submit"
               disabled={submitting || !accepted}
-              className="inline-flex h-11 items-center justify-center bg-[var(--color-ink)] px-6 text-[12px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-11 items-center justify-center bg-[var(--color-ink)] px-6 text-[12px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[var(--color-ink)]"
             >
               {submitting
                 ? "Confirming…"

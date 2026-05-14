@@ -81,7 +81,7 @@ export function CountrySelect({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search countries…"
-              className="h-8 w-full bg-[var(--color-canvas)] px-2 text-[13px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:outline-none"
+              className="h-8 w-full border border-transparent bg-[var(--color-canvas)] px-2 text-[13px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
             />
           </div>
           <ul className="max-h-64 overflow-y-auto py-1">

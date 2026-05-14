@@ -66,7 +66,7 @@ export function LinkedInSignInButton({
       type="button"
       onClick={handleClick}
       disabled={!isLoaded}
-      className="group inline-flex h-12 w-full items-center justify-center gap-2.5 bg-[#0A66C2] px-5 text-[14px] font-medium text-white transition-colors hover:bg-[#0959AB] active:translate-y-[1px] disabled:cursor-wait disabled:opacity-90 sm:h-14 sm:text-[15px]"
+      className="group inline-flex h-12 w-full items-center justify-center gap-2.5 bg-[#0A66C2] px-5 text-[14px] font-medium text-white transition-colors hover:bg-[#0959AB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] disabled:cursor-wait disabled:opacity-90 sm:h-14 sm:text-[15px]"
     >
       <LinkedinLogo size={20} weight="fill" />
       <span>{label}</span>

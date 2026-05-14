@@ -24,7 +24,7 @@ export function ViewAsVendorBanner() {
         <form action={exitVendorView}>
           <button
             type="submit"
-            className="group inline-flex h-9 items-center gap-1.5 bg-[var(--color-ink)] px-4 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-90 sm:h-8"
+            className="group inline-flex h-9 items-center gap-1.5 bg-[var(--color-ink)] px-4 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-8"
           >
             Return to admin view
             <ArrowRight
