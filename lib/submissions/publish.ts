@@ -11,6 +11,8 @@ import {
   industries,
   pricingModels,
   stages,
+  vendors,
+  vendorGalleryImages,
 } from "@/lib/db/schema";
 
 /**
@@ -41,6 +43,19 @@ export type PublishPayload = {
   capabilities?: string[];
   industries?: string[];
   pricing?: string;
+  // Phase C — product-level media. Carried on every submission.
+  // Empty / null values are treated as "no logo" / "no video"
+  // (the public detail page falls back to LetterAvatar / no
+  // video block).
+  productLogoUrl?: string | null;
+  productLogoAlt?: string | null;
+  videoUrl?: string | null;
+  // Phase C — company-level media. Carried only on first-time
+  // submissions; returning-vendor payloads omit these keys, and
+  // the publish helper skips writing vendor-level rows when so.
+  companyLogoUrl?: string | null;
+  companyLogoAlt?: string | null;
+  companyGallery?: Array<{ url: string; alt: string; position: number }>;
 };
 
 /**
@@ -88,6 +103,11 @@ export async function publishSubmissionInTx(
     websiteUrl: p.url,
     tagline: p.tagline ?? null,
     description: p.description ?? null,
+    // Phase C — product-level media writes. Always set (NULL
+    // overwrite is intentional — a vendor / admin clearing the
+    // field on an edit should clear the published row too).
+    logoUrl: p.productLogoUrl ?? null,
+    videoUrl: p.videoUrl ?? null,
     status: "published" as const,
     publishedAt: new Date(),
     updatedAt: new Date(),
@@ -124,6 +144,41 @@ export async function publishSubmissionInTx(
     insertIndustryJoins(tx, appId, p.industries ?? []),
     insertPricingJoins(tx, appId, p.pricing ? [p.pricing] : []),
   ]);
+
+  // Phase C — company-level media. Conditional on the payload
+  // actually carrying these keys: returning-vendor submissions
+  // skip step 1 of the wizard and don't include them, and we
+  // don't want a second product publish to wipe a gallery set on
+  // the first.
+  //
+  //   companyLogoUrl present → UPDATE vendors.logo_url
+  //   companyGallery present → DELETE then INSERT all rows
+  //
+  // The wipe-and-reinsert pattern matches how the four taxonomy
+  // joins handle re-publish (admin edits should land cleanly).
+  // Empty array is a meaningful "clear the gallery" — only
+  // `undefined` is the "leave alone" signal.
+  if (p.companyLogoUrl !== undefined) {
+    await tx
+      .update(vendors)
+      .set({ logoUrl: p.companyLogoUrl ?? null, updatedAt: new Date() })
+      .where(eq(vendors.id, opts.vendorId));
+  }
+  if (p.companyGallery !== undefined) {
+    await tx
+      .delete(vendorGalleryImages)
+      .where(eq(vendorGalleryImages.vendorId, opts.vendorId));
+    if (p.companyGallery.length > 0) {
+      await tx.insert(vendorGalleryImages).values(
+        p.companyGallery.map((g) => ({
+          vendorId: opts.vendorId,
+          url: g.url,
+          alt: g.alt,
+          position: g.position,
+        })),
+      );
+    }
+  }
 
   return { appId, slug: p.slug, name: p.name };
 }

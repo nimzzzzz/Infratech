@@ -24,6 +24,14 @@ import {
 } from "@/app/api/submissions/schema";
 import { cn } from "@/lib/utils";
 import { CountrySelect } from "./country-select";
+import { LogoUploadField } from "./logo-upload-field";
+import { GalleryUploadField } from "./gallery-upload-field";
+import {
+  ReviewImage,
+  ReviewGalleryStrip,
+} from "./review-image";
+import { VideoEmbed } from "@/components/media/video-embed";
+import { isYouTubeOrVimeo } from "@/lib/media/video";
 
 /**
  * Per-field validation error map. Keys are FormState field names.
@@ -66,6 +74,18 @@ const CUSTOM_PRICING_SLUG = "__custom__";
 
 type CustomKey = "capabilities" | "industries";
 
+/**
+ * Phase C PR 2 — media fields are now URL-based (not File-based).
+ * Uploads happen in <LogoUploadField> / <GalleryUploadField>
+ * against /api/uploads; the wizard form state holds the resulting
+ * Vercel Blob URLs and ships them in the submission payload.
+ */
+export type GalleryFormItem = {
+  url: string;
+  alt: string;
+  position: number;
+};
+
 type FormState = {
   // ── Company-level ── (skipped in real flow if vendor profile already exists)
   companyName: string;
@@ -74,16 +94,18 @@ type FormState = {
   companyHeadquarters: string;
   companyRegions: string[];
   companyDescription: string;
-  companyLogoFile: File | null;
+  companyLogoUrl: string | null;
   companyLogoAlt: string;
+  companyGallery: GalleryFormItem[];
 
   // ── Tool-level ──
   name: string;
   url: string;
-  logoFile: File | null;
+  productLogoUrl: string | null;
   logoAlt: string;
   tagline: string;
   description: string;
+  videoUrl: string;
   stages: string[];
   capabilities: string[];
   industries: string[];
@@ -100,15 +122,17 @@ const initialState = (companyName: string, domain: string): FormState => ({
   companyHeadquarters: "",
   companyRegions: [],
   companyDescription: "",
-  companyLogoFile: null,
+  companyLogoUrl: null,
   companyLogoAlt: "",
+  companyGallery: [],
 
   name: "",
   url: "",
-  logoFile: null,
+  productLogoUrl: null,
   logoAlt: "",
   tagline: "",
   description: "",
+  videoUrl: "",
   stages: [],
   capabilities: [],
   industries: [],
@@ -242,6 +266,12 @@ export function SubmitWizard({
         companyHeadquarters: data.companyHeadquarters,
         companyRegions: data.companyRegions,
         companyDescription: data.companyDescription,
+        // Phase C — media fields. All optional; the schema's
+        // refines reject anything that isn't a Vercel Blob URL,
+        // so a paste-attack via dev tools can't sneak past.
+        companyLogoUrl: data.companyLogoUrl ?? "",
+        companyLogoAlt: data.companyLogoAlt,
+        companyGallery: data.companyGallery,
       };
     }
     return {
@@ -255,6 +285,12 @@ export function SubmitWizard({
       industries: data.industries,
       customIndustries: data.customIndustries,
       pricing: data.pricing,
+      // Phase C — media. videoUrl gets normalised to the embed
+      // URL by the schema transform; productLogoUrl is refined
+      // against the Blob host suffix.
+      productLogoUrl: data.productLogoUrl ?? "",
+      productLogoAlt: data.logoAlt,
+      videoUrl: data.videoUrl,
       customPricing:
         data.pricing === CUSTOM_PRICING_SLUG ? data.customPricing : undefined,
     };
@@ -325,6 +361,13 @@ export function SubmitWizard({
       companyHeadquarters: data.companyHeadquarters,
       companyRegions: data.companyRegions,
       companyDescription: data.companyDescription,
+      // Phase C — company-level media. Carried only on the first
+      // submission; returning vendors don't render step 1, so
+      // these stay null/empty and the schema treats them as
+      // absent.
+      companyLogoUrl: data.companyLogoUrl ?? "",
+      companyLogoAlt: data.companyLogoAlt,
+      companyGallery: data.companyGallery,
       // Product block
       name: data.name,
       url: data.url,
@@ -337,6 +380,10 @@ export function SubmitWizard({
       customCapabilities: data.customCapabilities,
       customIndustries: data.customIndustries,
       customPricing: pricingIsCustom ? data.customPricing : undefined,
+      // Phase C — product-level media. Always carried.
+      productLogoUrl: data.productLogoUrl ?? "",
+      productLogoAlt: data.logoAlt,
+      videoUrl: data.videoUrl,
       // Honeypot — must stay empty for real users.
       website3: website3,
     };
@@ -691,10 +738,11 @@ function FullReviewView({
           value={data.companyDescription}
           multiline
         />
-        {data.companyLogoFile ? (
-          <ReviewLogo
+        <ReviewGalleryStrip label="Gallery" items={data.companyGallery} />
+        {data.companyLogoUrl ? (
+          <ReviewImage
             label="Company logo"
-            file={data.companyLogoFile}
+            url={data.companyLogoUrl}
             alt={data.companyLogoAlt}
           />
         ) : null}
@@ -706,10 +754,10 @@ function FullReviewView({
       >
         <ReviewRow label="Product" value={data.name} />
         <ReviewRow label="Website" value={data.url} />
-        {data.logoFile ? (
-          <ReviewLogo
+        {data.productLogoUrl ? (
+          <ReviewImage
             label="Product logo"
-            file={data.logoFile}
+            url={data.productLogoUrl}
             alt={data.logoAlt}
           />
         ) : null}
@@ -721,6 +769,18 @@ function FullReviewView({
       >
         <ReviewRow label="Tagline" value={data.tagline} />
         <ReviewRow label="What it does" value={data.description} multiline />
+        {data.videoUrl && isYouTubeOrVimeo(data.videoUrl) ? (
+          <div className="grid grid-cols-[120px_1fr] gap-1">
+            <dt className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+              Video
+            </dt>
+            <dd>
+              <div className="max-w-[400px]">
+                <VideoEmbed url={data.videoUrl} />
+              </div>
+            </dd>
+          </div>
+        ) : null}
       </ReviewBlock>
 
       <ReviewBlock
@@ -840,10 +900,10 @@ function SinglePageSubmit({
           >
             <ReviewRow label="Product" value={data.name} />
             <ReviewRow label="Website" value={data.url} />
-            {data.logoFile ? (
-              <ReviewLogo
+            {data.productLogoUrl ? (
+              <ReviewImage
                 label="Product logo"
-                file={data.logoFile}
+                url={data.productLogoUrl}
                 alt={data.logoAlt}
               />
             ) : null}
@@ -859,6 +919,18 @@ function SinglePageSubmit({
               value={data.description}
               multiline
             />
+            {data.videoUrl && isYouTubeOrVimeo(data.videoUrl) ? (
+              <div className="grid grid-cols-[120px_1fr] gap-1">
+                <dt className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+                  Video
+                </dt>
+                <dd>
+                  <div className="max-w-[400px]">
+                    <VideoEmbed url={data.videoUrl} />
+                  </div>
+                </dd>
+              </div>
+            ) : null}
           </ReviewBlock>
 
           <ReviewBlock
@@ -1288,10 +1360,46 @@ function CompanyStep({
 
       <div className="md:col-span-2">
         <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
+          Company gallery
+        </p>
+        <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
+          Up to 8 photos or screenshots &mdash; your office, team, products
+          in action. PNG, JPG, or WebP up to 2 MB each.
+        </p>
+        <div className="mt-3">
+          <GalleryUploadField
+            scope="vendor_gallery"
+            items={data.companyGallery.map((g) => ({ url: g.url, alt: g.alt }))}
+            onChange={(items) =>
+              update(
+                "companyGallery",
+                items.map((it, i) => ({
+                  url: it.url,
+                  alt: it.alt,
+                  position: i,
+                })),
+              )
+            }
+          />
+        </div>
+      </div>
+
+      <div className="md:col-span-2">
+        <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
           Company logo
         </p>
         <div className="mt-2">
-          <LogoUploadComingSoon />
+          <LogoUploadField
+            scope="vendor_logo"
+            value={{
+              url: data.companyLogoUrl,
+              alt: data.companyLogoAlt,
+            }}
+            onChange={(next) => {
+              update("companyLogoUrl", next.url);
+              update("companyLogoAlt", next.alt);
+            }}
+          />
         </div>
       </div>
     </div>
@@ -1369,7 +1477,17 @@ function ToolBasicsStep({
           Skip if your product uses the same brand mark as the company.
         </p>
         <div className="mt-2">
-          <LogoUploadComingSoon />
+          <LogoUploadField
+            scope="app_logo"
+            value={{
+              url: data.productLogoUrl,
+              alt: data.logoAlt,
+            }}
+            onChange={(next) => {
+              update("productLogoUrl", next.url);
+              update("logoAlt", next.alt);
+            }}
+          />
         </div>
       </div>
     </div>
@@ -1443,6 +1561,33 @@ function ToolDescStep({
           <span className="num">{data.description.length}</span> /{" "}
           <span className="num">1200</span>
         </p>
+      </Field>
+
+      <Field
+        label="Product video"
+        htmlFor="videoUrl"
+        hint="Paste a YouTube or Vimeo link. The video will play directly on your product page."
+        error={err(errors, "videoUrl")}
+      >
+        <input
+          id="videoUrl"
+          type="url"
+          value={data.videoUrl}
+          onChange={(e) => {
+            update("videoUrl", e.target.value);
+            clearError("videoUrl");
+          }}
+          placeholder="https://www.youtube.com/watch?v=…"
+          maxLength={500}
+          className={inputClsWithError(err(errors, "videoUrl"))}
+          aria-invalid={!!err(errors, "videoUrl")}
+        />
+        {data.videoUrl.trim().length > 0 &&
+        isYouTubeOrVimeo(data.videoUrl) ? (
+          <div className="mt-3">
+            <VideoEmbed url={data.videoUrl} />
+          </div>
+        ) : null}
       </Field>
     </div>
   );
@@ -1716,55 +1861,6 @@ function ReviewBlock({
         </button>
       </div>
       <dl className="mt-3 space-y-2">{children}</dl>
-    </div>
-  );
-}
-
-function ReviewLogo({
-  label,
-  file,
-  alt,
-}: {
-  label: string;
-  file: File;
-  alt: string;
-}) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  useEffect(() => {
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
-
-  return (
-    <div className="grid grid-cols-[120px_1fr] gap-1">
-      <dt className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
-        {label}
-      </dt>
-      <dd className="flex items-start gap-3">
-        <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden border border-[var(--color-line)] bg-[var(--color-canvas)]">
-          {previewUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={previewUrl}
-              alt=""
-              className="h-full w-full object-contain"
-            />
-          ) : null}
-        </span>
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="truncate text-[14px] text-[var(--color-ink)]">
-            {file.name}
-          </span>
-          <span className="truncate text-[12px] text-[var(--color-ink-3)]">
-            {alt || (
-              <span className="text-[var(--color-magenta)]">
-                — alt text missing —
-              </span>
-            )}
-          </span>
-        </div>
-      </dd>
     </div>
   );
 }

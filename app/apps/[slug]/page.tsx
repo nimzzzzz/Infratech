@@ -20,6 +20,7 @@ import {
 } from "@/lib/queries/apps";
 import { listStages } from "@/lib/queries/taxonomy";
 import { formatStageLabel } from "@/lib/stages/format";
+import { VideoEmbed } from "@/components/media/video-embed";
 import { cn } from "@/lib/utils";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -217,6 +218,12 @@ export default async function AppDetailPage({
               .
             </p>
           </Section>
+
+          {app.videoUrl ? (
+            <Section eyebrow="Product video">
+              <VideoEmbed url={app.videoUrl} />
+            </Section>
+          ) : null}
 
           <Section eyebrow="Lifecycle fit">
             <p className="text-[16px] leading-relaxed text-[var(--color-ink-2)]">

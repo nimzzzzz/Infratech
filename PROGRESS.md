@@ -120,12 +120,35 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 - End-to-end browser test for the wizard submit flow (when Playwright/Cypress lands)
 - Lawyer review of v1.0 legal copy (CLAUDE.md §14)
 
-### Phase C — file uploads to Vercel Blob ⬜ later
-**Storage choice changed in Phase D.4 (2026-05-09): Vercel Blob, not R2.** Use the `@vercel/blob` SDK, NOT `@aws-sdk/client-s3` as the original spec said.
-- [ ] Install `@vercel/blob`
-- [ ] `/api/uploads/sign` endpoint (Vercel Blob client uploads work differently from S3 presigned URLs — likely uses `handleUpload` server action or `put()` from server)
-- [ ] Wire `components/dashboard/logo-upload.tsx` + `gallery-upload.tsx` to the Blob store `allinfratech-uploads`
-- [ ] Enforce logo upload constraints from BACKLOG (square, ≥256×256, ≤2MB, alt text)
+### Phase C — file uploads to Vercel Blob 🟡 PR 1 + PR 2 done, PR 3 next
+
+**PR 1 — Upload infrastructure ✅ done (2026-05-14)**
+- [x] `@vercel/blob` installed; `env.blob()` lazy parser
+- [x] Migration `0017` — `apps.video_url` + `vendor_gallery_images` table
+- [x] `POST /api/uploads` (multipart). Scope-keyed blob paths, per-vendor prefix. PNG / JPG / WebP / SVG (logos), PNG / JPG / WebP (gallery, no SVG). 1 MB logos / 2 MB gallery
+- [x] `lib/media/video.ts` — YouTube + Vimeo parser. `/shorts/` accepted, `/live/` rejected
+- [x] `lib/media/upload-limits.ts` — single source of truth for client + server validation
+- [x] `<VideoEmbed>`, `<LogoUploadField>`, `<GalleryUploadField>` components ready for wizard wiring
+- [x] Tests: 17 cases on `video.ts`, 15 cases on `/api/uploads`
+
+**PR 2 — Wizard integration + public rendering ✅ done (2026-05-14)**
+- [x] Wizard FormState refactored from File-based (`companyLogoFile`, `logoFile`) to URL-based (`companyLogoUrl`, `productLogoUrl`, plus new `companyGallery`, `videoUrl`)
+- [x] Three `LogoUploadComingSoon` callsites swapped for real `<LogoUploadField>` widgets (vendor logo in step 1, product logo in ToolBasicsStep used by both multi-step and single-page views)
+- [x] Company gallery section in step 1 (between description and logo) wired to `<GalleryUploadField>` with 8-item cap
+- [x] Product video field in step 3 (after long description) with inline `<VideoEmbed>` preview on every keystroke
+- [x] Submission body schema validates new fields: Vercel Blob host suffix refine on image URLs; YouTube/Vimeo refine on video URL; video URL normalised to embed form by the schema transform (stored value is always the player-embed URL)
+- [x] Submissions route stashes all media fields in `submissions.payload`; company-level fields only on first-time submissions
+- [x] `publishSubmissionInTx` writes `apps.logo_url` / `apps.video_url` (always) and `vendors.logo_url` + `vendor_gallery_images` (conditionally — only when payload has company-level keys, so returning-vendor publishes don't wipe a prior gallery). CASCADE-then-insert pattern on re-publish mirrors the existing taxonomy joins
+- [x] App detail page renders `<Section eyebrow="Product video">` with `<VideoEmbed>` (only when `app.videoUrl` set)
+- [x] Vendor profile page renders `<Section eyebrow="Gallery">` 3-col grid (only when at least one image). Each tile is `<a target="_blank">` to the full-size blob URL (no lightbox — Q5)
+- [x] `ReviewLogo` (File-based) deleted; replaced by `ReviewImage` / `ReviewGalleryStrip` (URL-based) in the review screen
+- [x] Tests: 3 new admin-submissions cases (media write on first publish, gallery wipe-and-reinsert on re-publish, no-op on returning-vendor publish), 4 new submissions schema cases (bad video URL, bad blob URL on product logo + gallery item, full happy path payload roundtrip), 4 wizard render cases (real widgets + video preview)
+
+**PR 3 — Admin side ⬜ next**
+- Admin submission detail renders uploaded media
+- Admin edit mode includes media widgets
+- Diff view handles URL field changes
+- Admin upload route auth path (`vendorId` in body)
 
 ### Phase D — submission wizard wired to DB ⬜ later
 - [ ] `POST /api/submissions` with validation + honeypot + rate limit
