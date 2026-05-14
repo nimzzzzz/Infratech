@@ -105,6 +105,7 @@ export function DashboardEmptyState({
           <div className="mt-10 border-t border-[var(--color-line)] pt-6">
             <Link
               href="/dashboard/onboarding/submit?as=returning"
+              prefetch
               className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
             >
               <Plus size={11} weight="bold" />
@@ -121,6 +122,7 @@ export function DashboardEmptyState({
         <div className="mt-12">
           <Link
             href="/dashboard/onboarding/submit?as=returning"
+            prefetch
             className="group relative grid grid-cols-[auto_1fr_auto] items-start gap-5 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 transition-colors hover:border-[var(--color-ink)]/40 md:p-8"
           >
             <span className="grid h-12 w-12 place-items-center bg-[var(--color-canvas)] text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">

@@ -116,6 +116,7 @@ export function DashboardHeader({
                     <li key={item.href}>
                       <Link
                         href={item.href}
+                        prefetch
                         className={cn(
                           "relative inline-flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors",
                           active
@@ -218,6 +219,7 @@ export function DashboardHeader({
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    prefetch
                     className={cn(
                       "relative inline-flex items-center gap-1.5 px-3 py-3 text-[12px] font-medium transition-colors",
                       active

@@ -35,6 +35,7 @@ export default async function AdminSubmissionDetailPage({
     <Container className="max-w-4xl py-10 md:py-14">
       <Link
         href="/admin/submissions"
+        prefetch
         className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
       >
         <ArrowLeft

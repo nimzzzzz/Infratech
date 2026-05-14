@@ -72,7 +72,7 @@ export function AdminHeader({
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-6 md:h-18 md:px-8">
         {/* brand + admin badge */}
         <div className="flex items-center gap-4">
-          <Link href="/admin" className="group flex items-center gap-2.5">
+          <Link href="/admin" prefetch className="group flex items-center gap-2.5">
             <span className="relative inline-flex h-2 w-2">
               <span className="absolute inset-0 rounded-full bloom" />
               <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
@@ -95,6 +95,7 @@ export function AdminHeader({
                   <li key={`${item.label}-${idx}`}>
                     <Link
                       href={item.href}
+                      prefetch={!item.placeholder}
                       title={item.placeholder ? "Coming soon" : undefined}
                       aria-disabled={item.placeholder || undefined}
                       className={cn(
@@ -178,6 +179,7 @@ export function AdminHeader({
               <li key={`${item.label}-${idx}`}>
                 <Link
                   href={item.href}
+                  prefetch={!item.placeholder}
                   title={item.placeholder ? "Coming soon" : undefined}
                   aria-disabled={item.placeholder || undefined}
                   className={cn(

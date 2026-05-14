@@ -36,6 +36,7 @@ export function Header() {
             // header doesn't shift when auth state flips.
             <Link
               href="/dashboard"
+              prefetch
               className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-[0.18em] text-white transition-transform active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[11px]"
             >
               <span>Dashboard</span>
@@ -49,12 +50,14 @@ export function Header() {
             <>
               <Link
                 href="/login"
+                prefetch
                 className="inline-flex h-9 items-center justify-center border border-[var(--color-line-strong)] bg-transparent px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] sm:h-10 sm:px-4 sm:text-[11px]"
               >
                 Login
               </Link>
               <Link
                 href="/login?intent=submit"
+                prefetch
                 className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-[0.18em] text-white transition-transform active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[11px]"
               >
                 <span>List your product</span>

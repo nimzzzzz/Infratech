@@ -77,6 +77,7 @@ export default async function MessagesInboxPage({
             <li key={msg.id}>
               <Link
                 href={`/dashboard/messages/${msg.id}`}
+                prefetch
                 className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-5 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[auto_minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1.2fr)_88px] md:gap-6 md:px-3"
               >
                 <span
@@ -138,6 +139,7 @@ function FilterTab({
   return (
     <Link
       href={href}
+      prefetch
       className={cn(
         "px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] transition-colors",
         active

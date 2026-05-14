@@ -182,6 +182,7 @@ export default async function DashboardOverviewPage({
           </h2>
           <Link
             href="/dashboard/messages"
+            prefetch
             className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
           >
             View all
@@ -203,6 +204,7 @@ export default async function DashboardOverviewPage({
               <li key={msg.id}>
                 <Link
                   href={`/dashboard/messages/${msg.id}`}
+                  prefetch
                   className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[auto_1fr_auto_88px] md:gap-6 md:px-3"
                 >
                   <span
@@ -256,6 +258,7 @@ export default async function DashboardOverviewPage({
           </h2>
           <Link
             href="/dashboard/onboarding/submit?as=returning"
+            prefetch
             className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
           >
             <Plus size={11} weight="bold" />
@@ -317,6 +320,7 @@ function StatCard({
     <li>
       <Link
         href={href}
+        prefetch
         className="group flex h-full flex-col justify-between gap-6 bg-[var(--color-surface)] p-5 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:p-6"
       >
         <div className="flex items-center justify-between">

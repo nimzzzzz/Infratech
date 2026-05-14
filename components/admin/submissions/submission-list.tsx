@@ -148,6 +148,7 @@ export function SubmissionList({
               <li key={row.id}>
                 <Link
                   href={`/admin/submissions/${row.id}`}
+                  prefetch
                   className="grid grid-cols-[1fr_auto_88px] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[1fr_auto_auto_88px] md:gap-6 md:px-3"
                 >
                   <div className="min-w-0">

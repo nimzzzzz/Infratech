@@ -41,6 +41,7 @@ export function SubmissionRejectedCard({
       <div className="mt-8 flex justify-end border-t border-rose-200 pt-6">
         <Link
           href={`/dashboard/onboarding/submit?resubmit=${submissionId}`}
+          prefetch
           className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-90"
         >
           <PencilSimple size={13} weight="regular" />
