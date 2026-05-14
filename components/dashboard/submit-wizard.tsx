@@ -1172,12 +1172,8 @@ function CompanyStep({
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <p className="md:col-span-2 -mt-2 text-[13px] leading-relaxed text-[var(--color-ink-2)]">
-        This step builds your public company profile at{" "}
-        <code className="rounded bg-[var(--color-canvas-warm)] px-1.5 py-0.5 text-[12px] text-[var(--color-ink)]">
-          allinfratech.com/vendors/your-company
-        </code>
-        . You&rsquo;ll only see it once; subsequent product submissions
-        skip straight to product details.
+        A one-time step to set up your public company profile. Future
+        product submissions skip straight to product details.
       </p>
 
       <div className="md:col-span-2">
