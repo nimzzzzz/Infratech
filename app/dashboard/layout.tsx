@@ -3,10 +3,7 @@ import { cookies } from "next/headers";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { LegalAcceptanceModal } from "@/components/onboarding/legal-acceptance-modal";
 import { ViewAsVendorBanner } from "@/components/dashboard/view-as-vendor-banner";
-import {
-  getDashboardHeaderData,
-  getVendorSession,
-} from "@/lib/auth/session";
+import { getVendorSession } from "@/lib/auth/session";
 import { needsReacceptance } from "@/lib/legal/check-acceptance";
 import { countUnreadForVendor } from "@/lib/queries/messages";
 
@@ -24,18 +21,25 @@ export default async function DashboardLayout({
   // modal renders ON TOP of the page based on this flag; it must
   // mount before any page underneath could trigger a redirect or
   // request data the unverified user shouldn't yet see.
+  //
+  // Perf (pass 1): the layout previously called both
+  // getVendorSession AND getDashboardHeaderData, which fetched the
+  // same vendor_members + vendors join twice per render. Header
+  // data is now derived directly from the session — the underlying
+  // query is cache()-deduped so any page that also calls
+  // getVendorSession on top hits the same row without a second
+  // round trip. The remaining two ancillary queries (unread count +
+  // re-acceptance check) run in parallel rather than serially.
   const session = await getVendorSession({ requireOnboarded: false });
-  const header = await getDashboardHeaderData();
-  const unreadCount = session.vendor
-    ? await countUnreadForVendor(session.vendor.id)
-    : 0;
-  // Re-acceptance trigger (Phase B.2 PR 2): an already-onboarded
-  // member whose latest accepted version is older than the live
-  // TERMS_VERSION needs to re-accept. Skip the DB hit when the
-  // member hasn't onboarded yet — the first-sign-in flow covers it.
-  const reaccept = session.vendorMember.onboarded
-    ? await needsReacceptance(session.vendorMember.id)
-    : false;
+  const [unreadCount, reaccept, cookieStore] = await Promise.all([
+    session.vendor
+      ? countUnreadForVendor(session.vendor.id)
+      : Promise.resolve(0),
+    session.vendorMember.onboarded
+      ? needsReacceptance(session.vendorMember.id)
+      : Promise.resolve(false),
+    cookies(),
+  ]);
   const firstName = session.vendorMember.name.split(" ")[0] ?? null;
 
   // Phase A.1.1 — view-as-vendor banner. Renders for admins who
@@ -45,7 +49,7 @@ export default async function DashboardLayout({
   // here so a stale cookie inherited by a non-admin signing in
   // on the same browser doesn't render a confusing banner).
   const viewAsVendorCookie =
-    (await cookies()).get("view_as_vendor")?.value === "true";
+    cookieStore.get("view_as_vendor")?.value === "true";
   const showVendorViewBanner =
     viewAsVendorCookie && session.vendorMember.isAdmin;
 
@@ -53,10 +57,10 @@ export default async function DashboardLayout({
     <div className="flex min-h-[100dvh] flex-col bg-[var(--color-canvas)]">
       {showVendorViewBanner ? <ViewAsVendorBanner /> : null}
       <DashboardHeader
-        companyName={header.companyName}
-        userName={header.userName}
-        userAvatarUrl={header.userAvatarUrl}
-        userTitle={header.userTitle}
+        companyName={session.vendor?.name ?? "—"}
+        userName={session.vendorMember.name}
+        userAvatarUrl={session.vendorMember.avatarUrl}
+        userTitle={session.vendorMember.role}
         unreadCount={unreadCount}
       />
       <main id="main" className="flex-1">

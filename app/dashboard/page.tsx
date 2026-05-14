@@ -14,10 +14,7 @@ import {
   isDemoOverride,
 } from "@/lib/auth/session";
 import { listAppsForOwnerVendor } from "@/lib/queries/apps";
-import {
-  listMessagesForVendor,
-  countUnreadForVendor,
-} from "@/lib/queries/messages";
+import { listMessagesForVendor } from "@/lib/queries/messages";
 import {
   getMostRecentSubmissionForVendor,
   listPendingSubmissionsForVendor,
@@ -126,8 +123,14 @@ export default async function DashboardOverviewPage({
     );
   }
 
+  // Perf pass 1 — derive unread from the message list rather than
+  // firing a separate count query (the layout's header badge has
+  // its own count). One round trip instead of two.
   const allMessages = await listMessagesForVendor(vendor.id);
-  const unread = await countUnreadForVendor(vendor.id);
+  const unread = allMessages.reduce(
+    (n, m) => (m.status === "unread" ? n + 1 : n),
+    0,
+  );
   const recent = allMessages.slice(0, 4);
 
   const firstName = user.name.split(" ")[0];

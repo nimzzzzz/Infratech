@@ -18,8 +18,15 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminAppsPage() {
-  await getAdminSession();
-  const sorted = await listApps({ status: "published" });
+  // Perf pass 1 — race the auth check against the data fetch.
+  // getAdminSession redirects on failure (throws Next's redirect
+  // sentinel) which still aborts the response; the wasted listApps
+  // call when redirecting is accepted. Common case: cached session
+  // hit from the layout, data fetch is the only real cost.
+  const [, sorted] = await Promise.all([
+    getAdminSession(),
+    listApps({ status: "published" }),
+  ]);
 
   return (
     <Container className="max-w-6xl py-10 md:py-14">

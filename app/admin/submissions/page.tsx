@@ -45,7 +45,6 @@ export default async function AdminSubmissionsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  await getAdminSession();
   const sp = await searchParams;
   const tabParam = Array.isArray(sp.tab) ? sp.tab[0] : sp.tab;
   const tab: TabKey = VALID_TABS.has(tabParam ?? "")
@@ -53,10 +52,17 @@ export default async function AdminSubmissionsPage({
     : "queue";
   const q = (Array.isArray(sp.q) ? sp.q[0] : sp.q) ?? "";
 
-  const rows = await listSubmissionsForAdmin({
-    statuses: statusesForTab(tab),
-    q: q || undefined,
-  });
+  // Perf pass 1 — race the auth check against the data fetch. Same
+  // pattern as /admin/apps; getAdminSession redirects on failure
+  // so the wasted listSubmissionsForAdmin call when unauthorised
+  // is acceptable. Common case: cached session hit from layout.
+  const [, rows] = await Promise.all([
+    getAdminSession(),
+    listSubmissionsForAdmin({
+      statuses: statusesForTab(tab),
+      q: q || undefined,
+    }),
+  ]);
 
   return (
     <Container className="max-w-6xl py-12 md:py-16">

@@ -16,66 +16,50 @@ import { apps, submissions, vendors } from "@/lib/db/schema";
 import { listSubmissions } from "@/lib/queries/submissions";
 import { relativeDays } from "@/lib/browse/dates";
 
-/**
- * Minimal projection of the real submission payload shape written by
- * /api/submissions (Phase B.2 PR 2). The page reads only `name` for
- * the recent-activity title; everything else comes off the joined
- * submission row. We project loosely (all fields optional) so a
- * malformed payload doesn't crash render.
- */
-type SubmissionPayload = {
-  name?: string;
-  slug?: string;
-};
-
 export const metadata: Metadata = {
   title: "Admin · Overview",
   alternates: { canonical: "/admin" },
 };
 
 export default async function AdminOverviewPage() {
-  const { user } = await getAdminSession();
-  const firstName = user.name.split(" ")[0];
+  // Perf pass 1 — race auth + data fetches. getAdminSession() is
+  // cache()-deduped via the layout's earlier call, so it's a free
+  // cache hit; the four data fetches all run in parallel rather
+  // than sequentially. Previously the page issued ~6 sequential
+  // RTTs (4 separate counts + listSubmissions + a full-table
+  // payload scan); now it's one parallel batch of 4 queries.
+  //
+  // The two submission counts are collapsed into a single SELECT
+  // using FILTER so one round trip covers both. The full-table
+  // payload scan is gone — listSubmissions now projects
+  // payload->>'name' as productName, so the recent-activity list
+  // gets product titles in the same query.
+  const [session, submissionCounts, publishedAppsRow, vendorsRow, recentSubs] =
+    await Promise.all([
+      getAdminSession(),
+      db
+        .select({
+          pending: sql<number>`count(*) FILTER (WHERE status = 'pending_review')::int`,
+          inReview: sql<number>`count(*) FILTER (WHERE status = 'edited_awaiting_vendor_approval')::int`,
+        })
+        .from(submissions),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(apps)
+        .where(eq(apps.status, "published")),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(vendors)
+        .where(eq(vendors.suspended, false)),
+      listSubmissions(),
+    ]);
 
-  const [pendingRow] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(submissions)
-    .where(eq(submissions.status, "pending_review"));
-  const [inReviewRow] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(submissions)
-    .where(eq(submissions.status, "edited_awaiting_vendor_approval"));
-  const [publishedAppsRow] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(apps)
-    .where(eq(apps.status, "published"));
-  const [vendorsRow] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(vendors)
-    .where(eq(vendors.suspended, false));
-
-  const pending = pendingRow?.n ?? 0;
-  const inReview = inReviewRow?.n ?? 0;
-  const publishedAppsCount = publishedAppsRow?.n ?? 0;
-  const activeVendors = vendorsRow?.n ?? 0;
-
-  const recentSubs = await listSubmissions();
+  const firstName = session.user.name.split(" ")[0];
+  const pending = submissionCounts[0]?.pending ?? 0;
+  const inReview = submissionCounts[0]?.inReview ?? 0;
+  const publishedAppsCount = publishedAppsRow[0]?.n ?? 0;
+  const activeVendors = vendorsRow[0]?.n ?? 0;
   const recent = recentSubs.slice(0, 6);
-
-  // Pull payload for each visible row so we can show the product
-  // title. The previous implementation read this as the legacy
-  // MockSubmission shape (`p.submitter.companyName`, `p.app.name`,
-  // discriminated on `p.type`) which crashed once production had its
-  // first real /api/submissions row — real payloads are flat
-  // (see /api/submissions/route.ts:254). Phase A.2 will replace this
-  // ad-hoc projection with a proper submissions-list query that
-  // returns typed rows.
-  const payloads = await db
-    .select({ id: submissions.id, payload: submissions.payload })
-    .from(submissions);
-  const payloadById = new Map(
-    payloads.map((row) => [row.id, row.payload as SubmissionPayload | null]),
-  );
 
   return (
     <Container className="max-w-6xl py-12 md:py-16">
@@ -143,9 +127,10 @@ export default async function AdminOverviewPage() {
 
         <ul className="divide-y divide-[var(--color-line)]">
           {recent.map((sub) => {
-            const p = payloadById.get(sub.id);
             const title =
-              typeof p?.name === "string" && p.name.length > 0 ? p.name : "—";
+              sub.productName && sub.productName.length > 0
+                ? sub.productName
+                : "—";
             const company = sub.submitterName ?? "—";
             return (
               <li key={sub.id}>
