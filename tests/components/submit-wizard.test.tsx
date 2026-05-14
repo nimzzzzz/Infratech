@@ -169,4 +169,40 @@ describe("SubmitWizard", () => {
         .find((a) => a.getAttribute("href") === "#companyFounded"),
     ).toBeUndefined();
   });
+
+  // Phase C polish — stage chips carry tooltips with infrastructure-
+  // project descriptions. Asserting static presence in the DOM (the
+  // tooltip is hidden by CSS but rendered) covers the data flow from
+  // lib/data/stages.ts → ChipGroup option → <span role="tooltip">.
+  // Hover / focus visibility is a Tailwind class behaviour, not JS.
+  it("renders stage tooltips in the DOM with role=tooltip and the description text", () => {
+    render(
+      <SubmitWizard
+        prefill={{ vendor: "Returning Co", domain: "returning.example" }}
+        skipCompanyStep
+      />,
+    );
+    const tooltips = screen.getAllByRole("tooltip");
+    // Six stages, each with a tooltip.
+    expect(tooltips.length).toBeGreaterThanOrEqual(6);
+    // Spot-check a couple of the tightened descriptions.
+    expect(
+      screen.getByText(
+        /Tools used across multiple project phases — not tied to a specific stage\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Construction or implementation — site management, scheduling, quality control, safety\./i,
+      ),
+    ).toBeInTheDocument();
+    // Each stage chip's button references its tooltip via
+    // aria-describedby. Query by attribute to disambiguate from
+    // the Industries chip with the same "General" label.
+    const stageGeneralBtn = document.querySelector(
+      'button[aria-describedby="chip-tip-general"]',
+    );
+    expect(stageGeneralBtn).not.toBeNull();
+    expect(stageGeneralBtn?.textContent).toMatch(/General/i);
+  });
 });

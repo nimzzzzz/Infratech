@@ -1247,7 +1247,7 @@ function Field({
     <div className="flex flex-col gap-2">
       <label
         htmlFor={htmlFor}
-        className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]"
+        className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]"
       >
         {label}
         {required ? <span className="text-[var(--color-magenta)]"> *</span> : null}
@@ -1438,12 +1438,13 @@ function CompanyStep({
         id="companyGallery"
         className="md:col-span-2 scroll-mt-24"
       >
-        <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Company gallery
         </p>
         <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
-          Up to 8 photos or screenshots &mdash; your office, team, products
-          in action. PNG, JPG, or WebP up to 2 MB each.
+          Up to 8 photos &mdash; office, team, product screenshots. PNG,
+          JPG, or WebP up to 2 MB each. Alt text optional but recommended
+          for accessibility.
         </p>
         <div className="mt-3">
           <GalleryUploadField
@@ -1469,10 +1470,13 @@ function CompanyStep({
         id="companyLogoUrl"
         className="md:col-span-2 scroll-mt-24"
       >
-        <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Company logo
         </p>
-        <div className="mt-2">
+        <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
+          PNG, JPG, WebP, or SVG up to 1 MB. Square or landscape works best.
+        </p>
+        <div className="mt-3">
           <LogoUploadField
             scope="vendor_logo"
             value={{
@@ -1556,16 +1560,15 @@ function ToolBasicsStep({
         id="productLogoUrl"
         className="md:col-span-2 scroll-mt-24"
       >
-        <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
-          Product logo{" "}
-          <span className="normal-case tracking-normal text-[var(--color-ink-3)]">
-            (optional &mdash; overrides the company logo on this listing only)
-          </span>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
+          Product logo
         </p>
         <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
-          Skip if your product uses the same brand mark as the company.
+          Optional &mdash; overrides the company logo on this listing only.
+          PNG, JPG, WebP, or SVG up to 1 MB. Square or landscape works best
+          on the listing card.
         </p>
-        <div className="mt-2">
+        <div className="mt-3">
           <LogoUploadField
             scope="app_logo"
             value={{
@@ -1716,6 +1719,7 @@ function TaxonomyStep({
           options={stages.map((s) => ({
             slug: s.slug,
             name: formatStageLabel(s.slug),
+            tooltip: s.description,
           }))}
           selected={data.stages}
           onToggle={(slug) => {
@@ -1799,7 +1803,7 @@ function IndustryPricingStep({
       </div>
 
       <div id="pricing" className="scroll-mt-24">
-        <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Pricing model <span className="text-[var(--color-magenta)]">*</span>
         </p>
         <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
@@ -2039,7 +2043,10 @@ function ChipGroup({
   label: string;
   required?: boolean;
   hint?: string;
-  options: { slug: string; name: string }[];
+  /** `tooltip` is opt-in per option. Stages pass it (vendors need
+   *  the disambiguation); capabilities + industries leave it
+   *  undefined (chip names self-evident). */
+  options: { slug: string; name: string; tooltip?: string }[];
   selected: string[];
   onToggle: (slug: string) => void;
   scrollable?: boolean;
@@ -2053,7 +2060,7 @@ function ChipGroup({
 
   return (
     <div>
-      <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
         {label}
         {required ? (
           <span className="text-[var(--color-magenta)]"> *</span>
@@ -2072,12 +2079,15 @@ function ChipGroup({
       >
         {options.map((opt) => {
           const checked = selected.includes(opt.slug);
+          const tipId = opt.tooltip ? `chip-tip-${opt.slug}` : undefined;
           return (
-            <li key={opt.slug}>
+            <li key={opt.slug} className="group relative">
               <button
                 type="button"
                 onClick={() => onToggle(opt.slug)}
                 aria-pressed={checked}
+                aria-describedby={tipId}
+                title={opt.tooltip}
                 className={cn(
                   "inline-flex items-center gap-1.5 border px-3 py-1.5 text-[12px] transition-colors",
                   checked
@@ -2088,6 +2098,15 @@ function ChipGroup({
                 {checked ? <Check size={11} weight="bold" /> : null}
                 <span>{opt.name}</span>
               </button>
+              {opt.tooltip ? (
+                <span
+                  id={tipId}
+                  role="tooltip"
+                  className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-64 -translate-x-1/2 border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-[12px] leading-relaxed text-[var(--color-ink-2)] shadow-sm group-hover:block group-focus-within:block"
+                >
+                  {opt.tooltip}
+                </span>
+              ) : null}
             </li>
           );
         })}

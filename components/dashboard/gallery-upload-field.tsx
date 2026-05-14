@@ -209,19 +209,10 @@ export function GalleryUploadField({
 
   return (
     <div className="md:col-span-2">
-      <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
-        Gallery{" "}
-        <span className="normal-case tracking-normal text-[var(--color-ink-3)]">
-          (optional)
-        </span>
-      </p>
-      <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
-        Up to {MAX_ITEMS} photos &mdash; office, team, product screenshots,
-        events. PNG / JPG / WebP, max 2 MB each. Alt text optional but
-        recommended for accessibility.
-      </p>
-
-      <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {/* Wrapper (caller in submit-wizard.tsx) renders the section
+          heading + helper text. This component renders only the
+          grid + add-more tile — see Phase C heading-cleanup. */}
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {pending.map((item) => (
           <GalleryItemRow
             key={item.clientId}
