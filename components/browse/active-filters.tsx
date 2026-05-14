@@ -8,11 +8,11 @@ import {
   toggleInArray,
   type FilterKey,
 } from "@/lib/browse/filters";
-import { stageNameMap } from "@/lib/data/stages";
+import { formatStageLabel } from "@/lib/stages/format";
 import { lookups } from "@/lib/data/taxonomy";
 
 const labelFor = (category: FilterKey, slug: string): string => {
-  if (category === "stage") return stageNameMap.get(slug) ?? slug;
+  if (category === "stage") return formatStageLabel(slug);
   if (category === "capability") return lookups.capability.get(slug) ?? slug;
   if (category === "pricing") return lookups.pricing.get(slug) ?? slug;
   return lookups.industry.get(slug) ?? slug;

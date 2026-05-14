@@ -19,6 +19,7 @@ import {
   type AppDetail,
 } from "@/lib/queries/apps";
 import { listStages } from "@/lib/queries/taxonomy";
+import { formatStageLabel } from "@/lib/stages/format";
 import { cn } from "@/lib/utils";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -223,7 +224,7 @@ export default async function AppDetailPage({
               lifecycle.
             </p>
             <ul className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-3">
-              {allStages.map((stage, idx) => {
+              {allStages.map((stage) => {
                 const supported = supportedStageSlugs.has(stage.slug);
                 return (
                   <li key={stage.slug}>
@@ -237,23 +238,13 @@ export default async function AppDetailPage({
                     >
                       <span
                         className={cn(
-                          "num text-[13px] uppercase tracking-[0.22em]",
-                          supported
-                            ? "text-[var(--color-coral)]"
-                            : "text-[var(--color-ink-3)]",
-                        )}
-                      >
-                        {String(idx + 1).padStart(2, "0")}
-                      </span>
-                      <span
-                        className={cn(
                           "text-[17px]",
                           supported
                             ? "font-heading text-[var(--color-ink)]"
                             : "text-[var(--color-ink-3)]",
                         )}
                       >
-                        {stage.name}
+                        {formatStageLabel(stage.slug)}
                       </span>
                     </div>
                   </li>

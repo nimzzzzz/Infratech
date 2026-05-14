@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { AppCard as AppCardData } from "@/lib/queries/apps";
 import { lookups } from "@/lib/data/taxonomy";
+import { formatStageLabel } from "@/lib/stages/format";
 import { LetterAvatar } from "./letter-avatar";
 
 export function AppCard({ app }: { app: AppCardData }) {
@@ -47,7 +48,7 @@ export function AppCard({ app }: { app: AppCardData }) {
             {app.stages.map((s) => (
               <li key={s.slug}>
                 <span className="inline-block border border-[var(--color-line-strong)] px-2 py-[3px] text-[11px] uppercase tracking-[0.14em] text-[var(--color-ink-2)]">
-                  {s.name}
+                  {formatStageLabel(s.slug)}
                 </span>
               </li>
             ))}

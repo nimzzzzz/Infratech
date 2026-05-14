@@ -22,6 +22,12 @@ export function FilterSidebar({
       aria-label="Filters"
     >
       <FilterSection
+        title="Industry"
+        category="industry"
+        options={industries}
+        counts={facets.industry}
+      />
+      <FilterSection
         title="Capability"
         category="capability"
         options={capabilities}
@@ -34,12 +40,6 @@ export function FilterSidebar({
         category="pricing"
         options={pricingModels}
         counts={facets.pricing}
-      />
-      <FilterSection
-        title="Industry"
-        category="industry"
-        options={industries}
-        counts={facets.industry}
       />
     </aside>
   );

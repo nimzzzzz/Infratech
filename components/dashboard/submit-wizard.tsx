@@ -11,6 +11,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { stages } from "@/lib/data/stages";
+import { formatStageLabel } from "@/lib/stages/format";
 import {
   capabilities,
   industries,
@@ -728,9 +729,7 @@ function FullReviewView({
       >
         <ReviewRow
           label="Stages"
-          value={data.stages
-            .map((s) => stages.find((x) => x.slug === s)?.name ?? s)
-            .join(", ")}
+          value={data.stages.map((s) => formatStageLabel(s)).join(", ")}
         />
         <ReviewTaxonomyRow
           label="Capabilities"
@@ -867,9 +866,7 @@ function SinglePageSubmit({
           >
             <ReviewRow
               label="Stages"
-              value={data.stages
-                .map((s) => stages.find((x) => x.slug === s)?.name ?? s)
-                .join(", ")}
+              value={data.stages.map((s) => formatStageLabel(s)).join(", ")}
             />
             <ReviewTaxonomyRow
               label="Capabilities"
@@ -1483,7 +1480,10 @@ function TaxonomyStep({
           label="Project stages"
           required
           hint="Pick every stage your product actively supports. Stages are the directory's primary axis and aren't open for new proposals."
-          options={stages.map((s) => ({ slug: s.slug, name: s.name }))}
+          options={stages.map((s) => ({
+            slug: s.slug,
+            name: formatStageLabel(s.slug),
+          }))}
           selected={data.stages}
           onToggle={(slug) => {
             toggle("stages", slug);

@@ -11,7 +11,7 @@ import {
 } from "@phosphor-icons/react";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
 import { StatusPill } from "@/components/admin/status-pill";
-import { stageNameMap } from "@/lib/data/stages";
+import { formatStageLabel } from "@/lib/stages/format";
 import { lookups } from "@/lib/data/taxonomy";
 import { relativeDays } from "@/lib/browse/dates";
 import { cn } from "@/lib/utils";
@@ -315,9 +315,7 @@ function SubmissionDetail({ sub }: { sub: Submission }) {
             <DetailRow label="Tagline" value={sub.app.tagline} />
             <DetailRow
               label="Stages"
-              value={sub.app.stages
-                .map((s) => stageNameMap.get(s) ?? s)
-                .join(", ")}
+              value={sub.app.stages.map((s) => formatStageLabel(s)).join(", ")}
             />
             <TaxonomyDetailRow
               label="Capabilities"
