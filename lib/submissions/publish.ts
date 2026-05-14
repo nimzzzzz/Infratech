@@ -169,11 +169,17 @@ export async function publishSubmissionInTx(
       .delete(vendorGalleryImages)
       .where(eq(vendorGalleryImages.vendorId, opts.vendorId));
     if (p.companyGallery.length > 0) {
+      // Alt is optional at the wizard / schema layer (a vendor can
+      // submit a gallery item without alt text). The DB column is
+      // NOT NULL, so fall back to an empty string. Public render
+      // sites use the empty alt as the actual <img alt=""> for
+      // decorative-image treatment — same as how missing logos
+      // currently render.
       await tx.insert(vendorGalleryImages).values(
         p.companyGallery.map((g) => ({
           vendorId: opts.vendorId,
           url: g.url,
-          alt: g.alt,
+          alt: g.alt ?? "",
           position: g.position,
         })),
       );

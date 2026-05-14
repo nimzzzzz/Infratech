@@ -32,10 +32,16 @@ export function LogoUploadField({
   scope,
   value,
   onChange,
+  error,
 }: {
   scope: UploadScope;
   value: LogoUploadFieldValue;
   onChange: (next: LogoUploadFieldValue) => void;
+  /** Parent-supplied validation error (e.g. from the wizard's
+   *  Zod step check). Distinct from the in-component upload
+   *  error — both render, but the Zod one wins visually because
+   *  it's about the form state, not the network call. */
+  error?: string | null;
 }) {
   // We keep a local File copy so <LogoUpload> can render its
   // preview. Once the upload completes, the URL is the source
@@ -43,10 +49,10 @@ export function LogoUploadField({
   // user picks a new file or removes this one.
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const onFileChange = async (next: File | null) => {
-    setError(null);
+    setUploadError(null);
     setFile(next);
     if (!next) {
       onChange({ url: null, alt: value.alt });
@@ -63,7 +69,7 @@ export function LogoUploadField({
         const j = (await res
           .json()
           .catch(() => ({}))) as { error?: string };
-        setError(j.error ?? "Upload failed");
+        setUploadError(j.error ?? "Upload failed");
         setFile(null);
         onChange({ url: null, alt: value.alt });
         return;
@@ -72,7 +78,7 @@ export function LogoUploadField({
       onChange({ url: j.url, alt: value.alt });
     } catch (err) {
       console.error("[logo-upload-field] upload failed", err);
-      setError("Network error — try again");
+      setUploadError("Network error — try again");
       setFile(null);
       onChange({ url: null, alt: value.alt });
     } finally {
@@ -100,9 +106,17 @@ export function LogoUploadField({
       {error ? (
         <p
           role="alert"
-          className="mt-2 text-[12px] text-[var(--color-magenta)]"
+          className="mt-2 text-[12px] text-[var(--color-coral)]"
         >
           {error}
+        </p>
+      ) : null}
+      {uploadError ? (
+        <p
+          role="alert"
+          className="mt-2 text-[12px] text-[var(--color-magenta)]"
+        >
+          {uploadError}
         </p>
       ) : null}
     </div>

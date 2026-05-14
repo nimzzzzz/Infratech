@@ -151,12 +151,18 @@ const videoUrl = z
   })
   .transform((s) => (s ? (toEmbedSrc(s) ?? "") : ""));
 
-/** Phase C — single gallery item shape. Each requires alt text. */
+/**
+ * Phase C — single gallery item shape. Alt text is optional but
+ * recommended for accessibility; the wizard surfaces it as
+ * "Optional — short description for accessibility". Falls back to
+ * empty string on the publish helper side so the NOT NULL DB
+ * column stays satisfied.
+ */
 const galleryItem = z.object({
   url: z.string().trim().refine(isBlobUrl, {
     message: "Image URL must be a Vercel Blob URL",
   }),
-  alt: plainText(200).min(1, "Alt text is required"),
+  alt: plainText(200).optional().transform((s) => s ?? ""),
   position: z.number().int().min(0).max(99),
 });
 

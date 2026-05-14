@@ -50,10 +50,14 @@ export function GalleryUploadField({
   scope,
   items,
   onChange,
+  error,
 }: {
   scope: UploadScope;
   items: GalleryUploadFieldItem[];
   onChange: (next: GalleryUploadFieldItem[]) => void;
+  /** Parent-supplied validation error (Zod step check). The
+   *  inner `topError` (per-pick failures) renders separately. */
+  error?: string | null;
 }) {
   // `pending` is the local view layer. Each entry tracks its
   // upload status; `url !== null` means it has landed in the
@@ -213,7 +217,8 @@ export function GalleryUploadField({
       </p>
       <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
         Up to {MAX_ITEMS} photos &mdash; office, team, product screenshots,
-        events. PNG / JPG / WebP, max 2 MB each. Each requires alt text.
+        events. PNG / JPG / WebP, max 2 MB each. Alt text optional but
+        recommended for accessibility.
       </p>
 
       <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -263,6 +268,14 @@ export function GalleryUploadField({
         ) : null}
       </ul>
 
+      {error ? (
+        <p
+          role="alert"
+          className="mt-2 text-[12px] text-[var(--color-coral)]"
+        >
+          {error}
+        </p>
+      ) : null}
       {topError ? (
         <p
           role="alert"
@@ -323,7 +336,7 @@ function GalleryItemRow({
           type="text"
           value={item.alt}
           onChange={(e) => onAltChange(e.target.value)}
-          placeholder="Alt text — describe this image *"
+          placeholder="Alt text — short description (optional)"
           maxLength={200}
           className="h-9 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[13px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
         />
