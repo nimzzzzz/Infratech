@@ -48,6 +48,13 @@ Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
 
 ## 🟡 Future ideas — explore later
 
+### Cold-start warming for dashboard / admin Vercel functions
+- **Context (2026-05-14, perf pass 3):** the dashboard layout Suspense refactor handles cold-starts gracefully — the skeleton header + page-level `loading.tsx` render the instant a navigation starts, even when the Vercel function takes 500-1500 ms to spin up. UX-wise the cold-start is no longer "blank page" but "skeleton for ~1 second then real content." Acceptable for v1 but not ideal.
+- **Fix when it becomes a problem:** add a Vercel Cron (or external pinger like cron-job.org) that hits `/api/healthz` or any cheap auth-gated endpoint every 5 minutes during business hours. Keeps at least one function instance warm. Cost: a few thousand free Vercel invocations per month, well within free-tier.
+- **Trigger:** when vendor-onboarding flow gets enough traffic that a noticeable share of visitors hit cold dashboard renders — measured via Vercel function metrics or a Sentry transaction trace on `/dashboard` TTFB.
+- Out of scope for the perf pass; flagged here so future-self doesn't dig at it without context.
+
+
 ### "Did this lead anywhere?" feedback loop
 - **Idea**: after a vendor reads an inquiry message, surface a small inline prompt: *"What did this turn into?"* → options: `Led to a customer` / `Promising — still talking` / `Spam` / `Irrelevant`.
 - **Value**: aggregated across many vendors, this becomes a quality signal we can use to:

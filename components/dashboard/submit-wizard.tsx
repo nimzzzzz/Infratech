@@ -94,8 +94,21 @@ const FIELD_LABELS: Record<string, string> = {
  * happens" silent-failure case (Phase C PR 2 bug): even when an
  * errored field has no scroll target or no inline-error surface, the
  * summary makes it impossible to miss.
+ *
+ * The `step` prop is the active step (1, 2, or 3). All step
+ * components now prefix their input/wrapper IDs as `step{N}-{key}`
+ * because all step trees are kept mounted simultaneously (see
+ * keep-mounted refactor — same `companyName` ID would otherwise
+ * collide if a future step reused the name). The anchor href +
+ * scroll target both rely on this prefix.
  */
-function ErrorSummary({ errors }: { errors: FieldErrors }) {
+function ErrorSummary({
+  errors,
+  step,
+}: {
+  errors: FieldErrors;
+  step: number;
+}) {
   const items = Object.entries(errors)
     .map(([key, msgs]) => ({ key, msg: msgs?.[0] }))
     .filter((x): x is { key: string; msg: string } => Boolean(x.msg));
@@ -113,7 +126,7 @@ function ErrorSummary({ errors }: { errors: FieldErrors }) {
         {items.map(({ key, msg }) => (
           <li key={key} className="text-[13px] leading-relaxed">
             <a
-              href={`#${key}`}
+              href={`#step${step}-${key}`}
               className="font-medium text-[var(--color-ink)] underline underline-offset-2 hover:text-[var(--color-coral)]"
             >
               {FIELD_LABELS[key] ?? key}
@@ -387,10 +400,14 @@ export function SubmitWizard({
       const firstKey = Object.keys(flat)[0];
       if (firstKey) {
         // Defer one frame so the just-painted error border is in the
-        // layout before we try to scroll to it.
+        // layout before we try to scroll to it. The id includes the
+        // step prefix because step trees are now kept mounted with
+        // `hidden` toggling (see keep-mounted refactor) — ids must
+        // be unique across all steps in the DOM.
+        const scrollId = `step${stepNo}-${firstKey}`;
         requestAnimationFrame(() => {
           document
-            .getElementById(firstKey)
+            .getElementById(scrollId)
             ?.scrollIntoView({ behavior: "smooth", block: "center" });
         });
       }
@@ -568,8 +585,24 @@ export function SubmitWizard({
     <div className="mt-8">
       <ProgressRail step={step} skipCompanyStep={skipCompanyStep} />
 
+      {/*
+        Phase 3 perf — all three step trees are kept mounted and
+        toggled via the `hidden` attribute instead of conditional
+        render. Pre-fix: clicking Back from step 2 → step 1
+        unmounted the entire step-2 tree (4 sub-sections, ~30
+        inputs, gallery thumbnails) and re-mounted step 1 from
+        scratch, producing a visible white flash during the
+        reconciliation + image-decode window. Keep-mounted avoids
+        the flash, preserves form input identity (focus, IME,
+        browser autofill) across step changes, and keeps already-
+        decoded gallery image previews in memory.
+
+        IDs across step trees are prefixed `step{N}-{key}` so
+        getElementById in validateStep + ErrorSummary anchors hits
+        the right element. See ErrorSummary docstring.
+      */}
       <div className="mt-10">
-        {step === 1 ? (
+        <div hidden={step !== 1}>
           <CompanyStep
             data={data}
             update={update}
@@ -577,8 +610,8 @@ export function SubmitWizard({
             errors={errors}
             clearError={clearError}
           />
-        ) : null}
-        {step === 2 ? (
+        </div>
+        <div hidden={step !== 2}>
           <div className="space-y-14">
             <div id="section-basics" className="scroll-mt-24">
               <Section title="Product basics" n={1}>
@@ -626,14 +659,14 @@ export function SubmitWizard({
               </Section>
             </div>
           </div>
-        ) : null}
-        {step === 3 ? (
+        </div>
+        <div hidden={step !== 3}>
           <FullReviewView
             data={data}
             onEditCompany={() => jumpToStep(1)}
             onEditSection={(sectionId) => jumpToStep(2, sectionId)}
           />
-        ) : null}
+        </div>
       </div>
 
       {/* Honeypot — sr-only; bots fill every input. Real users never
@@ -651,7 +684,7 @@ export function SubmitWizard({
         />
       </div>
 
-      <ErrorSummary errors={errors} />
+      <ErrorSummary errors={errors} step={step} />
 
       {submitError ? (
         <p
@@ -952,8 +985,21 @@ function SinglePageSubmit({
     setView("edit");
   };
 
-  if (view === "review") {
-    return (
+  /*
+   * Phase 3 perf — both `edit` and `review` views are kept mounted
+   * and toggled via the `hidden` attribute. Pre-fix: switching
+   * between the two views unmounted and re-mounted the entire
+   * step-2 subtree (4 sections, the gallery + logo previews, ~30
+   * controlled inputs), causing the same visible white flash as
+   * the multi-step Back button. Keep-mounted preserves form-input
+   * identity (focus, IME, browser autofill) across the toggle.
+   *
+   * The honeypot input + submitError banner live OUTSIDE both
+   * views — they're shared infrastructure that doesn't change
+   * between edit and review.
+   */
+  const reviewBlock = (
+    <div hidden={view !== "review"}>
       <div className="mt-8">
         <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
           Add a product &middot; Review
@@ -1047,28 +1093,6 @@ function SinglePageSubmit({
           </ReviewBlock>
         </div>
 
-        {/* Honeypot — sr-only; bots fill every input. */}
-        <div className="sr-only" aria-hidden="true">
-          <label htmlFor="submission-website3-single">Website</label>
-          <input
-            id="submission-website3-single"
-            type="text"
-            tabIndex={-1}
-            autoComplete="off"
-            value={website3}
-            onChange={(e) => setWebsite3(e.target.value)}
-          />
-        </div>
-
-        {submitError ? (
-          <p
-            role="alert"
-            className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
-          >
-            {submitError}
-          </p>
-        ) : null}
-
         <div className="mt-12 flex items-center justify-between border-t border-[var(--color-line)] pt-6">
           <button
             type="button"
@@ -1108,11 +1132,37 @@ function SinglePageSubmit({
           </button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="mt-8">
+    <>
+      {/* Honeypot — sr-only; bots fill every input. Lives outside
+          both views so it stays in DOM regardless of toggle state. */}
+      <div className="sr-only" aria-hidden="true">
+        <label htmlFor="submission-website3-single">Website</label>
+        <input
+          id="submission-website3-single"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={website3}
+          onChange={(e) => setWebsite3(e.target.value)}
+        />
+      </div>
+
+      {submitError && view === "review" ? (
+        <p
+          role="alert"
+          className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
+        >
+          {submitError}
+        </p>
+      ) : null}
+
+      {reviewBlock}
+
+      <div hidden={view !== "edit"} className="mt-8">
       <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Add a product
       </p>
@@ -1172,7 +1222,7 @@ function SinglePageSubmit({
         </div>
       </div>
 
-      <ErrorSummary errors={errors} />
+      <ErrorSummary errors={errors} step={2} />
 
       <div className="mt-12 flex flex-col gap-3 border-t border-[var(--color-line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[12px] text-[var(--color-ink-3)]">
@@ -1200,7 +1250,8 @@ function SinglePageSubmit({
           />
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -1327,13 +1378,13 @@ function CompanyStep({
       <div className="md:col-span-2">
         <Field
           label="Company name"
-          htmlFor="companyName"
+          htmlFor="step1-companyName"
           required
           hint="Pre-filled from LinkedIn — edit if it should display differently."
           error={err(errors, "companyName")}
         >
           <input
-            id="companyName"
+            id="step1-companyName"
             type="text"
             value={data.companyName}
             onChange={(e) => setField("companyName")(e.target.value)}
@@ -1345,13 +1396,13 @@ function CompanyStep({
 
       <Field
         label="Company website"
-        htmlFor="companyWebsite"
+        htmlFor="step1-companyWebsite"
         required
         error={err(errors, "companyWebsite")}
         hint="example.com or https://example.com — we'll add https:// if you skip it."
       >
         <input
-          id="companyWebsite"
+          id="step1-companyWebsite"
           type="text"
           value={data.companyWebsite}
           onChange={(e) => setField("companyWebsite")(e.target.value)}
@@ -1362,12 +1413,12 @@ function CompanyStep({
       </Field>
       <Field
         label="Year founded"
-        htmlFor="companyFounded"
+        htmlFor="step1-companyFounded"
         required
         error={err(errors, "companyFounded")}
       >
         <input
-          id="companyFounded"
+          id="step1-companyFounded"
           type="number"
           inputMode="numeric"
           value={data.companyFounded}
@@ -1382,19 +1433,19 @@ function CompanyStep({
 
       <Field
         label="Headquarters country"
-        htmlFor="companyHeadquarters"
+        htmlFor="step1-companyHeadquarters"
         required
         hint="Where the company is legally based."
         error={err(errors, "companyHeadquarters")}
       >
         <CountrySelect
-          id="companyHeadquarters"
+          id="step1-companyHeadquarters"
           value={data.companyHeadquarters}
           onChange={(v) => setField("companyHeadquarters")(v)}
         />
       </Field>
 
-      <div id="companyRegions" className="md:col-span-2 scroll-mt-24">
+      <div id="step1-companyRegions" className="md:col-span-2 scroll-mt-24">
         <ChipGroup
           label="Regions you operate in"
           required
@@ -1412,13 +1463,13 @@ function CompanyStep({
       <div className="md:col-span-2">
         <Field
           label="Company description"
-          htmlFor="companyDescription"
+          htmlFor="step1-companyDescription"
           required
           hint="Two short paragraphs at most. What the company does, who it's for, founding context. Plain English — no marketing language."
           error={err(errors, "companyDescription")}
         >
           <textarea
-            id="companyDescription"
+            id="step1-companyDescription"
             rows={6}
             value={data.companyDescription}
             onChange={(e) => setField("companyDescription")(e.target.value)}
@@ -1435,7 +1486,7 @@ function CompanyStep({
       </div>
 
       <div
-        id="companyGallery"
+        id="step1-companyGallery"
         className="md:col-span-2 scroll-mt-24"
       >
         <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
@@ -1467,7 +1518,7 @@ function CompanyStep({
       </div>
 
       <div
-        id="companyLogoUrl"
+        id="step1-companyLogoUrl"
         className="md:col-span-2 scroll-mt-24"
       >
         <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
@@ -1516,12 +1567,12 @@ function ToolBasicsStep({
       <div className="md:col-span-2">
         <Field
           label="Product name"
-          htmlFor="name"
+          htmlFor="step2-name"
           required
           error={err(errors, "name")}
         >
           <input
-            id="name"
+            id="step2-name"
             type="text"
             value={data.name}
             onChange={(e) => {
@@ -1537,13 +1588,13 @@ function ToolBasicsStep({
       <div className="md:col-span-2">
         <Field
           label="Product website"
-          htmlFor="url"
+          htmlFor="step2-url"
           required
           error={err(errors, "url")}
           hint="example.com or https://example.com — we'll add https:// if you skip it."
         >
           <input
-            id="url"
+            id="step2-url"
             type="text"
             value={data.url}
             onChange={(e) => {
@@ -1557,7 +1608,7 @@ function ToolBasicsStep({
         </Field>
       </div>
       <div
-        id="productLogoUrl"
+        id="step2-productLogoUrl"
         className="md:col-span-2 scroll-mt-24"
       >
         <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
@@ -1607,13 +1658,13 @@ function ToolDescStep({
     <div className="flex flex-col gap-6">
       <Field
         label="Tagline"
-        htmlFor="tagline"
+        htmlFor="step2-tagline"
         required
         hint="One sentence, plain English. Describe the product, not the company. Avoid 'elevate', 'seamless', 'next-gen'."
         error={err(errors, "tagline")}
       >
         <input
-          id="tagline"
+          id="step2-tagline"
           type="text"
           value={data.tagline}
           onChange={(e) => {
@@ -1633,13 +1684,13 @@ function ToolDescStep({
 
       <Field
         label="What the product does"
-        htmlFor="description"
+        htmlFor="step2-description"
         required
         hint="Two short paragraphs at most. Product capabilities and where it fits — not company background. Editorial may copy-edit before publishing."
         error={err(errors, "description")}
       >
         <textarea
-          id="description"
+          id="step2-description"
           rows={6}
           value={data.description}
           onChange={(e) => {
@@ -1659,12 +1710,12 @@ function ToolDescStep({
 
       <Field
         label="Product video"
-        htmlFor="videoUrl"
+        htmlFor="step2-videoUrl"
         hint="Paste a YouTube or Vimeo link. The video will play directly on your product page."
         error={err(errors, "videoUrl")}
       >
         <input
-          id="videoUrl"
+          id="step2-videoUrl"
           type="url"
           value={data.videoUrl}
           onChange={(e) => {
@@ -1711,7 +1762,7 @@ function TaxonomyStep({
 }) {
   return (
     <div className="flex flex-col gap-10">
-      <div id="stages" className="scroll-mt-24">
+      <div id="step2-stages" className="scroll-mt-24">
         <ChipGroup
           label="Project stages"
           required
@@ -1729,7 +1780,7 @@ function TaxonomyStep({
           error={err(errors, "stages")}
         />
       </div>
-      <div id="capabilities" className="scroll-mt-24">
+      <div id="step2-capabilities" className="scroll-mt-24">
         <ChipGroup
           label="Capabilities"
           required
@@ -1781,7 +1832,7 @@ function IndustryPricingStep({
   const customSelected = data.pricing === CUSTOM_PRICING_SLUG;
   return (
     <div className="flex flex-col gap-10">
-      <div id="industries" className="scroll-mt-24">
+      <div id="step2-industries" className="scroll-mt-24">
         <ChipGroup
           label="Industries"
           required
@@ -1802,7 +1853,7 @@ function IndustryPricingStep({
         />
       </div>
 
-      <div id="pricing" className="scroll-mt-24">
+      <div id="step2-pricing" className="scroll-mt-24">
         <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Pricing model <span className="text-[var(--color-magenta)]">*</span>
         </p>
@@ -1846,15 +1897,15 @@ function IndustryPricingStep({
         <FieldError message={err(errors, "pricing")} />
 
         {customSelected ? (
-          <div id="customPricing" className="mt-4 scroll-mt-24">
+          <div id="step2-customPricing" className="mt-4 scroll-mt-24">
             <label
-              htmlFor="customPricing-input"
+              htmlFor="step2-customPricing-input"
               className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]"
             >
               Describe the pricing model
             </label>
             <input
-              id="customPricing-input"
+              id="step2-customPricing-input"
               type="text"
               autoFocus
               value={data.customPricing}
