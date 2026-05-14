@@ -87,14 +87,9 @@ export function LogoUpload({
 
   return (
     <div className="md:col-span-2">
-      <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
-        Logo
-      </p>
-      <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
-        Optional. PNG, JPG, WebP, or SVG &middot; max 1 MB. Square or
-        landscape works best on the listing card.
-      </p>
-
+      {/* Wrapper (LogoUploadField caller) renders the section
+          heading + helper text. This component renders only the
+          drop zone + alt input — see Phase C heading-cleanup. */}
       {file && previewUrl ? (
         <div className="mt-3 flex items-start gap-4 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-4">
           <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden border border-[var(--color-line)] bg-[var(--color-canvas)]">
