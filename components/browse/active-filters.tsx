@@ -61,7 +61,7 @@ export function ActiveFilters() {
           onClick={() =>
             router.push(buildHref(pathname, state, { q: "" }), { scroll: false })
           }
-          className="group inline-flex items-center gap-2 bg-[var(--color-ink)] px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-white"
+          className="group inline-flex items-center gap-2 bg-[var(--color-ink)] px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-white transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)]"
         >
           <span>{`"${state.q}"`}</span>
           <X size={10} weight="bold" className="opacity-70 group-hover:opacity-100" />
@@ -72,7 +72,7 @@ export function ActiveFilters() {
           key={`${c.category}:${c.slug}`}
           type="button"
           onClick={() => remove(c.category, c.slug)}
-          className="group inline-flex items-center gap-2 bg-[var(--color-ink)] px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-white"
+          className="group inline-flex items-center gap-2 bg-[var(--color-ink)] px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-white transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)]"
         >
           <span>{labelFor(c.category, c.slug)}</span>
           <X size={10} weight="bold" className="opacity-70 group-hover:opacity-100" />

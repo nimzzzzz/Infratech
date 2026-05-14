@@ -113,8 +113,8 @@ export function SubmissionEditedCard({
           onClick={onApprove}
           disabled={busy}
           className={cn(
-            "group inline-flex h-11 items-center gap-2 bg-[var(--color-coral)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-white transition-opacity",
-            busy ? "opacity-70" : "",
+            "group inline-flex h-11 items-center gap-2 bg-[var(--color-coral)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-magenta)] active:translate-y-[1px]",
+            busy ? "opacity-70" : "hover:bg-[var(--color-coral-deep)]",
           )}
         >
           <CheckCircle size={13} weight="regular" />

@@ -89,7 +89,7 @@ export default async function OnboardingSubmittedPage({
         <Link
           href="/dashboard/onboarding/submit?as=returning"
           prefetch
-          className="group inline-flex h-11 items-center justify-center gap-1.5 bg-[var(--color-ink)] px-5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-90"
+          className="group inline-flex h-11 items-center justify-center gap-1.5 bg-[var(--color-ink)] px-5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
         >
           <Plus size={11} weight="bold" />
           Submit another product

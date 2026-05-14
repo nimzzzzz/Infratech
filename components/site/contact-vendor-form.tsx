@@ -314,9 +314,9 @@ export function ContactForm({
           type="submit"
           disabled={!isValid || submitting}
           className={cn(
-            "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition active:translate-y-[1px]",
+            "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-[filter,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
             isValid && !submitting
-              ? "bloom"
+              ? "bloom hover:brightness-110"
               : "cursor-not-allowed bg-[var(--color-line)] text-[var(--color-ink-3)]",
           )}
         >

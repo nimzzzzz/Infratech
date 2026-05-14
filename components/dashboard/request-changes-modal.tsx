@@ -157,8 +157,8 @@ export function RequestChangesModal({
             type="submit"
             disabled={submitting}
             className={cn(
-              "inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity",
-              submitting ? "opacity-70" : "hover:opacity-90",
+              "inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
+              submitting ? "opacity-70" : "hover:bg-[var(--color-ink-2)]",
             )}
           >
             <ChatCircleText size={13} weight="regular" />

@@ -723,7 +723,7 @@ export function SubmitWizard({
           <button
             type="button"
             onClick={next}
-            className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-canvas)] transition active:translate-y-[1px]"
+            className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
           >
             Continue
             <ArrowRight
@@ -738,8 +738,8 @@ export function SubmitWizard({
             onClick={handleSubmit}
             disabled={submitting}
             className={cn(
-              "group inline-flex h-11 items-center gap-2 px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition active:translate-y-[1px]",
-              submitting ? "bg-[var(--color-coral)]/80" : "bloom",
+              "group inline-flex h-11 items-center gap-2 px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-[filter,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
+              submitting ? "bg-[var(--color-coral)]/80" : "bloom hover:brightness-110",
             )}
           >
             {submitting ? (
@@ -1114,8 +1114,8 @@ function SinglePageSubmit({
             onClick={onSubmit}
             disabled={submitting}
             className={cn(
-              "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition active:translate-y-[1px]",
-              submitting ? "bg-[var(--color-coral)]/80" : "bloom",
+              "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-[filter,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
+              submitting ? "bg-[var(--color-coral)]/80" : "bloom hover:brightness-110",
             )}
           >
             {submitting ? (
@@ -1240,7 +1240,7 @@ function SinglePageSubmit({
             scrollTargetRef.current = null;
             setView("review");
           }}
-          className="group inline-flex h-12 items-center justify-center gap-2 bg-[var(--color-ink)] px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-canvas)] transition active:translate-y-[1px]"
+          className="group inline-flex h-12 items-center justify-center gap-2 bg-[var(--color-ink)] px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
         >
           Continue to review
           <ArrowRight

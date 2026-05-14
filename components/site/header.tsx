@@ -37,7 +37,7 @@ export function Header() {
             <Link
               href="/dashboard"
               prefetch
-              className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-[0.18em] text-white transition-transform active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[11px]"
+              className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-[0.18em] text-white transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[11px]"
             >
               <span>Dashboard</span>
               <ArrowUpRight
@@ -58,7 +58,7 @@ export function Header() {
               <Link
                 href="/login?intent=submit"
                 prefetch
-                className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-[0.18em] text-white transition-transform active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[11px]"
+                className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-[0.18em] text-white transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[11px]"
               >
                 <span>List your product</span>
                 <ArrowUpRight
