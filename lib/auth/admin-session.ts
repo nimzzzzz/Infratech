@@ -1,11 +1,34 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db/client";
 import { vendorMembers, type VendorMember } from "@/lib/db/schema";
 import { isAdminEmail } from "@/lib/auth/admin-allowlist";
+
+/**
+ * Request-scoped cache of `vendor_members WHERE clerk_user_id = ?`.
+ * Both `getAdminSession` (page-side, redirects on auth fail) and
+ * `getAdminHeaderData` (layout-side, returns placeholders on miss)
+ * resolve through here. Before this dedupe, every /admin/** render
+ * fired the same SELECT twice — once for the layout's header pill,
+ * once for the page's auth gate.
+ *
+ * Returns the raw row (or null). Callers do their own isAdmin /
+ * suspended / redirect logic on the result.
+ */
+const getMemberByClerkId = cache(
+  async (clerkUserId: string): Promise<VendorMember | null> => {
+    const [row] = await db
+      .select()
+      .from(vendorMembers)
+      .where(eq(vendorMembers.clerkUserId, clerkUserId))
+      .limit(1);
+    return row ?? null;
+  },
+);
 
 /**
  * Phase A.1: admins are vendor_members rows with is_admin=true.
@@ -62,14 +85,10 @@ export async function getAdminSession(): Promise<AdminSession> {
   const { userId } = await auth();
   if (!userId) redirect("/admin/login");
 
-  let [member] = await db
-    .select()
-    .from(vendorMembers)
-    .where(eq(vendorMembers.clerkUserId, userId))
-    .limit(1);
+  let member = await getMemberByClerkId(userId);
 
   if (!member) {
-    member = (await lazyCreateAdminMember(userId)) ?? undefined!;
+    member = await lazyCreateAdminMember(userId);
   }
 
   if (!member) redirect("/admin/login?error=no_admin");
@@ -94,17 +113,12 @@ export async function getAdminHeaderData(): Promise<{
   try {
     const { userId } = await auth();
     if (userId) {
-      const [member] = await db
-        .select()
-        .from(vendorMembers)
-        .where(
-          and(
-            eq(vendorMembers.clerkUserId, userId),
-            eq(vendorMembers.isAdmin, true),
-          ),
-        )
-        .limit(1);
-      if (member) {
+      // Shares the cached `vendor_members` row with getAdminSession()
+      // — single DB hit per request even when both fire on the same
+      // /admin/** render. Filter is_admin in JS rather than the query
+      // so the cache key (just userId) stays consistent.
+      const member = await getMemberByClerkId(userId);
+      if (member && member.isAdmin) {
         return {
           name: member.name,
           email: member.primaryEmail,

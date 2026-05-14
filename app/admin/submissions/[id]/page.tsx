@@ -17,12 +17,18 @@ export default async function AdminSubmissionDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await getAdminSession();
   const { id: idParam } = await params;
   const id = Number(idParam);
   if (!Number.isFinite(id) || id <= 0) notFound();
 
-  const submission = await getSubmissionForAdmin(id);
+  // Perf pass 1 — race the auth check against the submission fetch.
+  // Submission ids are global (admin can see any), so the fetch has
+  // no dependency on session. Auth still gates rendering — its
+  // redirect propagates from the Promise.all rejection.
+  const [, submission] = await Promise.all([
+    getAdminSession(),
+    getSubmissionForAdmin(id),
+  ]);
   if (!submission) notFound();
 
   return (

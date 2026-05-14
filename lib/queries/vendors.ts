@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { eq, and, ne } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { vendors, vendorMembers, type Vendor, type VendorMember } from "@/lib/db/schema";
@@ -21,10 +22,17 @@ export async function getVendorBySlug(slug: string) {
  *   • unknown clerk_user_id          → null
  *
  * One LEFT JOIN, single roundtrip.
+ *
+ * Wrapped in React's `cache()` so layout + page server components in
+ * the same request share a single Postgres call. Without this dedupe,
+ * the dashboard layout's session probe + the page's session probe
+ * each fired this query independently, doubling the per-render DB
+ * cost. The cache is request-scoped — concurrent users don't share
+ * results.
  */
-export async function getVendorByMemberClerkUserId(
+export const getVendorByMemberClerkUserId = cache(async (
   clerkUserId: string,
-): Promise<{ vendor: Vendor | null; vendorMember: VendorMember } | null> {
+): Promise<{ vendor: Vendor | null; vendorMember: VendorMember } | null> => {
   const [row] = await db
     .select({
       member: vendorMembers,
@@ -36,7 +44,7 @@ export async function getVendorByMemberClerkUserId(
     .limit(1);
   if (!row) return null;
   return { vendor: row.vendor, vendorMember: row.member };
-}
+});
 
 export const listVendors = () =>
   db

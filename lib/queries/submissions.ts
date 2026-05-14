@@ -16,6 +16,14 @@ export type SubmissionListItem = {
   submittedAt: Date;
   submitterName: string | null;
   submitterEmail: string | null;
+  /**
+   * The product name from `payload.name`. Projected at query time
+   * (`payload->>'name'`) so the admin-overview page doesn't need a
+   * follow-up query to pull payloads for the recent-activity list.
+   * NULL when the payload is malformed or missing — caller treats
+   * it as "—".
+   */
+  productName: string | null;
 };
 
 export async function listSubmissions(opts?: {
@@ -31,6 +39,7 @@ export async function listSubmissions(opts?: {
       submittedAt: submissions.submittedAt,
       submitterName: vendors.name,
       submitterEmail: vendors.contactEmail,
+      productName: sql<string | null>`${submissions.payload}->>'name'`,
     })
     .from(submissions)
     .innerJoin(vendors, eq(vendors.id, submissions.submitterVendorId))

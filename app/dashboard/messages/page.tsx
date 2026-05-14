@@ -5,10 +5,7 @@ import {
   getVendorSession,
   isDemoOverride,
 } from "@/lib/auth/session";
-import {
-  listMessagesForVendor,
-  countUnreadForVendor,
-} from "@/lib/queries/messages";
+import { listMessagesForVendor } from "@/lib/queries/messages";
 import { relativeDays } from "@/lib/browse/dates";
 import { cn } from "@/lib/utils";
 
@@ -29,10 +26,15 @@ export default async function MessagesInboxPage({
 
   const { vendor } = await getVendorSession({ demoOverride });
 
+  // Perf pass 1 — derive unread from the message list we already
+  // have rather than firing a separate count query. The layout's
+  // header badge still uses countUnreadForVendor (it doesn't need
+  // the full list); this page does, so the derivation is free.
   const all = await listMessagesForVendor(vendor.id);
-  const unread = await countUnreadForVendor(vendor.id);
+  const unreadList = all.filter((m) => m.status === "unread");
+  const unread = unreadList.length;
   const filter = filterParam === "unread" ? "unread" : "all";
-  const list = filter === "unread" ? all.filter((m) => m.status === "unread") : all;
+  const list = filter === "unread" ? unreadList : all;
 
   return (
     <Container className="max-w-6xl py-10 md:py-14">
