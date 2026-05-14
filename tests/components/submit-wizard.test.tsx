@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { SubmitWizard } from "@/components/dashboard/submit-wizard";
 
 /**
@@ -39,9 +39,13 @@ describe("SubmitWizard", () => {
     ).toBeInTheDocument();
     // Company name input rendered.
     expect(screen.getByLabelText(/company name/i)).toBeInTheDocument();
-    // Logo upload widget replaced with the "coming soon" notice.
+    // Phase C — real upload widgets land (no more "coming soon"
+    // placeholder). Gallery section + logo section both render.
     expect(
-      screen.getByText(/Logo uploads are coming soon/i),
+      screen.getByText(/^Company gallery$/i, { selector: "p" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/^Company logo$/i, { selector: "p" }),
     ).toBeInTheDocument();
   });
 
@@ -59,9 +63,53 @@ describe("SubmitWizard", () => {
     expect(
       screen.getByRole("heading", { name: /^your new product\.$/i }),
     ).toBeInTheDocument();
-    // Product logo notice is the "coming soon" placeholder.
+    // Phase C — product logo widget renders (was the "coming soon"
+    // placeholder before).
     expect(
-      screen.getAllByText(/Logo uploads are coming soon/i).length,
-    ).toBeGreaterThan(0);
+      screen.getByText(/Product logo/i, { selector: "p" }),
+    ).toBeInTheDocument();
+    // Phase C — video URL field renders too.
+    expect(screen.getByLabelText(/Product video/i)).toBeInTheDocument();
+  });
+
+  // Phase C PR 2 — video preview renders inline when the user types
+  // a recognised YouTube / Vimeo URL. The schema test (in
+  // tests/api/submissions.test.ts) covers server-side rejection of
+  // bad URLs; this test covers the client-side preview behaviour.
+  it("shows an inline video embed when a valid URL is pasted", () => {
+    render(
+      <SubmitWizard
+        prefill={{ vendor: "Returning Co", domain: "returning.example" }}
+        skipCompanyStep
+      />,
+    );
+    const input = screen.getByLabelText(/Product video/i) as HTMLInputElement;
+    expect(input.value).toBe("");
+    // No iframe yet.
+    expect(document.querySelector("iframe")).toBeNull();
+
+    fireEvent.change(input, {
+      target: { value: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+    });
+
+    const iframe = document.querySelector("iframe");
+    expect(iframe).not.toBeNull();
+    expect(iframe?.getAttribute("src")).toBe(
+      "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    );
+  });
+
+  it("does NOT show an iframe for an invalid video URL", () => {
+    render(
+      <SubmitWizard
+        prefill={{ vendor: "Returning Co", domain: "returning.example" }}
+        skipCompanyStep
+      />,
+    );
+    const input = screen.getByLabelText(/Product video/i) as HTMLInputElement;
+    fireEvent.change(input, {
+      target: { value: "https://dailymotion.com/video/xyz" },
+    });
+    expect(document.querySelector("iframe")).toBeNull();
   });
 });

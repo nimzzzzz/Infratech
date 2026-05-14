@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { hasRealHostname, normaliseUrl } from "@/lib/submissions/url";
+import { isYouTubeOrVimeo, toEmbedSrc } from "@/lib/media/video";
 
 /**
  * Body schema for POST /api/submissions, plus per-step subschemas the
@@ -100,6 +101,67 @@ const foundedYear = z
     { message: "Year is out of range" },
   );
 
+/**
+ * Phase C — image URLs accepted in submission payloads must come
+ * from our own Vercel Blob store. The /api/uploads route is the
+ * only legitimate ingress; this refine closes the path where a
+ * hand-rolled fetch could smuggle an arbitrary URL through. Vercel
+ * Blob hostnames end with `.blob.vercel-storage.com` (see CLAUDE.md
+ * §6 D.4).
+ */
+const BLOB_HOST_SUFFIX = ".blob.vercel-storage.com";
+
+function isBlobUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:") return false;
+    return u.hostname.endsWith(BLOB_HOST_SUFFIX);
+  } catch {
+    return false;
+  }
+}
+
+const optionalBlobUrl = z
+  .string()
+  .trim()
+  .max(1000)
+  .optional()
+  .or(z.literal(""))
+  .refine((s) => !s || isBlobUrl(s), {
+    message: "Image URL must be a Vercel Blob URL",
+  })
+  .transform((s) => s ?? "");
+
+/**
+ * Phase C — vendor-supplied YouTube / Vimeo URL for the product
+ * detail video block. Empty string is allowed (video is optional).
+ * Non-empty values must match the allowlist + ID patterns from
+ * lib/media/video.ts; the parser normalises to the embed URL form
+ * (Q3: stored value is always the embed URL), so reading the
+ * column never has to interpret a raw watch?v= URL.
+ */
+const videoUrl = z
+  .string()
+  .trim()
+  .max(500)
+  .optional()
+  .or(z.literal(""))
+  .refine((s) => !s || isYouTubeOrVimeo(s), {
+    message: "Use a YouTube or Vimeo URL",
+  })
+  .transform((s) => (s ? (toEmbedSrc(s) ?? "") : ""));
+
+/** Phase C — single gallery item shape. Each requires alt text. */
+const galleryItem = z.object({
+  url: z.string().trim().refine(isBlobUrl, {
+    message: "Image URL must be a Vercel Blob URL",
+  }),
+  alt: plainText(200).min(1, "Alt text is required"),
+  position: z.number().int().min(0).max(99),
+});
+
+const galleryArray = z.array(galleryItem).max(8);
+
 // ────────────────────────────────────────────────────────────────────
 // Per-step subschemas (client wizard runs these before allowing
 // advance). Naming mirrors the wizard's step structure so the parent
@@ -114,6 +176,11 @@ export const companyStepSchema = z.object({
   companyHeadquarters: plainText(100).min(1, "Required"),
   companyRegions: slugArray.min(1, "Pick at least one region").max(20),
   companyDescription: plainText(2000).min(1, "Required"),
+  // Phase C — all optional. The vendor profile falls back to the
+  // LetterAvatar / empty-gallery treatment if these aren't set.
+  companyLogoUrl: optionalBlobUrl,
+  companyLogoAlt: optionalPlainText(200),
+  companyGallery: galleryArray.optional(),
 });
 
 /**
@@ -135,6 +202,11 @@ export const productStepSchema = z
     customIndustries: z.array(plainText(80)).max(10).optional(),
     pricing: z.string().trim().min(1, "Pick a pricing model").max(80),
     customPricing: optionalPlainText(80),
+    // Phase C — all optional. App detail page falls back to the
+    // LetterAvatar / no-video treatment if these aren't set.
+    productLogoUrl: optionalBlobUrl,
+    productLogoAlt: optionalPlainText(200),
+    videoUrl: videoUrl,
   })
   .superRefine((d, ctx) => {
     // At least one capability — canonical OR proposed.
@@ -192,6 +264,13 @@ export const submissionBodySchema = z.object({
   companyHeadquarters: optionalPlainText(100),
   companyRegions: slugArray.max(20).optional(),
   companyDescription: optionalPlainText(2000),
+  // Phase C — company-level media. Stashed in submissions.payload
+  // and written to vendors.logo_url / vendor_gallery_images on
+  // publish (only for first-time submissions; returning vendors
+  // don't carry these fields).
+  companyLogoUrl: optionalBlobUrl,
+  companyLogoAlt: optionalPlainText(200),
+  companyGallery: galleryArray.optional(),
 
   // --- Product block (always required) ---
   name: plainText(200).min(1),
@@ -205,6 +284,11 @@ export const submissionBodySchema = z.object({
   customCapabilities: z.array(plainText(80)).max(10).optional(),
   customIndustries: z.array(plainText(80)).max(10).optional(),
   customPricing: optionalPlainText(80),
+  // Phase C — product-level media. Stashed in submissions.payload
+  // and written to apps.logo_url / apps.video_url on publish.
+  productLogoUrl: optionalBlobUrl,
+  productLogoAlt: optionalPlainText(200),
+  videoUrl: videoUrl,
 
   // --- Honeypot ---
   website3: z.string().max(500).optional(),

@@ -261,6 +261,117 @@ describe("POST /api/submissions — validation & lookup", () => {
     const json = await res.json();
     expect(json.fieldErrors.companyName).toBeTruthy();
   });
+
+  // Phase C PR 2 — media field validation. New optional fields on
+  // both the company and product blocks of the body schema.
+  it("400 when videoUrl is not a YouTube / Vimeo URL", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    const vendorId = await seedVendor("video-bad");
+    await seedMember({ clerkUserId: "user_video_bad", vendorId });
+    authMock.userId = "user_video_bad";
+
+    const res = await POST(
+      makeRequest({
+        ...validCompany(),
+        ...validProduct({ videoUrl: "https://dailymotion.com/video/123" }),
+      }),
+    );
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.fieldErrors.videoUrl).toBeTruthy();
+  });
+
+  it("400 when productLogoUrl is not a Vercel Blob URL", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    const vendorId = await seedVendor("logo-bad");
+    await seedMember({ clerkUserId: "user_logo_bad", vendorId });
+    authMock.userId = "user_logo_bad";
+
+    const res = await POST(
+      makeRequest({
+        ...validCompany(),
+        ...validProduct({
+          productLogoUrl: "https://evil.example.com/spoof.png",
+          productLogoAlt: "alt",
+        }),
+      }),
+    );
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.fieldErrors.productLogoUrl).toBeTruthy();
+  });
+
+  it("400 when companyGallery item URL is not a Vercel Blob URL", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    await seedMember({ clerkUserId: "user_gallery_bad", vendorId: null });
+    authMock.userId = "user_gallery_bad";
+
+    const res = await POST(
+      makeRequest({
+        ...validCompany(),
+        ...validProduct(),
+        companyGallery: [
+          {
+            url: "https://evil.example.com/g.jpg",
+            alt: "img",
+            position: 0,
+          },
+        ],
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("200 when media fields are valid; payload carries them through", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    await seedMember({ clerkUserId: "user_media_ok", vendorId: null });
+    authMock.userId = "user_media_ok";
+
+    const res = await POST(
+      makeRequest({
+        ...validCompany(),
+        ...validProduct({
+          productLogoUrl: "https://x.public.blob.vercel-storage.com/app_logo/0/p.png",
+          productLogoAlt: "Mark",
+          // watch URL normalises to embed URL via the schema transform.
+          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        }),
+        companyLogoUrl: "https://x.public.blob.vercel-storage.com/vendor_logo/0/c.png",
+        companyLogoAlt: "Wordmark",
+        companyGallery: [
+          {
+            url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/g1.jpg",
+            alt: "Office",
+            position: 0,
+          },
+        ],
+      }),
+    );
+    expect(res.status).toBe(200);
+    const json = await res.json();
+
+    const [subRow] = await db
+      .select()
+      .from(submissions)
+      .where(eq(submissions.id, json.submissionId));
+    const payload = subRow.payload as Record<string, unknown>;
+    expect(payload.productLogoUrl).toBe(
+      "https://x.public.blob.vercel-storage.com/app_logo/0/p.png",
+    );
+    expect(payload.videoUrl).toBe(
+      "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    );
+    expect(payload.companyLogoUrl).toBe(
+      "https://x.public.blob.vercel-storage.com/vendor_logo/0/c.png",
+    );
+    expect(payload.companyGallery).toEqual([
+      {
+        url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/g1.jpg",
+        alt: "Office",
+        position: 0,
+      },
+    ]);
+  });
 });
 
 describe("POST /api/submissions — slug collisions", () => {

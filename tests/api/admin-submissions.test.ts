@@ -217,6 +217,205 @@ describe("POST /api/admin/submissions/:id/approve", () => {
     const json = await res.json();
     expect(json.code).toBe("invalid_transition");
   });
+
+  // Phase C PR 2 — publish writes media fields to apps / vendors and
+  // wipes-and-reinserts the vendor gallery. Same approve-route entry
+  // point as the happy path; just asserts the new side effects.
+  it("writes media: apps.logo_url + apps.video_url, vendors.logo_url, vendor_gallery_images rows", async () => {
+    const { vendorGalleryImages } = await import("@/lib/db/schema");
+    const vendorId = await seedVendor("media-happy");
+    const adminId = await seedAdmin("user_admin_media_happy");
+    void adminId;
+    authMock.userId = "user_admin_media_happy";
+    const sub = await seedSubmission({
+      vendorId,
+      payload: {
+        slug: `media-happy-${Date.now()}`,
+        name: "Media Happy Product",
+        url: "https://media-happy.test",
+        tagline: "tagline",
+        description: "desc",
+        stages: [],
+        capabilities: [],
+        industries: [],
+        pricing: "user-subscription-freemium",
+        productLogoUrl: "https://x.public.blob.vercel-storage.com/app_logo/42/p.png",
+        productLogoAlt: "Logo",
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        companyLogoUrl: "https://x.public.blob.vercel-storage.com/vendor_logo/42/c.png",
+        companyLogoAlt: "Company logo",
+        companyGallery: [
+          {
+            url: "https://x.public.blob.vercel-storage.com/vendor_gallery/42/g1.jpg",
+            alt: "Office",
+            position: 0,
+          },
+          {
+            url: "https://x.public.blob.vercel-storage.com/vendor_gallery/42/g2.jpg",
+            alt: "Team",
+            position: 1,
+          },
+        ],
+      },
+    });
+
+    const { POST } = await import(
+      "@/app/api/admin/submissions/[id]/approve/route"
+    );
+    const res = await POST(makeRequest({}, sub.id, "approve"), {
+      params: Promise.resolve({ id: String(sub.id) }),
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+
+    const [appRow] = await db
+      .select()
+      .from(apps)
+      .where(eq(apps.id, json.appId));
+    expect(appRow.logoUrl).toBe(
+      "https://x.public.blob.vercel-storage.com/app_logo/42/p.png",
+    );
+    expect(appRow.videoUrl).toBe(
+      "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    );
+
+    const [vendorRow] = await db
+      .select()
+      .from(vendors)
+      .where(eq(vendors.id, vendorId));
+    expect(vendorRow.logoUrl).toBe(
+      "https://x.public.blob.vercel-storage.com/vendor_logo/42/c.png",
+    );
+
+    const galleryRows = await db
+      .select()
+      .from(vendorGalleryImages)
+      .where(eq(vendorGalleryImages.vendorId, vendorId))
+      .orderBy(vendorGalleryImages.position);
+    expect(galleryRows).toHaveLength(2);
+    expect(galleryRows[0].alt).toBe("Office");
+    expect(galleryRows[0].position).toBe(0);
+    expect(galleryRows[1].alt).toBe("Team");
+    expect(galleryRows[1].position).toBe(1);
+  });
+
+  // Phase C PR 2 — re-publish (via approve on a fresh submission for
+  // the same vendor) wipes the existing gallery and re-inserts from
+  // the new payload. Defends the CASCADE-then-insert contract.
+  it("re-publish gallery: wipes existing rows and inserts the new set", async () => {
+    const { vendorGalleryImages } = await import("@/lib/db/schema");
+    const vendorId = await seedVendor("media-republish");
+    const adminId = await seedAdmin("user_admin_media_republish");
+    void adminId;
+    authMock.userId = "user_admin_media_republish";
+
+    // Seed an initial gallery directly (simulates a prior publish).
+    await db.insert(vendorGalleryImages).values([
+      { vendorId, url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/old1.jpg", alt: "Old 1", position: 0 },
+      { vendorId, url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/old2.jpg", alt: "Old 2", position: 1 },
+      { vendorId, url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/old3.jpg", alt: "Old 3", position: 2 },
+    ]);
+
+    // Approve a NEW submission whose payload carries a shorter gallery.
+    const sub = await seedSubmission({
+      vendorId,
+      payload: {
+        slug: `media-republish-${Date.now()}`,
+        name: "Republish Product",
+        url: "https://republish.test",
+        tagline: "tagline",
+        description: "desc",
+        stages: [],
+        capabilities: [],
+        industries: [],
+        pricing: "user-subscription-freemium",
+        companyGallery: [
+          {
+            url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/new1.jpg",
+            alt: "New 1",
+            position: 0,
+          },
+        ],
+      },
+    });
+
+    const { POST } = await import(
+      "@/app/api/admin/submissions/[id]/approve/route"
+    );
+    const res = await POST(makeRequest({}, sub.id, "approve"), {
+      params: Promise.resolve({ id: String(sub.id) }),
+    });
+    expect(res.status).toBe(200);
+
+    const rows = await db
+      .select()
+      .from(vendorGalleryImages)
+      .where(eq(vendorGalleryImages.vendorId, vendorId))
+      .orderBy(vendorGalleryImages.position);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].alt).toBe("New 1");
+  });
+
+  // Phase C PR 2 — payload without companyGallery / companyLogoUrl
+  // (the returning-vendor case) must NOT touch existing vendor-level
+  // rows. Wipe-on-undefined would regress a vendor whose first
+  // product set a gallery.
+  it("re-publish without companyGallery key leaves existing rows alone", async () => {
+    const { vendorGalleryImages } = await import("@/lib/db/schema");
+    const vendorId = await seedVendor("media-returning");
+    const adminId = await seedAdmin("user_admin_media_returning");
+    void adminId;
+    authMock.userId = "user_admin_media_returning";
+
+    // Seed two existing gallery rows + a vendor logo from a prior submission.
+    await db.insert(vendorGalleryImages).values([
+      { vendorId, url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/keep1.jpg", alt: "K1", position: 0 },
+      { vendorId, url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/keep2.jpg", alt: "K2", position: 1 },
+    ]);
+    await db
+      .update(vendors)
+      .set({ logoUrl: "https://x.public.blob.vercel-storage.com/vendor_logo/0/keep.png" })
+      .where(eq(vendors.id, vendorId));
+
+    // Returning vendor submits a new product; payload has no
+    // company* keys.
+    const sub = await seedSubmission({
+      vendorId,
+      payload: {
+        slug: `media-returning-${Date.now()}`,
+        name: "Returning Product",
+        url: "https://returning.test",
+        tagline: "tagline",
+        description: "desc",
+        stages: [],
+        capabilities: [],
+        industries: [],
+        pricing: "user-subscription-freemium",
+      },
+    });
+
+    const { POST } = await import(
+      "@/app/api/admin/submissions/[id]/approve/route"
+    );
+    const res = await POST(makeRequest({}, sub.id, "approve"), {
+      params: Promise.resolve({ id: String(sub.id) }),
+    });
+    expect(res.status).toBe(200);
+
+    const rows = await db
+      .select()
+      .from(vendorGalleryImages)
+      .where(eq(vendorGalleryImages.vendorId, vendorId));
+    expect(rows).toHaveLength(2);
+
+    const [vendorRow] = await db
+      .select()
+      .from(vendors)
+      .where(eq(vendors.id, vendorId));
+    expect(vendorRow.logoUrl).toBe(
+      "https://x.public.blob.vercel-storage.com/vendor_logo/0/keep.png",
+    );
+  });
 });
 
 describe("POST /api/admin/submissions/:id/edit", () => {

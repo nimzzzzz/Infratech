@@ -265,6 +265,24 @@ export async function POST(req: Request) {
             customIndustries: body.customIndustries ?? [],
             customPricing: body.customPricing ?? null,
             termsVersionAtSubmit: TERMS_VERSION,
+            // Phase C — product-level media. Always carried; the
+            // publish helper writes apps.logo_url / apps.video_url
+            // from these fields.
+            productLogoUrl: body.productLogoUrl || null,
+            productLogoAlt: body.productLogoAlt || null,
+            videoUrl: body.videoUrl || null,
+            // Phase C — company-level media. Carried only on
+            // first-time submissions (returning vendors skip step 1
+            // and don't send these). publishSubmissionInTx
+            // conditionally writes vendors.logo_url +
+            // vendor_gallery_images when these are present.
+            ...(mustCreateVendor
+              ? {
+                  companyLogoUrl: body.companyLogoUrl || null,
+                  companyLogoAlt: body.companyLogoAlt || null,
+                  companyGallery: body.companyGallery ?? [],
+                }
+              : {}),
           },
         })
         .returning({ id: submissions.id });

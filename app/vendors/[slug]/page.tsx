@@ -17,7 +17,8 @@ import {
   listAllVendorSlugs,
 } from "@/lib/queries/vendors";
 import { listAppsByVendorSlug } from "@/lib/queries/apps";
-import type { Vendor } from "@/lib/db/schema";
+import { listVendorGalleryImagesByVendorId } from "@/lib/queries/gallery";
+import type { Vendor, VendorGalleryImage } from "@/lib/db/schema";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -63,7 +64,10 @@ export default async function VendorDetailPage({
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
 
-  const tools = await listAppsByVendorSlug(vendor.slug);
+  const [tools, gallery] = await Promise.all([
+    listAppsByVendorSlug(vendor.slug),
+    listVendorGalleryImagesByVendorId(vendor.id),
+  ]);
   const paragraphs = (vendor.description ?? "")
     .split(/\n\n+/)
     .filter((p) => p.trim().length > 0);
@@ -251,7 +255,45 @@ export default async function VendorDetailPage({
           </div>
         </Container>
       </section>
+
+      {/* GALLERY — Phase C. Renders only when the vendor uploaded
+          at least one image. No lightbox; click opens the full-
+          size Blob URL in a new tab. */}
+      {gallery.length > 0 ? (
+        <section className="border-t border-[var(--color-line)] bg-[var(--color-canvas)] py-14 md:py-20">
+          <Container>
+            <Section eyebrow="Gallery">
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {gallery.map((img) => (
+                  <GalleryTile key={img.id} img={img} />
+                ))}
+              </ul>
+            </Section>
+          </Container>
+        </section>
+      ) : null}
     </article>
+  );
+}
+
+function GalleryTile({ img }: { img: VendorGalleryImage }) {
+  return (
+    <li>
+      <a
+        href={img.url}
+        target="_blank"
+        rel="noopener"
+        className="group relative block aspect-[4/3] overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={img.url}
+          alt={img.alt}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+        />
+      </a>
+    </li>
   );
 }
 
