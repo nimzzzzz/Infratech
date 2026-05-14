@@ -80,6 +80,16 @@ Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
 - ✅ Stage 4 Phase A (2026-05-07) wired `@clerk/nextjs/legacy` `useSignIn().authenticateWithRedirect`, `/sso-callback` page renders `<AuthenticateWithRedirectCallback />`, lazy-create `vendor_members` row from Clerk user when webhook hasn't delivered, signed-in case handled across `/login` + button + header.
 - 🟡 **Phase D.2 in progress** — Clerk Production instance switch. Blocked on LinkedIn Developer Portal "Sign in with LinkedIn using OpenID Connect" product review (1–72 h SLA). Custom credentials replace Clerk's shared sandbox LinkedIn OAuth keys.
 
+### Pre-existing test failures — waived for Phase C kickoff (2026-05-14)
+- CLAUDE.md §14 noted ~10 unrelated test failures (taxonomy seed mismatch, webhook ECONNRESET flakes, messages assertions, the `vendor-session` demo `ORDER BY` flake, plus the standing `tests/webhook-is-admin.test.ts` "UNVERIFIED email" case). The note said "fix before Phase B.2 PR 3 / Phase C kickoff."
+- **Decision (2026-05-14):** waiver granted. Phase C PR 1 ships without a cleanup pass — the failures are pre-existing, well-understood (see the §14 detail), and not blocking the upload infrastructure work. New Phase C tests (`tests/lib/video.test.ts`, `tests/api/uploads.test.ts`) ship green on their own.
+- **Trigger:** revisit before Phase C PR 2 merges. The diff hopefully isolates the seed expectations (the easiest fixes) without touching the webhook flakes (which need Neon dev-branch pool behaviour understood first).
+
+### Orphan blob cleanup
+- `/api/uploads` creates Blob objects keyed `<scope>/<vendor_id>/<timestamp>-<rand>.<ext>`. If the user uploads then abandons the wizard / removes a gallery item mid-flow / a submission is rejected and never resubmitted, the Blob persists.
+- Phase C PR 1 accepts the cost. The vendor-keyed path prefix means a future cleanup job can list+delete by prefix without scanning every key.
+- **Trigger:** when Vercel Blob usage approaches 800 MB/month (the spend-alert threshold) OR a vendor is suspended (cascade-delete from `vendor_gallery_images` happens at the DB layer; the Blob objects need a separate sweep).
+
 ### Background-removal on uploaded vendor logos
 - Vendors upload logos as PNG/JPG with whatever background. We'd want a clean transparent version on the dark footer / over varied backgrounds.
 - We did manual processing for the Resolute "R" logo using a Python script (Pillow + numpy `255 - min(r,g,b)` alpha trick).
