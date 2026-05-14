@@ -2087,7 +2087,6 @@ function ChipGroup({
                 onClick={() => onToggle(opt.slug)}
                 aria-pressed={checked}
                 aria-describedby={tipId}
-                title={opt.tooltip}
                 className={cn(
                   "inline-flex items-center gap-1.5 border px-3 py-1.5 text-[12px] transition-colors",
                   checked
