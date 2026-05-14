@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
@@ -289,6 +290,13 @@ export async function POST(req: Request) {
 
       return { submissionId: submission.id, vendorId: vendorId as number };
     });
+
+    // Belt-and-braces server-side invalidation. The wizard also calls
+    // router.refresh() on success, but invalidating here closes the
+    // gap if the client never executes the refresh (mid-navigation
+    // race, double-click, etc.). 'layout' scope so the dashboard
+    // layout's session lookup re-runs too.
+    revalidatePath("/dashboard", "layout");
 
     return NextResponse.json({
       submissionId: result.submissionId,

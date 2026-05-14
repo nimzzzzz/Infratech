@@ -551,6 +551,15 @@ export function SubmitWizard({
         return;
       }
       const json = (await res.json()) as { redirectUrl?: string };
+      // Invalidate the Router Cache before navigating. On a first
+      // submission the cache may hold a stale "/dashboard → redirect to
+      // /dashboard/onboarding" entry from the initial sign-in (when
+      // vendor_members.vendor_id was still null). Without this refresh,
+      // clicking "View dashboard" on the submitted page replays the
+      // stale redirect and bounces the user back into the onboarding
+      // flow. Same pattern the legal-acceptance modal uses after it
+      // flips vendor_members.onboarded.
+      router.refresh();
       router.push(json.redirectUrl ?? "/dashboard");
     } catch (err) {
       console.error("[submit-wizard] submit failed", err);
