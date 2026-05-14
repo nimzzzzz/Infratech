@@ -177,7 +177,7 @@ export function LogoUpload({
             className="flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]"
           >
             <ImageIcon size={11} weight="regular" />
-            Alt text <span className="text-[var(--color-magenta)]">*</span>
+            Alt text
           </label>
           <input
             id="logoAlt"
@@ -189,8 +189,7 @@ export function LogoUpload({
             className="h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
           />
           <p className="text-[11px] text-[var(--color-ink-3)]">
-            Required for accessibility &mdash; described to screen-reader
-            users and used in image-search context.
+            Optional &mdash; short description for accessibility.
           </p>
         </div>
       ) : null}

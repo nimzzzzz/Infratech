@@ -55,6 +55,78 @@ function FieldError({ message }: { message?: string | null }) {
 }
 
 /**
+ * Human labels for field keys. Used by `<ErrorSummary>` so a Zod
+ * `companyLogoUrl` error shows "Company logo" in the anchor list,
+ * not a camelCase identifier. Keys that aren't in the map fall back
+ * to the raw key (better than nothing, and signals a mapping gap).
+ */
+const FIELD_LABELS: Record<string, string> = {
+  companyName: "Company name",
+  companyWebsite: "Company website",
+  companyFounded: "Year founded",
+  companyHeadquarters: "Headquarters country",
+  companyRegions: "Regions",
+  companyDescription: "Company description",
+  companyLogoUrl: "Company logo",
+  companyLogoAlt: "Company logo alt text",
+  companyGallery: "Company gallery",
+  name: "Product name",
+  url: "Product website",
+  tagline: "Tagline",
+  description: "Product description",
+  stages: "Project stages",
+  capabilities: "Capabilities",
+  industries: "Industries",
+  pricing: "Pricing model",
+  customPricing: "Custom pricing description",
+  productLogoUrl: "Product logo",
+  productLogoAlt: "Product logo alt text",
+  videoUrl: "Product video",
+};
+
+/**
+ * Renders a summary box of all current field-level validation errors
+ * above the Continue / Submit button. Each line is an anchor link
+ * jumping to the field's `id`. Renders nothing when there are no
+ * errors — same component can sit above the nav unconditionally.
+ *
+ * The architectural backstop for the "click Continue, nothing
+ * happens" silent-failure case (Phase C PR 2 bug): even when an
+ * errored field has no scroll target or no inline-error surface, the
+ * summary makes it impossible to miss.
+ */
+function ErrorSummary({ errors }: { errors: FieldErrors }) {
+  const items = Object.entries(errors)
+    .map(([key, msgs]) => ({ key, msg: msgs?.[0] }))
+    .filter((x): x is { key: string; msg: string } => Boolean(x.msg));
+  if (items.length === 0) return null;
+  return (
+    <div
+      role="alert"
+      className="mt-6 border border-[var(--color-coral)]/50 bg-[var(--color-coral)]/5 px-4 py-3"
+    >
+      <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+        Fix {items.length === 1 ? "1 field" : `${items.length} fields`} to
+        continue
+      </p>
+      <ul className="mt-2 space-y-1">
+        {items.map(({ key, msg }) => (
+          <li key={key} className="text-[13px] leading-relaxed">
+            <a
+              href={`#${key}`}
+              className="font-medium text-[var(--color-ink)] underline underline-offset-2 hover:text-[var(--color-coral)]"
+            >
+              {FIELD_LABELS[key] ?? key}
+            </a>
+            <span className="text-[var(--color-ink-2)]"> &mdash; {msg}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
  * Logo uploads ship in Phase C (Vercel Blob). The submission endpoint
  * already accepts logo-less submissions; the wizard surfaces a small
  * notice explaining the path forward instead of rendering the upload
@@ -579,6 +651,8 @@ export function SubmitWizard({
         />
       </div>
 
+      <ErrorSummary errors={errors} />
+
       {submitError ? (
         <p
           role="alert"
@@ -1098,6 +1172,8 @@ function SinglePageSubmit({
         </div>
       </div>
 
+      <ErrorSummary errors={errors} />
+
       <div className="mt-12 flex flex-col gap-3 border-t border-[var(--color-line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[12px] text-[var(--color-ink-3)]">
           Continue when you&rsquo;re ready &mdash; we&rsquo;ll flag anything
@@ -1358,7 +1434,10 @@ function CompanyStep({
         </Field>
       </div>
 
-      <div className="md:col-span-2">
+      <div
+        id="companyGallery"
+        className="md:col-span-2 scroll-mt-24"
+      >
         <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
           Company gallery
         </p>
@@ -1370,7 +1449,7 @@ function CompanyStep({
           <GalleryUploadField
             scope="vendor_gallery"
             items={data.companyGallery.map((g) => ({ url: g.url, alt: g.alt }))}
-            onChange={(items) =>
+            onChange={(items) => {
               update(
                 "companyGallery",
                 items.map((it, i) => ({
@@ -1378,13 +1457,18 @@ function CompanyStep({
                   alt: it.alt,
                   position: i,
                 })),
-              )
-            }
+              );
+              clearError("companyGallery");
+            }}
+            error={err(errors, "companyGallery")}
           />
         </div>
       </div>
 
-      <div className="md:col-span-2">
+      <div
+        id="companyLogoUrl"
+        className="md:col-span-2 scroll-mt-24"
+      >
         <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
           Company logo
         </p>
@@ -1398,7 +1482,9 @@ function CompanyStep({
             onChange={(next) => {
               update("companyLogoUrl", next.url);
               update("companyLogoAlt", next.alt);
+              clearError("companyLogoUrl");
             }}
+            error={err(errors, "companyLogoUrl")}
           />
         </div>
       </div>
@@ -1466,7 +1552,10 @@ function ToolBasicsStep({
           />
         </Field>
       </div>
-      <div className="md:col-span-2">
+      <div
+        id="productLogoUrl"
+        className="md:col-span-2 scroll-mt-24"
+      >
         <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
           Product logo{" "}
           <span className="normal-case tracking-normal text-[var(--color-ink-3)]">
@@ -1486,7 +1575,9 @@ function ToolBasicsStep({
             onChange={(next) => {
               update("productLogoUrl", next.url);
               update("logoAlt", next.alt);
+              clearError("productLogoUrl");
             }}
+            error={err(errors, "productLogoUrl")}
           />
         </div>
       </div>
