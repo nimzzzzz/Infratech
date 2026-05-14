@@ -76,6 +76,15 @@ const r2Schema = z.object({
   R2_PUBLIC_URL: z.string().url(),
 });
 
+// Phase D.4 (2026-05-09) — storage moved from R2 to Vercel Blob.
+// `BLOB_READ_WRITE_TOKEN` is auto-set by Vercel on Production +
+// Preview + Development for the `allinfratech-uploads` store. Locally
+// (.env.local), set it to the project's blob token from the Vercel
+// dashboard. The r2 schema above is retained but has no consumers.
+const blobSchema = z.object({
+  BLOB_READ_WRITE_TOKEN: z.string().min(1),
+});
+
 const sentrySchema = z.object({
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   SENTRY_DSN: z.string().url().optional(),
@@ -119,6 +128,7 @@ export const env = {
   clerk: parseLazy(clerkSchema, "clerk"),
   resend: parseLazy(resendSchema, "resend"),
   r2: parseLazy(r2Schema, "r2"),
+  blob: parseLazy(blobSchema, "blob"),
   sentry: parseLazy(sentrySchema, "sentry"),
   secrets: parseLazy(secretsSchema, "secrets"),
 

@@ -68,6 +68,13 @@ export const apps = pgTable(
     description: text("description"),
     websiteUrl: text("website_url").notNull(),
     logoUrl: text("logo_url"),
+    /**
+     * Phase C — vendor-supplied YouTube / Vimeo URL for the product
+     * detail page. Validation + normalisation happens at the Zod
+     * layer (lib/media/video.ts); the stored value is the
+     * normalised player-embed URL.
+     */
+    videoUrl: text("video_url"),
     foundedYear: integer("founded_year"),
     hqLocation: text("hq_location"),
     pricingDetails: text("pricing_details"),
