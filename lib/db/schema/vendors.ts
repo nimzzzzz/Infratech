@@ -141,40 +141,13 @@ export const vendorRegions = pgTable(
   (t) => [primaryKey({ columns: [t.vendorId, t.regionId] })],
 );
 
-/**
- * Phase C — photos / screenshots displayed on the vendor profile
- * page. Vendor-level (not product-level — keyed on vendor_id). Same
- * column shape as the dormant app_screenshots table for consistency
- * (url / alt / position). Max 8 per vendor enforced at the wizard /
- * publish layer, not by a constraint here.
- */
-export const vendorGalleryImages = pgTable(
-  "vendor_gallery_images",
-  {
-    id: serial("id").primaryKey(),
-    vendorId: integer("vendor_id")
-      .notNull()
-      .references(() => vendors.id, { onDelete: "cascade" }),
-    url: text("url").notNull(),
-    /** Required per CLAUDE.md §3 rule 8 (a11y + SEO). */
-    alt: text("alt").notNull(),
-    position: integer("position").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [
-    index("ix_vendor_gallery_images_vendor_position").on(
-      t.vendorId,
-      t.position,
-    ),
-  ],
-);
+// Phase C gallery was originally vendor-level (vendor_gallery_images,
+// migration 0017). Reworked to product-level (app_screenshots, lives
+// in lib/db/schema/apps.ts) — migration 0018 drops the vendor-level
+// table. One gallery per product, not per company.
 
 export type Vendor = typeof vendors.$inferSelect;
 export type NewVendor = typeof vendors.$inferInsert;
 export type VendorMember = typeof vendorMembers.$inferSelect;
 export type NewVendorMember = typeof vendorMembers.$inferInsert;
 export type VendorRegion = typeof vendorRegions.$inferSelect;
-export type VendorGalleryImage = typeof vendorGalleryImages.$inferSelect;
-export type NewVendorGalleryImage = typeof vendorGalleryImages.$inferInsert;

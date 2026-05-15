@@ -313,6 +313,39 @@ export default async function AppDetailPage({
         </div>
       </Container>
 
+      {app.screenshots.length > 0 ? (
+        <section className="border-t border-[var(--color-line)] bg-[var(--color-canvas)] py-16 md:py-24">
+          <Container>
+            <p className="text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+              Screenshots
+            </p>
+            <h2 className="mt-3 font-heading text-[30px] leading-[1.05] tracking-tight md:text-[40px]">
+              {app.name} in use.
+            </h2>
+            <ul className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {app.screenshots.map((shot) => (
+                <li key={shot.id}>
+                  <a
+                    href={shot.url}
+                    target="_blank"
+                    rel="noopener"
+                    className="group relative block aspect-[4/3] overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={shot.url}
+                      alt={shot.alt}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                    />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </Container>
+        </section>
+      ) : null}
+
       {related.length > 0 ? (
         <section className="border-t border-[var(--color-line)] bg-[var(--color-canvas)] py-16 md:py-24">
           <Container>

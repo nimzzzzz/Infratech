@@ -12,7 +12,7 @@ import {
 /**
  * Vendor upload endpoint. Accepts `multipart/form-data` with:
  *   - file:  the binary blob
- *   - scope: "vendor_logo" | "app_logo" | "vendor_gallery"
+ *   - scope: "vendor_logo" | "app_logo" | "app_gallery"
  *   - alt:   alt text (passed back to the caller so the wizard
  *            can stash it in form state; the public alt attribute
  *            sources from submissions.payload, not from here)
