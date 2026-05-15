@@ -73,13 +73,13 @@ export function SubmissionEditedCard({
 
   return (
     <section className="mb-10 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
-      <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Edits waiting on your approval
       </p>
-      <h2 className="mt-3 font-heading text-[28px] leading-tight tracking-tight text-[var(--color-ink)] md:text-[32px]">
+      <h2 className="mt-3 font-heading text-[30px] leading-tight tracking-tight text-[var(--color-ink)] md:text-[34px]">
         We&rsquo;ve polished {productName}.
       </h2>
-      <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
+      <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
         Our editorial team made some edits. Review them below — approve to
         publish, or send the submission back with a note if anything looks
         off.
@@ -92,7 +92,7 @@ export function SubmissionEditedCard({
       {error ? (
         <p
           role="alert"
-          className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
+          className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[15px] text-[var(--color-coral)]"
         >
           {error}
         </p>
@@ -103,7 +103,7 @@ export function SubmissionEditedCard({
           type="button"
           onClick={() => setRequestOpen(true)}
           disabled={busy}
-          className="group inline-flex h-11 items-center gap-2 border border-[var(--color-line-strong)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
+          className="group inline-flex h-11 items-center gap-2 border border-[var(--color-line-strong)] px-5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
         >
           <ChatCircleText size={13} weight="regular" />
           Request changes
@@ -113,7 +113,7 @@ export function SubmissionEditedCard({
           onClick={onApprove}
           disabled={busy}
           className={cn(
-            "group inline-flex h-11 items-center gap-2 bg-[var(--color-coral)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-magenta)] active:translate-y-[1px]",
+            "group inline-flex h-11 items-center gap-2 bg-[var(--color-coral)] px-5 text-[14px] uppercase tracking-[0.18em] text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-magenta)] active:translate-y-[1px]",
             busy ? "opacity-70" : "hover:bg-[var(--color-coral-deep)]",
           )}
         >

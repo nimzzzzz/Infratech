@@ -60,7 +60,7 @@ export default async function StagePage({
       <section className="bg-[var(--color-canvas)] pb-24 md:pb-32">
         <Container>
           {apps.length === 0 ? (
-            <p className="text-[16px] text-[var(--color-ink-2)]">
+            <p className="text-[18px] text-[var(--color-ink-2)]">
               No apps catalogued in this stage yet.
             </p>
           ) : (
@@ -72,14 +72,14 @@ export default async function StagePage({
                     className="group grid items-center gap-6 py-7 transition-colors hover:bg-[var(--color-surface)] md:grid-cols-[1fr_2fr_auto] md:px-4"
                   >
                     <div>
-                      <p className="text-[12px] uppercase tracking-[0.16em] text-[var(--color-ink-3)]">
+                      <p className="text-[14px] uppercase tracking-[0.16em] text-[var(--color-ink-3)]">
                         {app.vendor.name}
                       </p>
-                      <p className="font-heading text-[22px] leading-tight">
+                      <p className="font-heading text-[24px] leading-tight">
                         {app.name}
                       </p>
                     </div>
-                    <p className="max-w-[60ch] text-[15px] leading-relaxed text-[var(--color-ink-2)]">
+                    <p className="max-w-[60ch] text-[17px] leading-relaxed text-[var(--color-ink-2)]">
                       {app.tagline}
                     </p>
                     <ArrowUpRight

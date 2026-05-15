@@ -51,7 +51,7 @@ export default async function ContactVendorPage({
         {/* back link */}
         <Link
           href={`/apps/${app.slug}`}
-          className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
+          className="group inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
         >
           <ArrowLeft
             size={12}
@@ -65,16 +65,16 @@ export default async function ContactVendorPage({
         <div className="mt-8 flex items-start gap-5">
           <LetterAvatar name={app.name} className="h-14 w-14 shrink-0" />
           <div>
-            <p className="text-[12px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+            <p className="text-[14px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
               {app.vendor.name}
             </p>
-            <h1 className="mt-2 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[44px]">
+            <h1 className="mt-2 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[48px]">
               Contact about {app.name}.
             </h1>
           </div>
         </div>
 
-        <p className="mt-6 max-w-[58ch] text-[15px] leading-relaxed text-[var(--color-ink-2)] md:text-[16px]">
+        <p className="mt-6 max-w-[58ch] text-[17px] leading-relaxed text-[var(--color-ink-2)] md:text-[18px]">
           Your message goes directly to the {app.vendor.name} team. We
           don&rsquo;t publish their email address &mdash; you&rsquo;ll get a
           confirmation from us, then they reply directly to your inbox.

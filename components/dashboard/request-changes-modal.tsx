@@ -91,12 +91,12 @@ export function RequestChangesModal({
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+            <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
               Request changes
             </p>
             <h2
               id="request-title"
-              className="mt-3 font-heading text-[24px] leading-tight tracking-tight text-[var(--color-ink)]"
+              className="mt-3 font-heading text-[26px] leading-tight tracking-tight text-[var(--color-ink)]"
             >
               What would you like adjusted?
             </h2>
@@ -112,7 +112,7 @@ export function RequestChangesModal({
           </button>
         </div>
 
-        <p className="mt-4 max-w-[58ch] text-[13px] leading-relaxed text-[var(--color-ink-2)]">
+        <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-[var(--color-ink-2)]">
           Your note goes to the editorial team. They&rsquo;ll review and make
           another pass at your submission.
         </p>
@@ -128,9 +128,9 @@ export function RequestChangesModal({
           onChange={(e) => setFeedback(e.target.value)}
           placeholder="e.g. The tagline rewrite changes the meaning — our product isn't for engineering teams, it's for project managers. Please revert the tagline to my original or use phrasing closer to it."
           maxLength={2000}
-          className="mt-4 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2.5 text-[14px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+          className="mt-4 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2.5 text-[16px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
         />
-        <p className="mt-1 text-[11px] text-[var(--color-ink-3)]">
+        <p className="mt-1 text-[13px] text-[var(--color-ink-3)]">
           <span className="num">{feedback.length}</span> /{" "}
           <span className="num">2000</span>
         </p>
@@ -138,7 +138,7 @@ export function RequestChangesModal({
         {error ? (
           <p
             role="alert"
-            className="mt-4 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
+            className="mt-4 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[15px] text-[var(--color-coral)]"
           >
             {error}
           </p>
@@ -149,7 +149,7 @@ export function RequestChangesModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-10 items-center px-4 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)] disabled:opacity-60"
+            className="inline-flex h-10 items-center px-4 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)] disabled:opacity-60"
           >
             Cancel
           </button>
@@ -157,7 +157,7 @@ export function RequestChangesModal({
             type="submit"
             disabled={submitting}
             className={cn(
-              "inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
+              "inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
               submitting ? "opacity-70" : "hover:bg-[var(--color-ink-2)]",
             )}
           >

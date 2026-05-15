@@ -39,7 +39,7 @@ export function UserAvatar({
     return (
       <span
         className={cn(
-          "grid place-items-center rounded-full bg-[var(--color-canvas-warm)] text-[11px] font-medium uppercase tracking-wider text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]",
+          "grid place-items-center rounded-full bg-[var(--color-canvas-warm)] text-[13px] uppercase tracking-wider text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]",
           className,
         )}
         style={{ width: size, height: size }}

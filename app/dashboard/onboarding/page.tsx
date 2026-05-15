@@ -42,15 +42,15 @@ export default async function OnboardingLandingPage({
 
   return (
     <Container className="max-w-3xl py-12 md:py-20">
-      <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[14px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Welcome
       </p>
-      <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
+      <h1 className="mt-5 font-heading text-[44px] leading-[1.04] tracking-tight md:text-[60px]">
         Welcome to AllInfratech, {firstName}.
       </h1>
-      <p className="mt-5 max-w-[56ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
+      <p className="mt-5 max-w-[56ch] text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
         We&rsquo;ve verified you with LinkedIn as part of{" "}
-        <strong className="font-medium text-[var(--color-ink)]">
+        <strong className="text-[var(--color-ink)]">
           {companyLabel}
         </strong>
         . Let&rsquo;s get your product on the directory.
@@ -67,13 +67,13 @@ export default async function OnboardingLandingPage({
               <Plus size={20} weight="regular" />
             </span>
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+              <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
                 Submit a new product
               </p>
-              <p className="mt-2 font-heading text-[22px] leading-tight tracking-tight md:text-[26px]">
+              <p className="mt-2 font-heading text-[24px] leading-tight tracking-tight md:text-[28px]">
                 Add your tool to the directory.
               </p>
-              <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)]">
+              <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-[var(--color-ink-2)]">
                 Three short steps to set up your company profile and submit
                 your first product. We&rsquo;ll review and email you when it
                 goes live, usually within two business days.
@@ -88,7 +88,7 @@ export default async function OnboardingLandingPage({
         </li>
       </ul>
 
-      <p className="mt-12 max-w-[60ch] text-[13px] leading-relaxed text-[var(--color-ink-3)]">
+      <p className="mt-12 max-w-[60ch] text-[15px] leading-relaxed text-[var(--color-ink-3)]">
         Just looking around?{" "}
         <Link
           href="/"

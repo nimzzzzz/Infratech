@@ -42,7 +42,7 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] ring-1",
+        "inline-flex items-center px-2 py-0.5 text-[13px] uppercase tracking-[0.18em] ring-1",
         c.className,
         className,
       )}

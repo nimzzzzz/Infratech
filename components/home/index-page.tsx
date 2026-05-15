@@ -65,7 +65,7 @@ export async function HomeIndex({
 
           <header className="flex flex-col gap-3 pb-6">
             <ActiveFilters />
-            <p className="hidden text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] md:block">
+            <p className="hidden text-[15px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] md:block">
               Showing{" "}
               <span className="num text-[var(--color-ink)]">
                 {results.length}
@@ -95,10 +95,10 @@ export async function HomeIndex({
 function EmptyState() {
   return (
     <div className="border border-dashed border-[var(--color-line-strong)] bg-[var(--color-surface)] p-12 text-center">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+      <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
         No matches
       </p>
-      <p className="mt-3 max-w-[40ch] mx-auto text-[15px] text-[var(--color-ink-2)]">
+      <p className="mt-3 max-w-[40ch] mx-auto text-[17px] text-[var(--color-ink-2)]">
         No products match the current combination of filters. Try removing
         one, or clearing all filters above.
       </p>

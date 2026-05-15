@@ -30,7 +30,7 @@ export function SubmissionDiffView({ diff }: { diff: DiffResult }) {
 
   if (changed.length === 0) {
     return (
-      <p className="text-[13px] leading-relaxed text-[var(--color-ink-2)]">
+      <p className="text-[15px] leading-relaxed text-[var(--color-ink-2)]">
         Our edits matched your submission as-is. Nothing actually changed —
         you can approve and publish.
       </p>
@@ -42,10 +42,10 @@ export function SubmissionDiffView({ diff }: { diff: DiffResult }) {
       {/* Desktop header row — sets the two-column grid for every
           field block below. */}
       <div className="hidden md:grid md:grid-cols-2 md:gap-6 md:border-b md:border-[var(--color-line-strong)] md:pb-2">
-        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+        <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
           Original
         </p>
-        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+        <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
           AllInfratech&rsquo;s edits
         </p>
       </div>
@@ -70,7 +70,7 @@ export function SubmissionDiffView({ diff }: { diff: DiffResult }) {
         <button
           type="button"
           onClick={() => setShowAll((v) => !v)}
-          className="mt-6 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] underline-offset-4 hover:text-[var(--color-ink)] hover:underline"
+          className="mt-6 inline-flex items-center gap-1.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] underline-offset-4 hover:text-[var(--color-ink)] hover:underline"
         >
           {showAll
             ? "Hide unchanged fields"
@@ -108,7 +108,7 @@ function DiffRow({
             className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-coral)]"
           />
         ) : null}
-        <span className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+        <span className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
           {label}
         </span>
       </div>
@@ -144,7 +144,7 @@ function Cell({
     >
       {/* Desktop-only field label inside the cell — mobile relies
           on the once-per-row label above. */}
-      <p className="hidden text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] md:block">
+      <p className="hidden text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] md:block">
         {label}
       </p>
       <ValueDisplay value={value} />
@@ -155,20 +155,20 @@ function Cell({
 function ValueDisplay({ value }: { value: DiffValue }) {
   if (value == null || value === "") {
     return (
-      <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">
+      <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">
         — not set —
       </p>
     );
   }
   if (Array.isArray(value)) {
     return (
-      <p className="mt-1 text-[14px] text-[var(--color-ink)]">
+      <p className="mt-1 text-[16px] text-[var(--color-ink)]">
         {value.join(", ")}
       </p>
     );
   }
   return (
-    <p className="mt-1 whitespace-pre-wrap text-[14px] leading-relaxed text-[var(--color-ink)]">
+    <p className="mt-1 whitespace-pre-wrap text-[16px] leading-relaxed text-[var(--color-ink)]">
       {value}
     </p>
   );

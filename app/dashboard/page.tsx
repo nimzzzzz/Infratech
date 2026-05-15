@@ -142,13 +142,13 @@ export default async function DashboardOverviewPage({
   return (
     <Container className="max-w-6xl py-12 md:py-16">
       {submissionCard}
-      <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[14px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Vendor dashboard
       </p>
-      <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[52px]">
+      <h1 className="mt-4 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
         Welcome back, {firstName}.
       </h1>
-      <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
+      <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
         {vendor.name}&rsquo;s account, at a glance. New inquiries and listing
         status sit here.
       </p>
@@ -177,13 +177,13 @@ export default async function DashboardOverviewPage({
 
       <section className="mt-14">
         <header className="flex items-end justify-between gap-4 border-b border-[var(--color-line-strong)] pb-3">
-          <h2 className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
+          <h2 className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
             Recent inquiries
           </h2>
           <Link
             href="/dashboard/messages"
             prefetch
-            className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
+            className="group inline-flex items-center gap-1.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
           >
             View all
             <ArrowRight
@@ -195,7 +195,7 @@ export default async function DashboardOverviewPage({
         </header>
 
         {recent.length === 0 ? (
-          <p className="mt-6 text-[14px] text-[var(--color-ink-3)]">
+          <p className="mt-6 text-[16px] text-[var(--color-ink-3)]">
             No inquiries yet.
           </p>
         ) : (
@@ -219,15 +219,15 @@ export default async function DashboardOverviewPage({
                   <div className="min-w-0">
                     <p
                       className={cn(
-                        "text-[15px] leading-tight",
+                        "text-[17px] leading-tight",
                         msg.status === "unread"
-                          ? "font-medium text-[var(--color-ink)]"
+                          ? "text-[var(--color-ink)]"
                           : "text-[var(--color-ink-2)]",
                       )}
                     >
                       {msg.subject}
                     </p>
-                    <p className="mt-0.5 truncate text-[12px] text-[var(--color-ink-3)]">
+                    <p className="mt-0.5 truncate text-[14px] text-[var(--color-ink-3)]">
                       {msg.senderName}
                       {msg.senderCompany ? ` · ${msg.senderCompany}` : ""} ·{" "}
                       <span className="text-[var(--color-coral)]">
@@ -235,10 +235,10 @@ export default async function DashboardOverviewPage({
                       </span>
                     </p>
                   </div>
-                  <span className="hidden text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] md:inline">
+                  <span className="hidden text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] md:inline">
                     {msg.senderRole ?? ""}
                   </span>
-                  <span className="num text-right text-[11px] text-[var(--color-ink-3)]">
+                  <span className="num text-right text-[13px] text-[var(--color-ink-3)]">
                     {
                       relativeDays(msg.createdAt.toISOString().slice(0, 10))
                         .label
@@ -253,13 +253,13 @@ export default async function DashboardOverviewPage({
 
       <section id="listings" className="mt-14 scroll-mt-24">
         <header className="flex items-end justify-between gap-4 border-b border-[var(--color-line-strong)] pb-3">
-          <h2 className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
+          <h2 className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
             Your listings
           </h2>
           <Link
             href="/dashboard/onboarding/submit?as=returning"
             prefetch
-            className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
+            className="group inline-flex items-center gap-1.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
           >
             <Plus size={11} weight="bold" />
             Add another product
@@ -274,10 +274,10 @@ export default async function DashboardOverviewPage({
             >
               <LetterAvatar name={listing.name} className="h-10 w-10" />
               <div className="min-w-0">
-                <p className="font-heading text-[20px] leading-tight">
+                <p className="font-heading text-[22px] leading-tight">
                   {listing.name}
                 </p>
-                <p className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+                <p className="mt-0.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
                   Listed{" "}
                   <span className="num">
                     {
@@ -340,13 +340,13 @@ function StatCard({
         <div>
           <p
             className={cn(
-              "num font-heading text-[36px] leading-none tracking-tight md:text-[44px]",
+              "num font-heading text-[40px] leading-none tracking-tight md:text-[48px]",
               accent ? "text-[var(--color-coral)]" : "text-[var(--color-ink)]",
             )}
           >
             {String(value).padStart(2, "0")}
           </p>
-          <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+          <p className="mt-2 text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
             {label}
           </p>
         </div>
@@ -400,7 +400,7 @@ function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] ring-1",
+        "inline-flex items-center px-2 py-0.5 text-[13px] uppercase tracking-[0.18em] ring-1",
         c.className,
       )}
     >

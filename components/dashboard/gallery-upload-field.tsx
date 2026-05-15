@@ -236,10 +236,10 @@ export function GalleryUploadField({
                   <Plus size={16} weight="bold" />
                 )}
               </span>
-              <p className="text-[13px] text-[var(--color-ink)]">
+              <p className="text-[15px] text-[var(--color-ink)]">
                 {pending.length === 0 ? "Add gallery photos" : "Add another"}
               </p>
-              <p className="text-[11px] text-[var(--color-ink-3)]">
+              <p className="text-[13px] text-[var(--color-ink-3)]">
                 {pending.length} / {MAX_ITEMS} used
               </p>
               <input
@@ -262,7 +262,7 @@ export function GalleryUploadField({
       {error ? (
         <p
           role="alert"
-          className="mt-2 text-[12px] text-[var(--color-coral)]"
+          className="mt-2 text-[14px] text-[var(--color-coral)]"
         >
           {error}
         </p>
@@ -270,7 +270,7 @@ export function GalleryUploadField({
       {topError ? (
         <p
           role="alert"
-          className="mt-2 text-[12px] text-[var(--color-magenta)]"
+          className="mt-2 text-[14px] text-[var(--color-magenta)]"
         >
           {topError}
         </p>
@@ -301,10 +301,10 @@ function GalleryItemRow({
             />
           </span>
           <div className="flex min-w-0 flex-1 flex-col">
-            <p className="truncate text-[12px] text-[var(--color-ink)]">
+            <p className="truncate text-[14px] text-[var(--color-ink)]">
               {item.file === emptyFile ? "Saved image" : item.file.name}
             </p>
-            <p className="text-[11px] text-[var(--color-ink-3)]">
+            <p className="text-[13px] text-[var(--color-ink-3)]">
               {item.uploading
                 ? "Uploading…"
                 : item.error
@@ -329,12 +329,12 @@ function GalleryItemRow({
           onChange={(e) => onAltChange(e.target.value)}
           placeholder="Alt text — short description (optional)"
           maxLength={200}
-          className="h-9 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[13px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+          className="h-9 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[15px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
         />
         {item.error ? (
           <p
             role="alert"
-            className="text-[11px] text-[var(--color-magenta)]"
+            className="text-[13px] text-[var(--color-magenta)]"
           >
             {item.error}
           </p>

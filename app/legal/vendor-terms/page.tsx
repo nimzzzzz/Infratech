@@ -8,14 +8,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "/legal/vendor-terms" },
 };
 
-const h2 = "mt-10 mb-3 font-heading text-[22px] leading-tight text-[var(--color-ink)] md:text-[24px]";
-const h3 = "mt-6 mb-2 font-heading text-[18px] leading-tight text-[var(--color-ink)]";
+const h2 = "mt-10 mb-3 font-heading text-[24px] leading-tight text-[var(--color-ink)] md:text-[26px]";
+const h3 = "mt-6 mb-2 font-heading text-[20px] leading-tight text-[var(--color-ink)]";
 const ul = "list-disc space-y-2 pl-6";
 
 export default function VendorTermsPage() {
   return (
     <LegalShell title="Vendor Terms" updated={TERMS_LAST_UPDATED}>
-      <p className="text-[14px] text-[var(--color-ink-3)]">
+      <p className="text-[16px] text-[var(--color-ink-3)]">
         AllInfratech &mdash; Vendor Terms. Effective date: {TERMS_LAST_UPDATED}. Version 1.0.
       </p>
 

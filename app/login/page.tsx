@@ -110,7 +110,7 @@ export default async function LoginPage({
             <span className="absolute inset-0 rounded-full bloom" />
             <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
           </span>
-          <span className="font-heading text-[20px] italic leading-none tracking-tight text-white lg:text-[22px]">
+          <span className="font-heading text-[22px] italic leading-none tracking-tight text-white lg:text-[24px]">
             AllInfratech
           </span>
         </Link>
@@ -118,7 +118,7 @@ export default async function LoginPage({
         {/* Editorial caption — defines what AllInfratech is. The
             right column defines what the vendor does here. Two
             distinct voices on one page. Locked tagline per CLAUDE.md. */}
-        <p className="absolute bottom-10 left-10 right-10 max-w-md font-heading text-[24px] leading-tight tracking-tight text-white md:text-[28px] lg:bottom-14 lg:left-14 lg:right-14 lg:text-[34px]">
+        <p className="absolute bottom-10 left-10 right-10 max-w-md font-heading text-[26px] leading-tight tracking-tight text-white md:text-[30px] lg:bottom-14 lg:left-14 lg:right-14 lg:text-[36px]">
           A repository of infrastructure technology products and companies.
         </p>
       </aside>
@@ -138,7 +138,7 @@ export default async function LoginPage({
             <span className="relative inline-flex h-2 w-2">
               <span className="absolute inset-0 rounded-full bloom" />
             </span>
-            <span className="font-heading text-[20px] italic leading-none tracking-tight text-white">
+            <span className="font-heading text-[22px] italic leading-none tracking-tight text-white">
               AllInfratech
             </span>
           </Link>
@@ -146,14 +146,14 @@ export default async function LoginPage({
 
         <div className="flex flex-1 items-center px-6 py-12 sm:px-10 md:px-12 md:py-16 lg:px-20">
           <div className="w-full max-w-md">
-            <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+            <p className="text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
               For vendors
             </p>
-            <h1 className="mt-5 font-heading text-[36px] leading-[1.04] tracking-tight text-[var(--color-ink)] md:text-[48px] lg:text-[56px]">
+            <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight text-[var(--color-ink)] md:text-[52px] lg:text-[60px]">
               List your product on{" "}
               <span className="italic">AllInfratech</span>.
             </h1>
-            <p className="mt-6 max-w-[44ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
+            <p className="mt-6 max-w-[44ch] text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
               Reach project-management and infrastructure-technology buyers
               across the region. Sign in with LinkedIn to get started.
             </p>
@@ -165,7 +165,7 @@ export default async function LoginPage({
               />
             </div>
 
-            <p className="mt-6 max-w-[44ch] text-[11px] leading-relaxed text-[var(--color-ink-3)]">
+            <p className="mt-6 max-w-[44ch] text-[13px] leading-relaxed text-[var(--color-ink-3)]">
               By signing in you agree to our{" "}
               <Link
                 href="/legal/terms"

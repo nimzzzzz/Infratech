@@ -19,7 +19,7 @@ export function ReviewImage({
 }) {
   return (
     <div className="grid grid-cols-[120px_1fr] gap-1">
-      <dt className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+      <dt className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
         {label}
       </dt>
       <dd className="flex items-start gap-3">
@@ -28,7 +28,7 @@ export function ReviewImage({
           <img src={url} alt="" className="h-full w-full object-contain" />
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="truncate text-[14px] text-[var(--color-ink)]">
+          <span className="truncate text-[16px] text-[var(--color-ink)]">
             {alt || (
               <span className="text-[var(--color-magenta)]">
                 — alt text missing —
@@ -56,12 +56,12 @@ export function ReviewGalleryStrip({
 }) {
   return (
     <div className="grid grid-cols-[120px_1fr] gap-1">
-      <dt className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+      <dt className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
         {label}
       </dt>
       <dd className="flex flex-wrap gap-2">
         {items.length === 0 ? (
-          <span className="text-[14px] text-[var(--color-ink-3)]">
+          <span className="text-[16px] text-[var(--color-ink-3)]">
             — not set —
           </span>
         ) : (

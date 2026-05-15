@@ -80,7 +80,7 @@ export function SubmissionList({
                     type="button"
                     onClick={() => setTab(t.key)}
                     className={cn(
-                      "relative inline-flex items-center px-3 py-2 text-[12px] uppercase tracking-[0.18em] transition-colors",
+                      "relative inline-flex items-center px-3 py-2 text-[14px] uppercase tracking-[0.18em] transition-colors",
                       active
                         ? "text-[var(--color-ink)]"
                         : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
@@ -122,7 +122,7 @@ export function SubmissionList({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Search product or vendor"
-              className="h-10 w-[280px] border border-[var(--color-line-strong)] bg-[var(--color-surface)] pl-9 pr-3 text-[13px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+              className="h-10 w-[280px] border border-[var(--color-line-strong)] bg-[var(--color-surface)] pl-9 pr-3 text-[15px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
             />
           </div>
         </form>
@@ -130,7 +130,7 @@ export function SubmissionList({
 
       {/* List */}
       {rows.length === 0 ? (
-        <p className="mt-10 text-[14px] text-[var(--color-ink-3)]">
+        <p className="mt-10 text-[16px] text-[var(--color-ink-3)]">
           {q ? `No submissions match "${q}".` : "Nothing in this view."}
         </p>
       ) : (
@@ -152,18 +152,18 @@ export function SubmissionList({
                   className="grid grid-cols-[1fr_auto_88px] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[1fr_auto_auto_88px] md:gap-6 md:px-3"
                 >
                   <div className="min-w-0">
-                    <p className="font-heading text-[18px] leading-tight">
+                    <p className="font-heading text-[20px] leading-tight">
                       {display}
                     </p>
-                    <p className="mt-0.5 truncate text-[12px] text-[var(--color-ink-3)]">
+                    <p className="mt-0.5 truncate text-[14px] text-[var(--color-ink-3)]">
                       {row.vendor.name}
                     </p>
                   </div>
                   <StatusPill status={row.status} />
-                  <span className="hidden text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] md:inline">
+                  <span className="hidden text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] md:inline">
                     {row.vendor.contactEmail ?? ""}
                   </span>
-                  <span className="num text-right text-[12px] text-[var(--color-ink-3)]">
+                  <span className="num text-right text-[14px] text-[var(--color-ink-3)]">
                     {
                       relativeDays(row.submittedAt.toISOString().slice(0, 10))
                         .label
@@ -187,7 +187,7 @@ function StatusPill({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] ring-1",
+        "inline-flex items-center px-2 py-0.5 text-[13px] uppercase tracking-[0.18em] ring-1",
         tone,
       )}
     >

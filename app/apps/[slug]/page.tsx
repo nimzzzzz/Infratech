@@ -107,7 +107,7 @@ export default async function AppDetailPage({
               <LetterAvatar
                 name={app.name}
                 className="h-24 w-24 md:h-32 md:w-32"
-                letterClassName="text-[56px] md:text-[72px]"
+                letterClassName="text-[60px] md:text-[72px]"
               />
             )}
           </div>
@@ -116,7 +116,7 @@ export default async function AppDetailPage({
             <div className="flex flex-col">
               <Link
                 href={`/vendors/${app.vendor.slug}`}
-                className="group inline-flex items-center gap-1 self-start text-[12px] uppercase tracking-[0.22em] text-[var(--color-coral)] underline-offset-4 transition-colors hover:underline"
+                className="group inline-flex items-center gap-1 self-start text-[14px] uppercase tracking-[0.22em] text-[var(--color-coral)] underline-offset-4 transition-colors hover:underline"
               >
                 <span>{app.vendor.name}</span>
                 <ArrowUpRight
@@ -125,10 +125,10 @@ export default async function AppDetailPage({
                   className="opacity-60 transition-opacity group-hover:opacity-100"
                 />
               </Link>
-              <h1 className="mt-3 font-heading text-[44px] leading-[1.02] tracking-tight md:text-[64px]">
+              <h1 className="mt-3 font-heading text-[48px] leading-[1.02] tracking-tight md:text-[68px]">
                 {app.name}
               </h1>
-              <p className="mt-6 max-w-[60ch] text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
+              <p className="mt-6 max-w-[60ch] text-[20px] leading-relaxed text-[var(--color-ink-2)] md:text-[20px]">
                 {app.tagline}
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -136,7 +136,7 @@ export default async function AppDetailPage({
                   href={`/api/clicks/${app.id}?to=${encodeURIComponent(app.websiteUrl)}`}
                   target="_blank"
                   rel="nofollow noopener"
-                  className="group relative inline-flex h-12 items-center gap-2 overflow-hidden bg-[var(--color-coral)] px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-transform active:translate-y-[1px]"
+                  className="group relative inline-flex h-12 items-center gap-2 overflow-hidden bg-[var(--color-coral)] px-5 text-[14px] uppercase tracking-[0.2em] text-white transition-transform active:translate-y-[1px]"
                 >
                   <span className="relative z-10">Visit website</span>
                   <ArrowUpRight
@@ -151,7 +151,7 @@ export default async function AppDetailPage({
                 </a>
                 <Link
                   href={`/apps/${app.slug}/contact`}
-                  className="group inline-flex h-12 items-center gap-2 border border-[var(--color-line-strong)] bg-transparent px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
+                  className="group inline-flex h-12 items-center gap-2 border border-[var(--color-line-strong)] bg-transparent px-5 text-[14px] uppercase tracking-[0.2em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
                 >
                   <ChatCircleText size={13} weight="regular" />
                   <span>Contact vendor</span>
@@ -160,7 +160,7 @@ export default async function AppDetailPage({
             </div>
 
             <aside className="border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+              <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
                 At a glance
               </p>
               <dl className="mt-5 space-y-4">
@@ -201,12 +201,12 @@ export default async function AppDetailPage({
       <Container className="py-14 md:py-20">
         <div className="space-y-12 md:max-w-[60ch]">
           <Section eyebrow="What it does">
-            <div className="space-y-5 text-[17px] leading-relaxed text-[var(--color-ink)] md:text-[18px]">
+            <div className="space-y-5 text-[19px] leading-relaxed text-[var(--color-ink)] md:text-[20px]">
               {paragraphs.map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
             </div>
-            <p className="mt-6 text-[13px] text-[var(--color-ink-3)]">
+            <p className="mt-6 text-[15px] text-[var(--color-ink-3)]">
               For {app.vendor.name}&rsquo;s company background and other
               listings,{" "}
               <Link
@@ -226,7 +226,7 @@ export default async function AppDetailPage({
           ) : null}
 
           <Section eyebrow="Lifecycle fit">
-            <p className="text-[16px] leading-relaxed text-[var(--color-ink-2)]">
+            <p className="text-[18px] leading-relaxed text-[var(--color-ink-2)]">
               Where {app.name} actively supports work across the project
               lifecycle.
             </p>
@@ -245,7 +245,7 @@ export default async function AppDetailPage({
                     >
                       <span
                         className={cn(
-                          "text-[17px]",
+                          "text-[19px]",
                           supported
                             ? "font-heading text-[var(--color-ink)]"
                             : "text-[var(--color-ink-3)]",
@@ -266,7 +266,7 @@ export default async function AppDetailPage({
                 <li key={c.slug}>
                   <Link
                     href={`/capabilities/${c.slug}`}
-                    className="inline-flex items-center border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-4 py-2 text-[15px] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)]"
+                    className="inline-flex items-center border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-4 py-2 text-[17px] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)]"
                   >
                     {c.name}
                   </Link>
@@ -280,7 +280,7 @@ export default async function AppDetailPage({
               <ul className="flex flex-wrap gap-2">
                 {app.industries.map((i) => (
                   <li key={i.slug}>
-                    <span className="inline-flex items-center border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-4 py-2 text-[15px] text-[var(--color-ink)]">
+                    <span className="inline-flex items-center border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-4 py-2 text-[17px] text-[var(--color-ink)]">
                       {i.name}
                     </span>
                   </li>
@@ -291,10 +291,10 @@ export default async function AppDetailPage({
 
           {app.pricing ? (
             <Section eyebrow="Pricing">
-              <p className="font-heading text-[28px] leading-tight">
+              <p className="font-heading text-[30px] leading-tight">
                 {app.pricing.name}
               </p>
-              <p className="mt-3 text-[16px] leading-relaxed text-[var(--color-ink-2)]">
+              <p className="mt-3 text-[18px] leading-relaxed text-[var(--color-ink-2)]">
                 The directory describes how vendors charge. We don&rsquo;t
                 publish actual prices &mdash; those vary by project size,
                 region, and procurement vehicle.
@@ -304,7 +304,7 @@ export default async function AppDetailPage({
 
           {app.editorNote ? (
             <Section eyebrow="Editor's note">
-              <blockquote className="border-l-2 border-[var(--color-coral)] pl-5 font-heading text-[20px] italic leading-snug text-[var(--color-ink)] md:text-[24px]">
+              <blockquote className="border-l-2 border-[var(--color-coral)] pl-5 font-heading text-[22px] italic leading-snug text-[var(--color-ink)] md:text-[26px]">
                 &ldquo;{app.editorNote}&rdquo;
               </blockquote>
             </Section>
@@ -318,16 +318,16 @@ export default async function AppDetailPage({
           <Container>
             <div className="mb-8 flex items-end justify-between gap-4">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+                <p className="text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
                   More like this
                 </p>
-                <h2 className="mt-3 font-heading text-[28px] leading-[1.05] tracking-tight md:text-[36px]">
+                <h2 className="mt-3 font-heading text-[30px] leading-[1.05] tracking-tight md:text-[40px]">
                   Products in adjacent territory.
                 </h2>
               </div>
               <Link
                 href="/"
-                className="group hidden items-center gap-1.5 self-end text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)] sm:inline-flex"
+                className="group hidden items-center gap-1.5 self-end text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)] sm:inline-flex"
               >
                 Browse all
                 <ArrowUpRight
@@ -353,7 +353,7 @@ export default async function AppDetailPage({
 
 function Breadcrumb({ appName }: { appName: string }) {
   return (
-    <div className="flex items-center gap-2 text-[13px] uppercase tracking-[0.16em] text-[var(--color-ink-3)]">
+    <div className="flex items-center gap-2 text-[15px] uppercase tracking-[0.16em] text-[var(--color-ink-3)]">
       <Link href="/" className="hover:text-[var(--color-ink)]">
         Index
       </Link>
@@ -372,7 +372,7 @@ function Section({
 }) {
   return (
     <section>
-      <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[14px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         {eyebrow}
       </p>
       <div className="mt-5">{children}</div>
@@ -401,10 +401,10 @@ function FactRow({
         className="mt-0.5 shrink-0 text-[var(--color-ink-3)]"
       />
       <div className="flex min-w-0 flex-col">
-        <dt className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+        <dt className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
           {label}
         </dt>
-        <dd className="mt-0.5 text-[15px] text-[var(--color-ink)]">{value}</dd>
+        <dd className="mt-0.5 text-[17px] text-[var(--color-ink)]">{value}</dd>
       </div>
     </div>
   );

@@ -38,13 +38,13 @@ export default async function MessagesInboxPage({
 
   return (
     <Container className="max-w-6xl py-10 md:py-14">
-      <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[14px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Inbox
       </p>
-      <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[52px]">
+      <h1 className="mt-4 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
         Inquiries from visitors.
       </h1>
-      <p className="mt-3 max-w-[60ch] text-[13px] leading-relaxed text-[var(--color-ink-2)] md:text-[14px]">
+      <p className="mt-3 max-w-[60ch] text-[15px] leading-relaxed text-[var(--color-ink-2)] md:text-[16px]">
         Sent through the &ldquo;Contact vendor&rdquo; form on your product pages.
         Reply directly via email &mdash; the visitor&rsquo;s address is on each
         message.
@@ -67,7 +67,7 @@ export default async function MessagesInboxPage({
       {/* list */}
       <ul className="mt-6 border-y border-[var(--color-line)] divide-y divide-[var(--color-line)]">
         {list.length === 0 ? (
-          <li className="py-12 text-center text-[14px] text-[var(--color-ink-3)]">
+          <li className="py-12 text-center text-[16px] text-[var(--color-ink-3)]">
             {filter === "unread"
               ? "Nothing unread. Inbox zero."
               : "No inquiries yet."}
@@ -92,27 +92,27 @@ export default async function MessagesInboxPage({
                 <div className="min-w-0">
                   <p
                     className={cn(
-                      "text-[15px] leading-tight md:text-[16px]",
+                      "text-[17px] leading-tight md:text-[18px]",
                       msg.status === "unread"
-                        ? "font-medium text-[var(--color-ink)]"
+                        ? "text-[var(--color-ink)]"
                         : "text-[var(--color-ink-2)]",
                     )}
                   >
                     {msg.subject}
                   </p>
-                  <p className="mt-1 truncate text-[12px] text-[var(--color-ink-3)]">
+                  <p className="mt-1 truncate text-[14px] text-[var(--color-ink-3)]">
                     {msg.senderName}
                     {msg.senderCompany ? ` · ${msg.senderCompany}` : ""}
                     {msg.senderRole ? ` · ${msg.senderRole}` : ""}
                   </p>
                 </div>
-                <p className="hidden truncate text-[12px] uppercase tracking-[0.16em] text-[var(--color-coral)] md:block">
+                <p className="hidden truncate text-[14px] uppercase tracking-[0.16em] text-[var(--color-coral)] md:block">
                   {msg.appName}
                 </p>
-                <p className="hidden truncate text-[12px] text-[var(--color-ink-2)] md:block">
+                <p className="hidden truncate text-[14px] text-[var(--color-ink-2)] md:block">
                   {snippet(msg.body)}
                 </p>
-                <span className="num text-right text-[11px] text-[var(--color-ink-3)]">
+                <span className="num text-right text-[13px] text-[var(--color-ink-3)]">
                   {
                     relativeDays(msg.createdAt.toISOString().slice(0, 10))
                       .label
@@ -141,7 +141,7 @@ function FilterTab({
       href={href}
       prefetch
       className={cn(
-        "px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] transition-colors",
+        "px-3 py-1.5 text-[13px] uppercase tracking-[0.18em] transition-colors",
         active
           ? "bg-[var(--color-ink)] text-[var(--color-canvas)]"
           : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",

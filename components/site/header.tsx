@@ -22,10 +22,10 @@ export function Header() {
           aria-label="AllInfratech home"
           className="group flex flex-col leading-none"
         >
-          <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)] md:text-[20px]">
+          <span className="font-heading text-[20px] italic leading-none tracking-tight text-[var(--color-ink)] md:text-[22px]">
             AllInfratech
           </span>
-          <span className="mt-1.5 text-[12px] leading-snug text-[var(--color-ink-3)] md:text-[13px]">
+          <span className="mt-1.5 text-[14px] leading-snug text-[var(--color-ink-3)] md:text-[15px]">
             A repository of infrastructure technology products and companies
           </span>
         </Link>
@@ -37,7 +37,7 @@ export function Header() {
             <Link
               href="/dashboard"
               prefetch
-              className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-[0.18em] text-white transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[11px]"
+              className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[13px] uppercase tracking-[0.18em] text-white transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
             >
               <span>Dashboard</span>
               <ArrowUpRight
@@ -51,14 +51,14 @@ export function Header() {
               <Link
                 href="/login"
                 prefetch
-                className="inline-flex h-9 items-center justify-center border border-[var(--color-line-strong)] bg-transparent px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] sm:h-10 sm:px-4 sm:text-[11px]"
+                className="inline-flex h-9 items-center justify-center border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] sm:h-10 sm:px-4 sm:text-[13px]"
               >
                 Login
               </Link>
               <Link
                 href="/login?intent=submit"
                 prefetch
-                className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase tracking-[0.18em] text-white transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[11px]"
+                className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[13px] uppercase tracking-[0.18em] text-white transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
               >
                 <span>List your product</span>
                 <ArrowUpRight

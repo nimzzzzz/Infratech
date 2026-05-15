@@ -98,7 +98,7 @@ export function LogoUploadField({
         <p
           role="status"
           aria-live="polite"
-          className="mt-2 text-[12px] text-[var(--color-ink-3)]"
+          className="mt-2 text-[14px] text-[var(--color-ink-3)]"
         >
           Uploading…
         </p>
@@ -106,7 +106,7 @@ export function LogoUploadField({
       {error ? (
         <p
           role="alert"
-          className="mt-2 text-[12px] text-[var(--color-coral)]"
+          className="mt-2 text-[14px] text-[var(--color-coral)]"
         >
           {error}
         </p>
@@ -114,7 +114,7 @@ export function LogoUploadField({
       {uploadError ? (
         <p
           role="alert"
-          className="mt-2 text-[12px] text-[var(--color-magenta)]"
+          className="mt-2 text-[14px] text-[var(--color-magenta)]"
         >
           {uploadError}
         </p>

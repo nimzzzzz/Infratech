@@ -52,10 +52,10 @@ export function FilterSection({
   return (
     <div>
       <div className="flex items-center justify-between border-b border-[var(--color-line-strong)] pb-3">
-        <h3 className="text-[12px] uppercase tracking-[0.22em] text-[var(--color-ink)]">
+        <h3 className="text-[14px] uppercase tracking-[0.22em] text-[var(--color-ink)]">
           {title}
         </h3>
-        <span className="num text-[12px] text-[var(--color-ink-3)]">
+        <span className="num text-[14px] text-[var(--color-ink-3)]">
           {String(options.length).padStart(2, "0")}
         </span>
       </div>
@@ -66,7 +66,7 @@ export function FilterSection({
           value={innerQuery}
           onChange={(e) => setInnerQuery(e.target.value)}
           placeholder="Filter capabilities…"
-          className="mt-3 h-10 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+          className="mt-3 h-10 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
           aria-label={`Filter ${title.toLowerCase()}`}
         />
       ) : null}
@@ -107,7 +107,7 @@ export function FilterSection({
                   </span>
                   <span
                     className={cn(
-                      "truncate text-[14px]",
+                      "truncate text-[16px]",
                       checked
                         ? "text-[var(--color-ink)]"
                         : "text-[var(--color-ink-2)]",
@@ -116,7 +116,7 @@ export function FilterSection({
                     {opt.name}
                   </span>
                 </span>
-                <span className="num shrink-0 text-[12px] text-[var(--color-ink-3)]">
+                <span className="num shrink-0 text-[14px] text-[var(--color-ink-3)]">
                   {count}
                 </span>
               </button>

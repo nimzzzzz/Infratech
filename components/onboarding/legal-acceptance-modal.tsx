@@ -135,12 +135,12 @@ export function LegalAcceptanceModal({
         tabIndex={-1}
         className="w-full max-w-2xl border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 shadow-2xl outline-none md:p-10"
       >
-        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+        <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
           {isReaccept ? "Updated terms" : "One last thing"}
         </p>
         <h2
           id="onboarding-modal-title"
-          className="mt-4 font-heading text-[28px] leading-tight tracking-tight text-[var(--color-ink)] md:text-[32px]"
+          className="mt-4 font-heading text-[30px] leading-tight tracking-tight text-[var(--color-ink)] md:text-[34px]"
         >
           {isReaccept
             ? "Our terms have been updated."
@@ -148,14 +148,14 @@ export function LegalAcceptanceModal({
               ? `Welcome, ${firstName}.`
               : "Welcome to AllInfratech."}
         </h2>
-        <p className="mt-4 max-w-[58ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
+        <p className="mt-4 max-w-[58ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
           {isReaccept
             ? "We've updated the terms that govern using AllInfratech as a vendor since you last accepted. Please review and re-accept to continue."
             : "Before you set up your listing, please confirm you accept the terms that govern using AllInfratech as a vendor. We log your acceptance for our records."}
         </p>
 
         <form onSubmit={onSubmit} className="mt-7 space-y-5">
-          <label className="flex items-start gap-3 text-[14px] leading-relaxed text-[var(--color-ink)]">
+          <label className="flex items-start gap-3 text-[16px] leading-relaxed text-[var(--color-ink)]">
             <input
               type="checkbox"
               checked={accepted}
@@ -224,7 +224,7 @@ export function LegalAcceptanceModal({
           {error ? (
             <p
               role="alert"
-              className="border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
+              className="border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[15px] text-[var(--color-coral)]"
             >
               {error}
             </p>
@@ -245,7 +245,7 @@ export function LegalAcceptanceModal({
                 type="button"
                 onClick={onSignOut}
                 disabled={submitting}
-                className="inline-flex h-10 items-center justify-center px-4 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] transition-colors hover:text-[var(--color-ink)] disabled:opacity-60"
+                className="inline-flex h-10 items-center justify-center px-4 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] transition-colors hover:text-[var(--color-ink)] disabled:opacity-60"
               >
                 Sign out
               </button>
@@ -253,7 +253,7 @@ export function LegalAcceptanceModal({
             <button
               type="submit"
               disabled={submitting || !accepted}
-              className="inline-flex h-11 items-center justify-center bg-[var(--color-ink)] px-6 text-[12px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[var(--color-ink)]"
+              className="inline-flex h-11 items-center justify-center bg-[var(--color-ink)] px-6 text-[14px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[var(--color-ink)]"
             >
               {submitting
                 ? "Confirming…"
@@ -263,7 +263,7 @@ export function LegalAcceptanceModal({
             </button>
           </div>
 
-          <p className="pt-1 text-[11px] leading-relaxed text-[var(--color-ink-3)]">
+          <p className="pt-1 text-[13px] leading-relaxed text-[var(--color-ink-3)]">
             Terms version {TERMS_VERSION}.
           </p>
         </form>

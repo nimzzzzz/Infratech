@@ -90,7 +90,7 @@ export function SearchBar() {
           setValue(e.currentTarget.value);
         }}
         placeholder="Search by name, capability, or vendor…"
-        className={`${styles.input} h-full w-full bg-transparent px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)]`}
+        className={`${styles.input} h-full w-full bg-transparent px-3 text-[18px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)]`}
         aria-label="Search the directory"
       />
     </label>

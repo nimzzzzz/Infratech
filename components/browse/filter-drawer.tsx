@@ -69,7 +69,7 @@ export function FilterDrawer({
           type="button"
           onClick={() => setOpen(true)}
           className={cn(
-            "group inline-flex h-10 items-center gap-2 border px-3 text-[12px] uppercase tracking-[0.18em] transition-colors",
+            "group inline-flex h-10 items-center gap-2 border px-3 text-[14px] uppercase tracking-[0.18em] transition-colors",
             activeCount > 0
               ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-[var(--color-canvas)]"
               : "border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-ink)]",
@@ -79,12 +79,12 @@ export function FilterDrawer({
           <FunnelSimple size={13} weight="regular" />
           <span>Filters</span>
           {activeCount > 0 ? (
-            <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[10px] font-medium text-white">
+            <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[13px] text-white">
               {activeCount}
             </span>
           ) : null}
         </button>
-        <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+        <p className="text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
           <span className="num text-[var(--color-ink)]">{resultCount}</span>{" "}
           / <span className="num">{totalCount}</span>
         </p>
@@ -117,11 +117,11 @@ export function FilterDrawer({
               {/* drawer header */}
               <header className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-5 py-4">
                 <div className="flex items-center gap-2">
-                  <h2 className="font-heading text-[20px] leading-none tracking-tight">
+                  <h2 className="font-heading text-[22px] leading-none tracking-tight">
                     Filters
                   </h2>
                   {activeCount > 0 ? (
-                    <span className="num inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-coral)] px-1.5 text-[10px] font-medium text-white">
+                    <span className="num inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-coral)] px-1.5 text-[13px] text-white">
                       {activeCount}
                     </span>
                   ) : null}
@@ -147,14 +147,14 @@ export function FilterDrawer({
                   type="button"
                   onClick={clearAll}
                   disabled={activeCount === 0}
-                  className="inline-flex h-11 items-center px-3 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] underline-offset-4 transition-colors hover:text-[var(--color-ink)] hover:underline disabled:opacity-40 disabled:hover:no-underline"
+                  className="inline-flex h-11 items-center px-3 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] underline-offset-4 transition-colors hover:text-[var(--color-ink)] hover:underline disabled:opacity-40 disabled:hover:no-underline"
                 >
                   Clear all
                 </button>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-canvas)] transition active:translate-y-[1px]"
+                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 bg-[var(--color-ink)] px-5 text-[14px] uppercase tracking-[0.2em] text-[var(--color-canvas)] transition active:translate-y-[1px]"
                 >
                   Show <span className="num">{resultCount}</span>{" "}
                   {resultCount === 1 ? "result" : "results"}

@@ -23,18 +23,18 @@ export function SubmissionRejectedCard({
 }) {
   return (
     <section className="mb-10 border border-rose-300 bg-rose-50 p-6 md:p-8">
-      <p className="text-[11px] uppercase tracking-[0.32em] text-rose-700">
+      <p className="text-[13px] uppercase tracking-[0.32em] text-rose-700">
         Submission needs changes
       </p>
-      <h2 className="mt-3 font-heading text-[28px] leading-tight tracking-tight text-[var(--color-ink)] md:text-[32px]">
+      <h2 className="mt-3 font-heading text-[30px] leading-tight tracking-tight text-[var(--color-ink)] md:text-[34px]">
         We weren&rsquo;t able to publish {productName}.
       </h2>
-      <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
+      <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
         Here&rsquo;s what our editorial team would need addressed before
         re-review:
       </p>
 
-      <div className="mt-6 border-l-[3px] border-rose-400 bg-white p-4 text-[14px] leading-relaxed text-[var(--color-ink)] whitespace-pre-wrap">
+      <div className="mt-6 border-l-[3px] border-rose-400 bg-white p-4 text-[16px] leading-relaxed text-[var(--color-ink)] whitespace-pre-wrap">
         {rejectionReason}
       </div>
 
@@ -42,7 +42,7 @@ export function SubmissionRejectedCard({
         <Link
           href={`/dashboard/onboarding/submit?resubmit=${submissionId}`}
           prefetch
-          className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
+          className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
         >
           <PencilSimple size={13} weight="regular" />
           Edit &amp; resubmit

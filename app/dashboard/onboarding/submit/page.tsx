@@ -146,7 +146,7 @@ export default async function SubmitPage({
       <div className="flex items-center justify-between gap-4">
         <Link
           href={resubmitId !== null ? "/dashboard" : "/dashboard/onboarding"}
-          className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
+          className="group inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
         >
           <ArrowLeft
             size={12}
@@ -162,7 +162,7 @@ export default async function SubmitPage({
       </div>
 
       {resubmitId !== null ? (
-        <p className="mt-6 text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+        <p className="mt-6 text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
           Editing rejected submission · resubmit when ready
         </p>
       ) : null}
@@ -186,7 +186,7 @@ export default async function SubmitPage({
 
 function DemoToggle({ skipCompanyStep }: { skipCompanyStep: boolean }) {
   return (
-    <div className="inline-flex items-center gap-1 border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-1 text-[10px] uppercase tracking-[0.18em]">
+    <div className="inline-flex items-center gap-1 border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-1 text-[13px] uppercase tracking-[0.18em]">
       <span className="px-2 text-[var(--color-ink-3)]">Demo as</span>
       <Link
         href="/dashboard/onboarding/submit"
