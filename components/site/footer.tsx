@@ -80,7 +80,7 @@ export function Footer() {
             A community service of the Digital &amp; AI Practice of{" "}
             <Link
               href="/about"
-              className="bloom-text underline-offset-4 transition hover:underline"
+              className="text-white/65 underline-offset-4 transition hover:text-white/90 hover:underline"
             >
               Resolute Management Consultancy
             </Link>

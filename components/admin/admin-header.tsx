@@ -73,12 +73,8 @@ export function AdminHeader({
         {/* brand + admin badge */}
         <div className="flex items-center gap-4">
           <Link href="/admin" prefetch className="group flex items-center gap-2.5">
-            <span className="relative inline-flex h-2 w-2">
-              <span className="absolute inset-0 rounded-full bloom" />
-              <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
-            </span>
             <span className="font-heading text-[20px] italic leading-none tracking-tight text-[var(--color-ink)]">
-              AllInfratech
+              allinfratech
             </span>
             <span className="ml-1 inline-flex items-center gap-1 border border-[var(--color-magenta)]/40 bg-[var(--color-canvas-warm)] px-1.5 py-0.5 text-[13px] uppercase tracking-[0.22em] text-[var(--color-magenta)]">
               <ShieldCheck size={10} weight="fill" />
