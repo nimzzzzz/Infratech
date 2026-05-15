@@ -103,6 +103,12 @@ Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
 - Admin upload scope is `app_gallery` (same scope vendors use). The `/api/uploads` route already accepts it; PR 3 just needs to pass the scope through.
 - **Trigger:** Phase C PR 3 kickoff.
 
+### Hide "Claim or edit this profile" on already-claimed vendors
+- On `/vendors/[slug]`, the "Are you {vendor.name}? Claim or edit this profile →" CTA in the Vendor links sidebar currently renders for **every** vendor, including vendors that already have a `claimed_at` timestamp. Reads weirdly to a logged-in vendor visiting their own page (or to a visitor of a clearly-claimed company).
+- Fix: gate the CTA on `vendor.claimedAt === null`. When claimed, drop it (or replace with a quieter "Need to update something? team@allinfratech.com" line).
+- Out of scope for `fix/vendor-profile-layout-revised` (2026-05-15) — that PR moved the CTA into the new sidebar but didn't change visibility logic.
+- **Trigger:** when the first real claimed vendor lands in production, OR sooner as part of a vendor-profile content pass.
+
 ### Background-removal on uploaded vendor logos
 - Vendors upload logos as PNG/JPG with whatever background. We'd want a clean transparent version on the dark footer / over varied backgrounds.
 - We did manual processing for the Resolute "R" logo using a Python script (Pillow + numpy `255 - min(r,g,b)` alpha trick).
