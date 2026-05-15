@@ -218,11 +218,11 @@ describe("POST /api/admin/submissions/:id/approve", () => {
     expect(json.code).toBe("invalid_transition");
   });
 
-  // Phase C PR 2 — publish writes media fields to apps / vendors and
-  // wipes-and-reinserts the vendor gallery. Same approve-route entry
-  // point as the happy path; just asserts the new side effects.
-  it("writes media: apps.logo_url + apps.video_url, vendors.logo_url, vendor_gallery_images rows", async () => {
-    const { vendorGalleryImages } = await import("@/lib/db/schema");
+  // Phase C — publish writes media fields to apps / vendors and
+  // inserts app_screenshots rows keyed on the freshly-created apps
+  // row. Gallery is now product-level (one set per app).
+  it("writes media: apps.logo_url + apps.video_url, vendors.logo_url, app_screenshots rows", async () => {
+    const { appScreenshots } = await import("@/lib/db/schema");
     const vendorId = await seedVendor("media-happy");
     const adminId = await seedAdmin("user_admin_media_happy");
     void adminId;
@@ -244,15 +244,15 @@ describe("POST /api/admin/submissions/:id/approve", () => {
         videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
         companyLogoUrl: "https://x.public.blob.vercel-storage.com/vendor_logo/42/c.png",
         companyLogoAlt: "Company logo",
-        companyGallery: [
+        productGallery: [
           {
-            url: "https://x.public.blob.vercel-storage.com/vendor_gallery/42/g1.jpg",
-            alt: "Office",
+            url: "https://x.public.blob.vercel-storage.com/app_gallery/42/g1.jpg",
+            alt: "Dashboard",
             position: 0,
           },
           {
-            url: "https://x.public.blob.vercel-storage.com/vendor_gallery/42/g2.jpg",
-            alt: "Team",
+            url: "https://x.public.blob.vercel-storage.com/app_gallery/42/g2.jpg",
+            alt: "Reports",
             position: 1,
           },
         ],
@@ -289,50 +289,138 @@ describe("POST /api/admin/submissions/:id/approve", () => {
 
     const galleryRows = await db
       .select()
-      .from(vendorGalleryImages)
-      .where(eq(vendorGalleryImages.vendorId, vendorId))
-      .orderBy(vendorGalleryImages.position);
+      .from(appScreenshots)
+      .where(eq(appScreenshots.appId, json.appId))
+      .orderBy(appScreenshots.position);
     expect(galleryRows).toHaveLength(2);
-    expect(galleryRows[0].alt).toBe("Office");
+    expect(galleryRows[0].alt).toBe("Dashboard");
     expect(galleryRows[0].position).toBe(0);
-    expect(galleryRows[1].alt).toBe("Team");
+    expect(galleryRows[1].alt).toBe("Reports");
     expect(galleryRows[1].position).toBe(1);
   });
 
-  // Phase C PR 2 — re-publish (via approve on a fresh submission for
-  // the same vendor) wipes the existing gallery and re-inserts from
-  // the new payload. Defends the CASCADE-then-insert contract.
+  // Phase C — re-publish on an existing app (idempotent path) wipes
+  // and re-inserts the screenshot set. Seeds an apps row with three
+  // screenshots, sets the submission's app_id to it (admin edit flow
+  // before vendor approval), then approves with a shorter payload and
+  // asserts the new set replaces the old.
   it("re-publish gallery: wipes existing rows and inserts the new set", async () => {
-    const { vendorGalleryImages } = await import("@/lib/db/schema");
+    const { appScreenshots } = await import("@/lib/db/schema");
     const vendorId = await seedVendor("media-republish");
     const adminId = await seedAdmin("user_admin_media_republish");
     void adminId;
     authMock.userId = "user_admin_media_republish";
 
-    // Seed an initial gallery directly (simulates a prior publish).
-    await db.insert(vendorGalleryImages).values([
-      { vendorId, url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/old1.jpg", alt: "Old 1", position: 0 },
-      { vendorId, url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/old2.jpg", alt: "Old 2", position: 1 },
-      { vendorId, url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/old3.jpg", alt: "Old 3", position: 2 },
+    // Seed an existing apps row + initial gallery (simulates a prior
+    // publish that's now being re-published).
+    const [existingApp] = await db
+      .insert(apps)
+      .values({
+        slug: `media-republish-${Date.now()}`,
+        name: "Republish Product",
+        vendorId,
+        websiteUrl: "https://republish.test",
+        status: "published",
+      })
+      .returning({ id: apps.id });
+    await db.insert(appScreenshots).values([
+      { appId: existingApp.id, url: "https://x.public.blob.vercel-storage.com/app_gallery/0/old1.jpg", alt: "Old 1", position: 0 },
+      { appId: existingApp.id, url: "https://x.public.blob.vercel-storage.com/app_gallery/0/old2.jpg", alt: "Old 2", position: 1 },
+      { appId: existingApp.id, url: "https://x.public.blob.vercel-storage.com/app_gallery/0/old3.jpg", alt: "Old 3", position: 2 },
     ]);
 
-    // Approve a NEW submission whose payload carries a shorter gallery.
+    // Seed a submission tied to the existing apps row via app_id.
+    const [sub] = await db
+      .insert(submissions)
+      .values({
+        type: "new",
+        status: "pending_review",
+        submitterVendorId: vendorId,
+        appId: existingApp.id,
+        payload: {
+          slug: `media-republish-${Date.now()}`,
+          name: "Republish Product",
+          url: "https://republish.test",
+          tagline: "tagline",
+          description: "desc",
+          stages: [],
+          capabilities: [],
+          industries: [],
+          pricing: "user-subscription-freemium",
+          productGallery: [
+            {
+              url: "https://x.public.blob.vercel-storage.com/app_gallery/0/new1.jpg",
+              alt: "New 1",
+              position: 0,
+            },
+          ],
+        },
+      })
+      .returning({ id: submissions.id });
+
+    const { POST } = await import(
+      "@/app/api/admin/submissions/[id]/approve/route"
+    );
+    const res = await POST(makeRequest({}, sub.id, "approve"), {
+      params: Promise.resolve({ id: String(sub.id) }),
+    });
+    expect(res.status).toBe(200);
+
+    const rows = await db
+      .select()
+      .from(appScreenshots)
+      .where(eq(appScreenshots.appId, existingApp.id))
+      .orderBy(appScreenshots.position);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].alt).toBe("New 1");
+  });
+
+  // Phase C — publishing a NEW product for a vendor who already has
+  // another published app + screenshots must NOT touch the existing
+  // app's screenshots. Gallery is product-level, keyed on apps.id;
+  // wipe-and-reinsert only runs against the app being published.
+  it("publishing a second product leaves the first product's screenshots untouched", async () => {
+    const { appScreenshots } = await import("@/lib/db/schema");
+    const vendorId = await seedVendor("media-isolation");
+    const adminId = await seedAdmin("user_admin_media_isolation");
+    void adminId;
+    authMock.userId = "user_admin_media_isolation";
+
+    // Seed an existing published app + screenshots (the "first product").
+    const [firstApp] = await db
+      .insert(apps)
+      .values({
+        slug: `first-${Date.now()}`,
+        name: "First Product",
+        vendorId,
+        websiteUrl: "https://first.test",
+        status: "published",
+      })
+      .returning({ id: apps.id });
+    await db.insert(appScreenshots).values([
+      { appId: firstApp.id, url: "https://x.public.blob.vercel-storage.com/app_gallery/0/keep1.jpg", alt: "K1", position: 0 },
+      { appId: firstApp.id, url: "https://x.public.blob.vercel-storage.com/app_gallery/0/keep2.jpg", alt: "K2", position: 1 },
+    ]);
+
+    // Approve a NEW submission for the same vendor with its own (small)
+    // gallery — should create a second app, leave the first's gallery
+    // alone.
     const sub = await seedSubmission({
       vendorId,
       payload: {
-        slug: `media-republish-${Date.now()}`,
-        name: "Republish Product",
-        url: "https://republish.test",
+        slug: `second-${Date.now()}`,
+        name: "Second Product",
+        url: "https://second.test",
         tagline: "tagline",
         description: "desc",
         stages: [],
         capabilities: [],
         industries: [],
         pricing: "user-subscription-freemium",
-        companyGallery: [
+        productGallery: [
           {
-            url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/new1.jpg",
-            alt: "New 1",
+            url: "https://x.public.blob.vercel-storage.com/app_gallery/0/second1.jpg",
+            alt: "S1",
             position: 0,
           },
         ],
@@ -346,75 +434,25 @@ describe("POST /api/admin/submissions/:id/approve", () => {
       params: Promise.resolve({ id: String(sub.id) }),
     });
     expect(res.status).toBe(200);
+    const json = await res.json();
 
-    const rows = await db
+    // First app's screenshots untouched.
+    const firstRows = await db
       .select()
-      .from(vendorGalleryImages)
-      .where(eq(vendorGalleryImages.vendorId, vendorId))
-      .orderBy(vendorGalleryImages.position);
-    expect(rows).toHaveLength(1);
-    expect(rows[0].alt).toBe("New 1");
-  });
+      .from(appScreenshots)
+      .where(eq(appScreenshots.appId, firstApp.id))
+      .orderBy(appScreenshots.position);
+    expect(firstRows).toHaveLength(2);
+    expect(firstRows[0].alt).toBe("K1");
 
-  // Phase C PR 2 — payload without companyGallery / companyLogoUrl
-  // (the returning-vendor case) must NOT touch existing vendor-level
-  // rows. Wipe-on-undefined would regress a vendor whose first
-  // product set a gallery.
-  it("re-publish without companyGallery key leaves existing rows alone", async () => {
-    const { vendorGalleryImages } = await import("@/lib/db/schema");
-    const vendorId = await seedVendor("media-returning");
-    const adminId = await seedAdmin("user_admin_media_returning");
-    void adminId;
-    authMock.userId = "user_admin_media_returning";
-
-    // Seed two existing gallery rows + a vendor logo from a prior submission.
-    await db.insert(vendorGalleryImages).values([
-      { vendorId, url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/keep1.jpg", alt: "K1", position: 0 },
-      { vendorId, url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/keep2.jpg", alt: "K2", position: 1 },
-    ]);
-    await db
-      .update(vendors)
-      .set({ logoUrl: "https://x.public.blob.vercel-storage.com/vendor_logo/0/keep.png" })
-      .where(eq(vendors.id, vendorId));
-
-    // Returning vendor submits a new product; payload has no
-    // company* keys.
-    const sub = await seedSubmission({
-      vendorId,
-      payload: {
-        slug: `media-returning-${Date.now()}`,
-        name: "Returning Product",
-        url: "https://returning.test",
-        tagline: "tagline",
-        description: "desc",
-        stages: [],
-        capabilities: [],
-        industries: [],
-        pricing: "user-subscription-freemium",
-      },
-    });
-
-    const { POST } = await import(
-      "@/app/api/admin/submissions/[id]/approve/route"
-    );
-    const res = await POST(makeRequest({}, sub.id, "approve"), {
-      params: Promise.resolve({ id: String(sub.id) }),
-    });
-    expect(res.status).toBe(200);
-
-    const rows = await db
+    // New app got its own gallery.
+    const secondRows = await db
       .select()
-      .from(vendorGalleryImages)
-      .where(eq(vendorGalleryImages.vendorId, vendorId));
-    expect(rows).toHaveLength(2);
-
-    const [vendorRow] = await db
-      .select()
-      .from(vendors)
-      .where(eq(vendors.id, vendorId));
-    expect(vendorRow.logoUrl).toBe(
-      "https://x.public.blob.vercel-storage.com/vendor_logo/0/keep.png",
-    );
+      .from(appScreenshots)
+      .where(eq(appScreenshots.appId, json.appId))
+      .orderBy(appScreenshots.position);
+    expect(secondRows).toHaveLength(1);
+    expect(secondRows[0].alt).toBe("S1");
   });
 });
 

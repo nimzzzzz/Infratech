@@ -95,7 +95,13 @@ Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
 ### Orphan blob cleanup
 - `/api/uploads` creates Blob objects keyed `<scope>/<vendor_id>/<timestamp>-<rand>.<ext>`. If the user uploads then abandons the wizard / removes a gallery item mid-flow / a submission is rejected and never resubmitted, the Blob persists.
 - Phase C PR 1 accepts the cost. The vendor-keyed path prefix means a future cleanup job can list+delete by prefix without scanning every key.
-- **Trigger:** when Vercel Blob usage approaches 800 MB/month (the spend-alert threshold) OR a vendor is suspended (cascade-delete from `vendor_gallery_images` happens at the DB layer; the Blob objects need a separate sweep).
+- **Additional orphan path after gallery refactor (2026-05-15, `feat/move-gallery-to-product`):** any Blob objects under `vendor_gallery/<vendor_id>/...` written during the brief window the vendor-level gallery shipped are now orphaned — no DB rows reference them after migration 0018 dropped `vendor_gallery_images`. Sweep these alongside the rest when the cleanup job lands. Active scopes now: `vendor_logo`, `app_logo`, `app_gallery`.
+- **Trigger:** when Vercel Blob usage approaches 800 MB/month (the spend-alert threshold) OR a vendor is suspended (cascade-delete from `app_screenshots` happens at the DB layer via `apps.id` FK; the Blob objects need a separate sweep).
+
+### Phase C PR 3 — admin gallery editing (product-level)
+- When the admin submission detail page lands (PR 3), the gallery editor must read + write `app_screenshots` keyed on the submission's resolved `app_id`, NOT the prior `vendor_gallery_images` keyed on vendor_id. Migration 0018 (`feat/move-gallery-to-product`, 2026-05-15) moved the source of truth.
+- Admin upload scope is `app_gallery` (same scope vendors use). The `/api/uploads` route already accepts it; PR 3 just needs to pass the scope through.
+- **Trigger:** Phase C PR 3 kickoff.
 
 ### Background-removal on uploaded vendor logos
 - Vendors upload logos as PNG/JPG with whatever background. We'd want a clean transparent version on the dark footer / over varied backgrounds.

@@ -88,9 +88,9 @@ describe("POST /api/uploads", () => {
     expect((await res.json()).code).toBe("mime");
   });
 
-  it("rejects SVG for vendor_gallery (Q3: no SVG in gallery)", async () => {
+  it("rejects SVG for app_gallery (no SVG in gallery)", async () => {
     const fd = new FormData();
-    fd.append("scope", "vendor_gallery");
+    fd.append("scope", "app_gallery");
     fd.append("file", makeFile("a.svg", "image/svg+xml", 100));
     const res = await POST(makeRequest(fd));
     expect(res.status).toBe(400);
@@ -117,7 +117,7 @@ describe("POST /api/uploads", () => {
 
   it("rejects oversize gallery (>2 MB)", async () => {
     const fd = new FormData();
-    fd.append("scope", "vendor_gallery");
+    fd.append("scope", "app_gallery");
     fd.append("file", makeFile("big.jpg", "image/jpeg", 3 * 1024 * 1024));
     const res = await POST(makeRequest(fd));
     expect(res.status).toBe(400);
@@ -158,15 +158,15 @@ describe("POST /api/uploads", () => {
     expect(path).toMatch(/^app_logo\/42\/\d+-[a-f0-9]+\.webp$/);
   });
 
-  it("happy path: vendor_gallery scope keys correctly", async () => {
+  it("happy path: app_gallery scope keys correctly", async () => {
     putMock.mockResolvedValue({ url: "https://blob.example/g.jpg" });
     const fd = new FormData();
-    fd.append("scope", "vendor_gallery");
+    fd.append("scope", "app_gallery");
     fd.append("file", makeFile("g.jpg", "image/jpeg", 500));
     const res = await POST(makeRequest(fd));
     expect(res.status).toBe(200);
     const [path] = putMock.mock.calls[0];
-    expect(path).toMatch(/^vendor_gallery\/42\/\d+-[a-f0-9]+\.jpg$/);
+    expect(path).toMatch(/^app_gallery\/42\/\d+-[a-f0-9]+\.jpg$/);
   });
 
   it("trims and caps alt text at 200 chars", async () => {

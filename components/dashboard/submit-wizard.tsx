@@ -69,7 +69,6 @@ const FIELD_LABELS: Record<string, string> = {
   companyDescription: "Company description",
   companyLogoUrl: "Company logo",
   companyLogoAlt: "Company logo alt text",
-  companyGallery: "Company gallery",
   name: "Product name",
   url: "Product website",
   tagline: "Tagline",
@@ -82,6 +81,7 @@ const FIELD_LABELS: Record<string, string> = {
   productLogoUrl: "Product logo",
   productLogoAlt: "Product logo alt text",
   videoUrl: "Product video",
+  productGallery: "Product gallery",
 };
 
 /**
@@ -181,7 +181,6 @@ type FormState = {
   companyDescription: string;
   companyLogoUrl: string | null;
   companyLogoAlt: string;
-  companyGallery: GalleryFormItem[];
 
   // ── Tool-level ──
   name: string;
@@ -191,6 +190,7 @@ type FormState = {
   tagline: string;
   description: string;
   videoUrl: string;
+  productGallery: GalleryFormItem[];
   stages: string[];
   capabilities: string[];
   industries: string[];
@@ -209,7 +209,6 @@ const initialState = (companyName: string, domain: string): FormState => ({
   companyDescription: "",
   companyLogoUrl: null,
   companyLogoAlt: "",
-  companyGallery: [],
 
   name: "",
   url: "",
@@ -218,6 +217,7 @@ const initialState = (companyName: string, domain: string): FormState => ({
   tagline: "",
   description: "",
   videoUrl: "",
+  productGallery: [],
   stages: [],
   capabilities: [],
   industries: [],
@@ -351,12 +351,11 @@ export function SubmitWizard({
         companyHeadquarters: data.companyHeadquarters,
         companyRegions: data.companyRegions,
         companyDescription: data.companyDescription,
-        // Phase C — media fields. All optional; the schema's
-        // refines reject anything that isn't a Vercel Blob URL,
-        // so a paste-attack via dev tools can't sneak past.
+        // Phase C — company-level media fields. All optional; the
+        // schema's refines reject anything that isn't a Vercel Blob
+        // URL, so a paste-attack via dev tools can't sneak past.
         companyLogoUrl: data.companyLogoUrl ?? "",
         companyLogoAlt: data.companyLogoAlt,
-        companyGallery: data.companyGallery,
       };
     }
     return {
@@ -370,12 +369,14 @@ export function SubmitWizard({
       industries: data.industries,
       customIndustries: data.customIndustries,
       pricing: data.pricing,
-      // Phase C — media. videoUrl gets normalised to the embed
-      // URL by the schema transform; productLogoUrl is refined
-      // against the Blob host suffix.
+      // Phase C — product-level media. videoUrl gets normalised to
+      // the embed URL by the schema transform; productLogoUrl is
+      // refined against the Blob host suffix; productGallery is the
+      // per-product screenshot set.
       productLogoUrl: data.productLogoUrl ?? "",
       productLogoAlt: data.logoAlt,
       videoUrl: data.videoUrl,
+      productGallery: data.productGallery,
       customPricing:
         data.pricing === CUSTOM_PRICING_SLUG ? data.customPricing : undefined,
     };
@@ -456,7 +457,6 @@ export function SubmitWizard({
       // absent.
       companyLogoUrl: data.companyLogoUrl ?? "",
       companyLogoAlt: data.companyLogoAlt,
-      companyGallery: data.companyGallery,
       // Product block
       name: data.name,
       url: data.url,
@@ -473,6 +473,7 @@ export function SubmitWizard({
       productLogoUrl: data.productLogoUrl ?? "",
       productLogoAlt: data.logoAlt,
       videoUrl: data.videoUrl,
+      productGallery: data.productGallery,
       // Honeypot — must stay empty for real users.
       website3: website3,
     };
@@ -854,7 +855,6 @@ function FullReviewView({
           value={data.companyDescription}
           multiline
         />
-        <ReviewGalleryStrip label="Gallery" items={data.companyGallery} />
         {data.companyLogoUrl ? (
           <ReviewImage
             label="Company logo"
@@ -897,6 +897,7 @@ function FullReviewView({
             </dd>
           </div>
         ) : null}
+        <ReviewGalleryStrip label="Screenshots" items={data.productGallery} />
       </ReviewBlock>
 
       <ReviewBlock
@@ -1060,6 +1061,10 @@ function SinglePageSubmit({
                 </dd>
               </div>
             ) : null}
+            <ReviewGalleryStrip
+              label="Screenshots"
+              items={data.productGallery}
+            />
           </ReviewBlock>
 
           <ReviewBlock
@@ -1495,38 +1500,6 @@ function CompanyStep({
       </div>
 
       <div
-        id="step1-companyGallery"
-        className="md:col-span-2 scroll-mt-24"
-      >
-        <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
-          Company gallery
-        </p>
-        <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">
-          Up to 8 photos &mdash; office, team, product screenshots. PNG,
-          JPG, or WebP up to 2 MB each. Alt text optional but recommended
-          for accessibility.
-        </p>
-        <div className="mt-3">
-          <GalleryUploadField
-            scope="vendor_gallery"
-            items={data.companyGallery.map((g) => ({ url: g.url, alt: g.alt }))}
-            onChange={(items) => {
-              update(
-                "companyGallery",
-                items.map((it, i) => ({
-                  url: it.url,
-                  alt: it.alt,
-                  position: i,
-                })),
-              );
-              clearError("companyGallery");
-            }}
-            error={err(errors, "companyGallery")}
-          />
-        </div>
-      </div>
-
-      <div
         id="step1-companyLogoUrl"
         className="md:col-span-2 scroll-mt-24"
       >
@@ -1743,6 +1716,35 @@ function ToolDescStep({
           </div>
         ) : null}
       </Field>
+
+      <div id="step2-productGallery" className="scroll-mt-24">
+        <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
+          Screenshots
+        </p>
+        <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">
+          Up to 8 product screenshots &mdash; UI shots, dashboards,
+          feature views. PNG, JPG, or WebP up to 2 MB each. Alt text
+          optional but recommended for accessibility.
+        </p>
+        <div className="mt-3">
+          <GalleryUploadField
+            scope="app_gallery"
+            items={data.productGallery.map((g) => ({ url: g.url, alt: g.alt }))}
+            onChange={(items) => {
+              update(
+                "productGallery",
+                items.map((it, i) => ({
+                  url: it.url,
+                  alt: it.alt,
+                  position: i,
+                })),
+              );
+              clearError("productGallery");
+            }}
+            error={err(errors, "productGallery")}
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -14,7 +14,7 @@
  * layer, not here — this file is per-file constraints.
  */
 
-export type UploadScope = "vendor_logo" | "app_logo" | "vendor_gallery";
+export type UploadScope = "vendor_logo" | "app_logo" | "app_gallery";
 
 export type ScopeRules = {
   maxBytes: number;
@@ -42,7 +42,7 @@ const GALLERY_RULES: ScopeRules = {
 const RULES: Record<UploadScope, ScopeRules> = {
   vendor_logo: LOGO_RULES,
   app_logo: LOGO_RULES,
-  vendor_gallery: GALLERY_RULES,
+  app_gallery: GALLERY_RULES,
 };
 
 export function rulesFor(scope: UploadScope): ScopeRules {
@@ -50,7 +50,7 @@ export function rulesFor(scope: UploadScope): ScopeRules {
 }
 
 export function isValidScope(s: string): s is UploadScope {
-  return s === "vendor_logo" || s === "app_logo" || s === "vendor_gallery";
+  return s === "vendor_logo" || s === "app_logo" || s === "app_gallery";
 }
 
 export type UploadValidationError =

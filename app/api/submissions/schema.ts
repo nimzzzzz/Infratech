@@ -183,10 +183,9 @@ export const companyStepSchema = z.object({
   companyRegions: slugArray.min(1, "Pick at least one region").max(20),
   companyDescription: plainText(2000).min(1, "Required"),
   // Phase C — all optional. The vendor profile falls back to the
-  // LetterAvatar / empty-gallery treatment if these aren't set.
+  // LetterAvatar treatment if these aren't set.
   companyLogoUrl: optionalBlobUrl,
   companyLogoAlt: optionalPlainText(200),
-  companyGallery: galleryArray.optional(),
 });
 
 /**
@@ -209,10 +208,12 @@ export const productStepSchema = z
     pricing: z.string().trim().min(1, "Pick a pricing model").max(80),
     customPricing: optionalPlainText(80),
     // Phase C — all optional. App detail page falls back to the
-    // LetterAvatar / no-video treatment if these aren't set.
+    // LetterAvatar / no-video / no-gallery treatment if these
+    // aren't set.
     productLogoUrl: optionalBlobUrl,
     productLogoAlt: optionalPlainText(200),
     videoUrl: videoUrl,
+    productGallery: galleryArray.optional(),
   })
   .superRefine((d, ctx) => {
     // At least one capability — canonical OR proposed.
@@ -271,12 +272,10 @@ export const submissionBodySchema = z.object({
   companyRegions: slugArray.max(20).optional(),
   companyDescription: optionalPlainText(2000),
   // Phase C — company-level media. Stashed in submissions.payload
-  // and written to vendors.logo_url / vendor_gallery_images on
-  // publish (only for first-time submissions; returning vendors
-  // don't carry these fields).
+  // and written to vendors.logo_url on publish (only for first-time
+  // submissions; returning vendors don't carry these fields).
   companyLogoUrl: optionalBlobUrl,
   companyLogoAlt: optionalPlainText(200),
-  companyGallery: galleryArray.optional(),
 
   // --- Product block (always required) ---
   name: plainText(200).min(1),
@@ -291,10 +290,12 @@ export const submissionBodySchema = z.object({
   customIndustries: z.array(plainText(80)).max(10).optional(),
   customPricing: optionalPlainText(80),
   // Phase C — product-level media. Stashed in submissions.payload
-  // and written to apps.logo_url / apps.video_url on publish.
+  // and written to apps.logo_url / apps.video_url / app_screenshots
+  // on publish. Carried on every submission (one gallery per product).
   productLogoUrl: optionalBlobUrl,
   productLogoAlt: optionalPlainText(200),
   videoUrl: videoUrl,
+  productGallery: galleryArray.optional(),
 
   // --- Honeypot ---
   website3: z.string().max(500).optional(),

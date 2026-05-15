@@ -6,13 +6,13 @@ import {
   appCapabilities,
   appIndustries,
   appPricingModels,
+  appScreenshots,
   appStages,
   capabilities,
   industries,
   pricingModels,
   stages,
   vendors,
-  vendorGalleryImages,
 } from "@/lib/db/schema";
 
 /**
@@ -50,12 +50,17 @@ export type PublishPayload = {
   productLogoUrl?: string | null;
   productLogoAlt?: string | null;
   videoUrl?: string | null;
+  // Phase C — product-level gallery (one gallery per product, keyed
+  // on apps.id via app_screenshots). Carried on every submission;
+  // an empty array clears any existing screenshots, undefined behaves
+  // the same way (we always wipe + reinsert so a re-publish lands
+  // cleanly).
+  productGallery?: Array<{ url: string; alt: string; position: number }>;
   // Phase C — company-level media. Carried only on first-time
   // submissions; returning-vendor payloads omit these keys, and
   // the publish helper skips writing vendor-level rows when so.
   companyLogoUrl?: string | null;
   companyLogoAlt?: string | null;
-  companyGallery?: Array<{ url: string; alt: string; position: number }>;
 };
 
 /**
@@ -145,45 +150,38 @@ export async function publishSubmissionInTx(
     insertPricingJoins(tx, appId, p.pricing ? [p.pricing] : []),
   ]);
 
-  // Phase C — company-level media. Conditional on the payload
-  // actually carrying these keys: returning-vendor submissions
-  // skip step 1 of the wizard and don't include them, and we
-  // don't want a second product publish to wipe a gallery set on
-  // the first.
-  //
-  //   companyLogoUrl present → UPDATE vendors.logo_url
-  //   companyGallery present → DELETE then INSERT all rows
-  //
-  // The wipe-and-reinsert pattern matches how the four taxonomy
-  // joins handle re-publish (admin edits should land cleanly).
-  // Empty array is a meaningful "clear the gallery" — only
-  // `undefined` is the "leave alone" signal.
+  // Phase C — company-level logo. Conditional on the payload
+  // actually carrying the key: returning-vendor submissions skip
+  // step 1 of the wizard and don't include it, and a second product
+  // publish shouldn't wipe a logo set on the first.
   if (p.companyLogoUrl !== undefined) {
     await tx
       .update(vendors)
       .set({ logoUrl: p.companyLogoUrl ?? null, updatedAt: new Date() })
       .where(eq(vendors.id, opts.vendorId));
   }
-  if (p.companyGallery !== undefined) {
-    await tx
-      .delete(vendorGalleryImages)
-      .where(eq(vendorGalleryImages.vendorId, opts.vendorId));
-    if (p.companyGallery.length > 0) {
-      // Alt is optional at the wizard / schema layer (a vendor can
-      // submit a gallery item without alt text). The DB column is
-      // NOT NULL, so fall back to an empty string. Public render
-      // sites use the empty alt as the actual <img alt=""> for
-      // decorative-image treatment — same as how missing logos
-      // currently render.
-      await tx.insert(vendorGalleryImages).values(
-        p.companyGallery.map((g) => ({
-          vendorId: opts.vendorId,
-          url: g.url,
-          alt: g.alt ?? "",
-          position: g.position,
-        })),
-      );
-    }
+
+  // Phase C — product-level gallery (app_screenshots). One gallery
+  // per product, keyed on apps.id. Always wipe + reinsert so a
+  // re-publish (admin edit, vendor resubmit, vendor approve of admin
+  // edits) lands cleanly. Empty array / undefined both behave as
+  // "clear the gallery" — the wizard sends an explicit value on
+  // every submission so undefined shouldn't surface in practice.
+  await tx.delete(appScreenshots).where(eq(appScreenshots.appId, appId));
+  const gallery = p.productGallery ?? [];
+  if (gallery.length > 0) {
+    // Alt is optional at the wizard / schema layer (a vendor can
+    // submit a gallery item without alt text). The DB column is
+    // NOT NULL, so fall back to an empty string — the public render
+    // treats empty alt as the `<img alt="">` decorative-image case.
+    await tx.insert(appScreenshots).values(
+      gallery.map((g) => ({
+        appId,
+        url: g.url,
+        alt: g.alt ?? "",
+        position: g.position,
+      })),
+    );
   }
 
   return { appId, slug: p.slug, name: p.name };

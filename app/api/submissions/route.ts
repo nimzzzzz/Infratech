@@ -268,20 +268,19 @@ export async function POST(req: Request) {
             termsVersionAtSubmit: TERMS_VERSION,
             // Phase C — product-level media. Always carried; the
             // publish helper writes apps.logo_url / apps.video_url
-            // from these fields.
+            // and app_screenshots rows from these fields.
             productLogoUrl: body.productLogoUrl || null,
             productLogoAlt: body.productLogoAlt || null,
             videoUrl: body.videoUrl || null,
+            productGallery: body.productGallery ?? [],
             // Phase C — company-level media. Carried only on
             // first-time submissions (returning vendors skip step 1
             // and don't send these). publishSubmissionInTx
-            // conditionally writes vendors.logo_url +
-            // vendor_gallery_images when these are present.
+            // conditionally writes vendors.logo_url when present.
             ...(mustCreateVendor
               ? {
                   companyLogoUrl: body.companyLogoUrl || null,
                   companyLogoAlt: body.companyLogoAlt || null,
-                  companyGallery: body.companyGallery ?? [],
                 }
               : {}),
           },

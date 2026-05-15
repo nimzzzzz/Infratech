@@ -139,7 +139,7 @@ describe("POST /api/submissions — happy paths", () => {
       .select()
       .from(submissions)
       .where(eq(submissions.id, json.submissionId));
-    expect(subRow.status).toBe("pending");
+    expect(subRow.status).toBe("pending_review");
     expect(subRow.type).toBe("new");
     expect(subRow.submitterVendorId).toBe(json.vendorId);
     const payload = subRow.payload as { slug: string; name: string };
@@ -301,7 +301,7 @@ describe("POST /api/submissions — validation & lookup", () => {
     expect(json.fieldErrors.productLogoUrl).toBeTruthy();
   });
 
-  it("400 when companyGallery item URL is not a Vercel Blob URL", async () => {
+  it("400 when productGallery item URL is not a Vercel Blob URL", async () => {
     const { POST } = await import("@/app/api/submissions/route");
     await seedMember({ clerkUserId: "user_gallery_bad", vendorId: null });
     authMock.userId = "user_gallery_bad";
@@ -309,14 +309,15 @@ describe("POST /api/submissions — validation & lookup", () => {
     const res = await POST(
       makeRequest({
         ...validCompany(),
-        ...validProduct(),
-        companyGallery: [
-          {
-            url: "https://evil.example.com/g.jpg",
-            alt: "img",
-            position: 0,
-          },
-        ],
+        ...validProduct({
+          productGallery: [
+            {
+              url: "https://evil.example.com/g.jpg",
+              alt: "img",
+              position: 0,
+            },
+          ],
+        }),
       }),
     );
     expect(res.status).toBe(400);
@@ -335,16 +336,16 @@ describe("POST /api/submissions — validation & lookup", () => {
           productLogoAlt: "Mark",
           // watch URL normalises to embed URL via the schema transform.
           videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          productGallery: [
+            {
+              url: "https://x.public.blob.vercel-storage.com/app_gallery/0/g1.jpg",
+              alt: "Dashboard",
+              position: 0,
+            },
+          ],
         }),
         companyLogoUrl: "https://x.public.blob.vercel-storage.com/vendor_logo/0/c.png",
         companyLogoAlt: "Wordmark",
-        companyGallery: [
-          {
-            url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/g1.jpg",
-            alt: "Office",
-            position: 0,
-          },
-        ],
       }),
     );
     expect(res.status).toBe(200);
@@ -364,10 +365,10 @@ describe("POST /api/submissions — validation & lookup", () => {
     expect(payload.companyLogoUrl).toBe(
       "https://x.public.blob.vercel-storage.com/vendor_logo/0/c.png",
     );
-    expect(payload.companyGallery).toEqual([
+    expect(payload.productGallery).toEqual([
       {
-        url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/g1.jpg",
-        alt: "Office",
+        url: "https://x.public.blob.vercel-storage.com/app_gallery/0/g1.jpg",
+        alt: "Dashboard",
         position: 0,
       },
     ]);
@@ -376,8 +377,8 @@ describe("POST /api/submissions — validation & lookup", () => {
   // Phase C follow-up — alt text on gallery items dropped from
   // required to optional. Empty / missing alt must pass the body
   // schema (the publish helper defaults to "" when writing to the
-  // NOT NULL vendor_gallery_images.alt column).
-  it("200 when companyGallery item has empty alt (relaxed from PR 2)", async () => {
+  // NOT NULL app_screenshots.alt column).
+  it("200 when productGallery item has empty alt (relaxed from PR 2)", async () => {
     const { POST } = await import("@/app/api/submissions/route");
     await seedMember({ clerkUserId: "user_gallery_no_alt", vendorId: null });
     authMock.userId = "user_gallery_no_alt";
@@ -385,20 +386,21 @@ describe("POST /api/submissions — validation & lookup", () => {
     const res = await POST(
       makeRequest({
         ...validCompany(),
-        ...validProduct(),
-        companyGallery: [
-          {
-            url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/g1.jpg",
-            alt: "",
-            position: 0,
-          },
-        ],
+        ...validProduct({
+          productGallery: [
+            {
+              url: "https://x.public.blob.vercel-storage.com/app_gallery/0/g1.jpg",
+              alt: "",
+              position: 0,
+            },
+          ],
+        }),
       }),
     );
     expect(res.status).toBe(200);
   });
 
-  it("200 when companyGallery item omits alt entirely (relaxed from PR 2)", async () => {
+  it("200 when productGallery item omits alt entirely (relaxed from PR 2)", async () => {
     const { POST } = await import("@/app/api/submissions/route");
     await seedMember({
       clerkUserId: "user_gallery_undef_alt",
@@ -409,13 +411,14 @@ describe("POST /api/submissions — validation & lookup", () => {
     const res = await POST(
       makeRequest({
         ...validCompany(),
-        ...validProduct(),
-        companyGallery: [
-          {
-            url: "https://x.public.blob.vercel-storage.com/vendor_gallery/0/g1.jpg",
-            position: 0,
-          },
-        ],
+        ...validProduct({
+          productGallery: [
+            {
+              url: "https://x.public.blob.vercel-storage.com/app_gallery/0/g1.jpg",
+              position: 0,
+            },
+          ],
+        }),
       }),
     );
     expect(res.status).toBe(200);
