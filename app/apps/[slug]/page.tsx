@@ -199,14 +199,19 @@ export default async function AppDetailPage({
       </section>
 
       <Container className="py-14 md:py-20">
-        <div className="space-y-12 md:max-w-[60ch]">
+        {/* Body block fills the Container — the prior md:max-w-[60ch]
+            cap left half the page empty. Per-section width caps below
+            keep reading text (paragraphs, blockquote) at a comfortable
+            line length; chip lists, the lifecycle ribbon, and the video
+            embed get the breathing room they deserve. */}
+        <div className="space-y-12">
           <Section eyebrow="What it does">
-            <div className="space-y-5 text-[19px] leading-relaxed text-[var(--color-ink)] md:text-[20px]">
+            <div className="max-w-[70ch] space-y-5 text-[19px] leading-relaxed text-[var(--color-ink)] md:text-[20px]">
               {paragraphs.map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
             </div>
-            <p className="mt-6 text-[15px] text-[var(--color-ink-3)]">
+            <p className="mt-6 max-w-[70ch] text-[15px] text-[var(--color-ink-3)]">
               For {app.vendor.name}&rsquo;s company background and other
               listings,{" "}
               <Link
@@ -221,16 +226,18 @@ export default async function AppDetailPage({
 
           {app.videoUrl ? (
             <Section eyebrow="Product video">
-              <VideoEmbed url={app.videoUrl} />
+              <div className="max-w-4xl">
+                <VideoEmbed url={app.videoUrl} />
+              </div>
             </Section>
           ) : null}
 
           <Section eyebrow="Lifecycle fit">
-            <p className="text-[18px] leading-relaxed text-[var(--color-ink-2)]">
+            <p className="max-w-[70ch] text-[18px] leading-relaxed text-[var(--color-ink-2)]">
               Where {app.name} actively supports work across the project
               lifecycle.
             </p>
-            <ul className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-3">
+            <ul className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
               {allStages.map((stage) => {
                 const supported = supportedStageSlugs.has(stage.slug);
                 return (
@@ -294,7 +301,7 @@ export default async function AppDetailPage({
               <p className="font-heading text-[30px] leading-tight">
                 {app.pricing.name}
               </p>
-              <p className="mt-3 text-[18px] leading-relaxed text-[var(--color-ink-2)]">
+              <p className="mt-3 max-w-[60ch] text-[18px] leading-relaxed text-[var(--color-ink-2)]">
                 The directory describes how vendors charge. We don&rsquo;t
                 publish actual prices &mdash; those vary by project size,
                 region, and procurement vehicle.
@@ -304,7 +311,7 @@ export default async function AppDetailPage({
 
           {app.editorNote ? (
             <Section eyebrow="Editor's note">
-              <blockquote className="border-l-2 border-[var(--color-coral)] pl-5 font-heading text-[22px] italic leading-snug text-[var(--color-ink)] md:text-[26px]">
+              <blockquote className="max-w-[70ch] border-l-2 border-[var(--color-coral)] pl-5 font-heading text-[22px] italic leading-snug text-[var(--color-ink)] md:text-[26px]">
                 &ldquo;{app.editorNote}&rdquo;
               </blockquote>
             </Section>
