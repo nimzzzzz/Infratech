@@ -124,7 +124,7 @@ function ErrorSummary({
       </p>
       <ul className="mt-2 space-y-1">
         {items.map(({ key, msg }) => (
-          <li key={key} className="text-[15px] leading-relaxed">
+          <li key={key} className="text-[16px] leading-relaxed">
             <a
               href={`#step${step}-${key}`}
               className="text-[var(--color-ink)] underline underline-offset-2 hover:text-[var(--color-coral)]"
@@ -148,7 +148,7 @@ function ErrorSummary({
  */
 function LogoUploadComingSoon() {
   return (
-    <div className="border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-4 text-[14px] leading-relaxed text-[var(--color-ink-2)]">
+    <div className="border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-4 text-[16px] leading-relaxed text-[var(--color-ink-2)]">
       Logo uploads are coming soon. After we review your submission,
       we&rsquo;ll email you a link to add your logo.
     </div>
@@ -1234,7 +1234,7 @@ function SinglePageSubmit({
       <ErrorSummary errors={errors} step={2} />
 
       <div className="mt-12 flex flex-col gap-3 border-t border-[var(--color-line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[14px] text-[var(--color-ink-3)]">
+        <p className="text-[16px] text-[var(--color-ink-3)]">
           Continue when you&rsquo;re ready &mdash; we&rsquo;ll flag anything
           that needs your attention.
         </p>
@@ -1316,7 +1316,7 @@ function Field({
       {error ? (
         <FieldError message={error} />
       ) : hint ? (
-        <p className="text-[14px] text-[var(--color-ink-3)]">{hint}</p>
+        <p className="text-[16px] text-[var(--color-ink-3)]">{hint}</p>
       ) : null}
     </div>
   );
@@ -1379,7 +1379,7 @@ function CompanyStep({
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <p className="md:col-span-2 -mt-2 text-[15px] leading-relaxed text-[var(--color-ink-2)]">
+      <p className="md:col-span-2 -mt-2 text-[16px] leading-relaxed text-[var(--color-ink-2)]">
         A one-time step to set up your public company profile. Future
         product submissions skip straight to product details.
       </p>
@@ -1501,7 +1501,7 @@ function CompanyStep({
         <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Company gallery
         </p>
-        <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">
+        <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">
           Up to 8 photos &mdash; office, team, product screenshots. PNG,
           JPG, or WebP up to 2 MB each. Alt text optional but recommended
           for accessibility.
@@ -1533,7 +1533,7 @@ function CompanyStep({
         <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Company logo
         </p>
-        <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">
+        <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">
           PNG, JPG, WebP, or SVG up to 1 MB. Square or landscape works best.
         </p>
         <div className="mt-3">
@@ -1623,7 +1623,7 @@ function ToolBasicsStep({
         <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Product logo
         </p>
-        <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">
+        <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">
           Optional &mdash; overrides the company logo on this listing only.
           PNG, JPG, WebP, or SVG up to 1 MB. Square or landscape works best
           on the listing card.
@@ -1866,7 +1866,7 @@ function IndustryPricingStep({
         <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Pricing model <span className="text-[var(--color-magenta)]">*</span>
         </p>
-        <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">
+        <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">
           Pick the model that best describes how customers buy. We
           don&rsquo;t display actual prices. Choose &ldquo;Other&rdquo; if
           none of these fit.
@@ -1931,7 +1931,7 @@ function IndustryPricingStep({
               aria-invalid={!!err(errors, "customPricing")}
             />
             <FieldError message={err(errors, "customPricing")} />
-            <p className="mt-2 text-[13px] text-[var(--color-ink-3)]">
+            <p className="mt-2 text-[16px] text-[var(--color-ink-3)]">
               Flagged for editorial review. We may rename or merge into a
               canonical model.
             </p>
@@ -2129,7 +2129,7 @@ function ChipGroup({
       {error ? (
         <FieldError message={error} />
       ) : hint ? (
-        <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">{hint}</p>
+        <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">{hint}</p>
       ) : null}
       <ul
         className={cn(
