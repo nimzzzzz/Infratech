@@ -103,15 +103,11 @@ export default async function LoginPage({
             visible "back" link cluttering the form column. */}
         <Link
           href="/"
-          aria-label="AllInfratech home"
+          aria-label="allinfratech home"
           className="group absolute left-10 top-10 inline-flex items-center gap-2.5 lg:left-14 lg:top-14"
         >
-          <span className="relative inline-flex h-2 w-2">
-            <span className="absolute inset-0 rounded-full bloom" />
-            <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
-          </span>
           <span className="font-heading text-[22px] italic leading-none tracking-tight text-white lg:text-[24px]">
-            AllInfratech
+            allinfratech
           </span>
         </Link>
 
@@ -132,14 +128,11 @@ export default async function LoginPage({
         <div className="flex items-center justify-center bg-[var(--color-night)] px-6 py-5 md:hidden">
           <Link
             href="/"
-            aria-label="AllInfratech home"
+            aria-label="allinfratech home"
             className="inline-flex items-center gap-2"
           >
-            <span className="relative inline-flex h-2 w-2">
-              <span className="absolute inset-0 rounded-full bloom" />
-            </span>
             <span className="font-heading text-[22px] italic leading-none tracking-tight text-white">
-              AllInfratech
+              allinfratech
             </span>
           </Link>
         </div>
@@ -151,7 +144,7 @@ export default async function LoginPage({
             </p>
             <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight text-[var(--color-ink)] md:text-[52px] lg:text-[60px]">
               List your product on{" "}
-              <span className="italic">AllInfratech</span>.
+              <span className="italic">allinfratech</span>.
             </h1>
             <p className="mt-6 max-w-[44ch] text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
               Reach project-management and infrastructure-technology buyers

@@ -23,7 +23,7 @@ export function Header() {
           className="group flex flex-col leading-none"
         >
           <span className="font-heading text-[20px] italic leading-none tracking-tight text-[var(--color-ink)] md:text-[22px]">
-            AllInfratech
+            allinfratech
           </span>
           <span className="mt-1.5 text-[14px] leading-snug text-[var(--color-ink-3)] md:text-[15px]">
             A repository of infrastructure technology products and companies

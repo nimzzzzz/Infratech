@@ -89,15 +89,11 @@ export function DashboardHeader({
           <div className="flex items-center gap-2.5">
             <Link
               href="/"
-              aria-label="AllInfratech home"
+              aria-label="allinfratech home"
               className="group flex items-center gap-2.5"
             >
-              <span className="relative inline-flex h-2 w-2">
-                <span className="absolute inset-0 rounded-full bloom" />
-                <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
-              </span>
               <span className="font-heading text-[20px] italic leading-none tracking-tight text-[var(--color-ink)]">
-                AllInfratech
+                allinfratech
               </span>
             </Link>
             <span className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
