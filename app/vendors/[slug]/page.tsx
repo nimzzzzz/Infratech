@@ -182,10 +182,60 @@ export default async function VendorDetailPage({
         </Container>
       </section>
 
-      {/* TOOLS — vendor's roster (now the second thing on the page) */}
+      {/* ABOUT — visitors learn who the company is before what they sell. */}
+      <section className="border-t border-[var(--color-line)] bg-[var(--color-canvas)] py-14 md:py-20">
+        <Container>
+          <div className="grid gap-10 md:grid-cols-[2fr_1fr] md:gap-14">
+            <Section eyebrow="About the company">
+              <div className="space-y-5 text-[19px] leading-relaxed text-[var(--color-ink)] md:text-[20px]">
+                {paragraphs.map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
+              </div>
+            </Section>
+
+            <aside className="md:pt-9">
+              <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+                Vendor links
+              </p>
+              <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-[var(--color-ink-2)]">
+                {vendor.linkedinUrl ? (
+                  <p>
+                    <a
+                      href={vendor.linkedinUrl}
+                      target="_blank"
+                      rel="nofollow noopener"
+                      className="group inline-flex items-center gap-1.5 text-[var(--color-ink)] underline-offset-4 hover:underline"
+                    >
+                      LinkedIn
+                      <ArrowUpRight
+                        size={12}
+                        weight="bold"
+                        className="opacity-60 transition-opacity group-hover:opacity-100"
+                      />
+                    </a>
+                  </p>
+                ) : null}
+                <p>
+                  Are you {vendor.name}?{" "}
+                  <Link
+                    href="/login"
+                    className="underline underline-offset-4 hover:text-[var(--color-ink)]"
+                  >
+                    Claim or edit this profile
+                  </Link>
+                  .
+                </p>
+              </div>
+            </aside>
+          </div>
+        </Container>
+      </section>
+
+      {/* PRODUCTS — vendor's roster, anchor target for the hero CTA. */}
       <section
         id="tools"
-        className="scroll-mt-24 bg-[var(--color-canvas)] py-14 md:py-20"
+        className="scroll-mt-24 border-t border-[var(--color-line)] bg-[var(--color-canvas)] py-14 md:py-20"
       >
         <Container>
           <div className="mb-8 flex items-end justify-between gap-4">
@@ -224,31 +274,6 @@ export default async function VendorDetailPage({
               ))}
             </ul>
           )}
-        </Container>
-      </section>
-
-      {/* ABOUT — moved below the tool roster */}
-      <section className="border-t border-[var(--color-line)] bg-[var(--color-canvas)] py-14 md:py-20">
-        <Container>
-          <div className="md:max-w-[68ch]">
-            <Section eyebrow="About the company">
-              <div className="space-y-5 text-[19px] leading-relaxed text-[var(--color-ink)] md:text-[20px]">
-                {paragraphs.map((p, i) => (
-                  <p key={i}>{p}</p>
-                ))}
-              </div>
-              <p className="mt-8 text-[15px] text-[var(--color-ink-3)]">
-                Are you {vendor.name}?{" "}
-                <Link
-                  href="/login"
-                  className="underline underline-offset-4 hover:text-[var(--color-ink)]"
-                >
-                  Claim or edit this profile
-                </Link>
-                .
-              </p>
-            </Section>
-          </div>
         </Container>
       </section>
 
