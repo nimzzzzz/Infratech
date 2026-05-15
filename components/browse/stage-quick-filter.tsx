@@ -71,7 +71,7 @@ export function StageQuickFilter() {
 
   return (
     <div className="-mx-6 sm:-mx-6 md:mx-0">
-      <p className="mb-3 px-6 text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-3)] md:px-0">
+      <p className="mb-3 px-6 text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)] md:px-0">
         Filter by stage
       </p>
 
@@ -91,7 +91,7 @@ export function StageQuickFilter() {
                   onClick={() => toggle(stage.slug)}
                   aria-pressed={checked}
                   className={cn(
-                    "inline-flex h-10 items-center gap-1.5 border px-3 text-[13px] transition-colors",
+                    "inline-flex h-10 items-center gap-1.5 border px-3 text-[15px] transition-colors",
                     checked
                       ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-[var(--color-canvas)]"
                       : "border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-ink)]",

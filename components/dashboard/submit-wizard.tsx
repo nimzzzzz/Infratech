@@ -48,7 +48,7 @@ type FieldErrors = Partial<Record<string, string[]>>;
 function FieldError({ message }: { message?: string | null }) {
   if (!message) return null;
   return (
-    <p role="alert" className="mt-1 text-[12px] text-[var(--color-coral)]">
+    <p role="alert" className="mt-1 text-[14px] text-[var(--color-coral)]">
       {message}
     </p>
   );
@@ -118,16 +118,16 @@ function ErrorSummary({
       role="alert"
       className="mt-6 border border-[var(--color-coral)]/50 bg-[var(--color-coral)]/5 px-4 py-3"
     >
-      <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+      <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
         Fix {items.length === 1 ? "1 field" : `${items.length} fields`} to
         continue
       </p>
       <ul className="mt-2 space-y-1">
         {items.map(({ key, msg }) => (
-          <li key={key} className="text-[13px] leading-relaxed">
+          <li key={key} className="text-[15px] leading-relaxed">
             <a
               href={`#step${step}-${key}`}
-              className="font-medium text-[var(--color-ink)] underline underline-offset-2 hover:text-[var(--color-coral)]"
+              className="text-[var(--color-ink)] underline underline-offset-2 hover:text-[var(--color-coral)]"
             >
               {FIELD_LABELS[key] ?? key}
             </a>
@@ -148,7 +148,7 @@ function ErrorSummary({
  */
 function LogoUploadComingSoon() {
   return (
-    <div className="border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-4 text-[12px] leading-relaxed text-[var(--color-ink-2)]">
+    <div className="border border-dashed border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-4 text-[14px] leading-relaxed text-[var(--color-ink-2)]">
       Logo uploads are coming soon. After we review your submission,
       we&rsquo;ll email you a link to add your logo.
     </div>
@@ -698,7 +698,7 @@ export function SubmitWizard({
       {submitError ? (
         <p
           role="alert"
-          className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
+          className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[15px] text-[var(--color-coral)]"
         >
           {submitError}
         </p>
@@ -711,7 +711,7 @@ export function SubmitWizard({
           onClick={prev}
           disabled={step === minStep}
           className={cn(
-            "group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] transition-colors",
+            "group inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.18em] transition-colors",
             step === minStep
               ? "cursor-not-allowed text-[var(--color-ink-3)]/50"
               : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
@@ -732,7 +732,7 @@ export function SubmitWizard({
           <button
             type="button"
             onClick={next}
-            className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
+            className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[14px] uppercase tracking-[0.2em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
           >
             Continue
             <ArrowRight
@@ -747,7 +747,7 @@ export function SubmitWizard({
             onClick={handleSubmit}
             disabled={submitting}
             className={cn(
-              "group inline-flex h-11 items-center gap-2 px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-[filter,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
+              "group inline-flex h-11 items-center gap-2 px-5 text-[14px] uppercase tracking-[0.2em] text-white transition-[filter,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
               submitting ? "bg-[var(--color-coral)]/80" : "bloom hover:brightness-110",
             )}
           >
@@ -792,14 +792,14 @@ function ProgressRail({
 
   return (
     <div>
-      <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[14px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         {eyebrowLabel} &middot; Step{" "}
         <span className="num">{String(displayIndex).padStart(2, "0")}</span>{" "}
         of{" "}
         <span className="num">{String(totalVisible).padStart(2, "0")}</span>{" "}
         &middot; {steps[step - 1].label}
       </p>
-      <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
+      <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[48px]">
         {headlineFor(step)}
       </h1>
       <div
@@ -887,7 +887,7 @@ function FullReviewView({
         <ReviewRow label="What it does" value={data.description} multiline />
         {data.videoUrl && isYouTubeOrVimeo(data.videoUrl) ? (
           <div className="grid grid-cols-[120px_1fr] gap-1">
-            <dt className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+            <dt className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
               Video
             </dt>
             <dd>
@@ -1010,13 +1010,13 @@ function SinglePageSubmit({
   const reviewBlock = (
     <div hidden={view !== "review"}>
       <div className="mt-8">
-        <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+        <p className="text-[14px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
           Add a product &middot; Review
         </p>
-        <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
+        <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[48px]">
           Review before submitting.
         </h1>
-        <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
+        <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
           Edit any block to jump back. Editorial review typically takes two
           business days; we&rsquo;ll email you when your listing is
           published.
@@ -1050,7 +1050,7 @@ function SinglePageSubmit({
             />
             {data.videoUrl && isYouTubeOrVimeo(data.videoUrl) ? (
               <div className="grid grid-cols-[120px_1fr] gap-1">
-                <dt className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+                <dt className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
                   Video
                 </dt>
                 <dd>
@@ -1109,7 +1109,7 @@ function SinglePageSubmit({
               scrollTargetRef.current = null;
               setView("edit");
             }}
-            className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
+            className="group inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
           >
             <ArrowLeft
               size={12}
@@ -1123,7 +1123,7 @@ function SinglePageSubmit({
             onClick={onSubmit}
             disabled={submitting}
             className={cn(
-              "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-[filter,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
+              "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[14px] uppercase tracking-[0.2em] text-white transition-[filter,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
               submitting ? "bg-[var(--color-coral)]/80" : "bloom hover:brightness-110",
             )}
           >
@@ -1163,7 +1163,7 @@ function SinglePageSubmit({
       {submitError && view === "review" ? (
         <p
           role="alert"
-          className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
+          className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[15px] text-[var(--color-coral)]"
         >
           {submitError}
         </p>
@@ -1172,13 +1172,13 @@ function SinglePageSubmit({
       {reviewBlock}
 
       <div hidden={view !== "edit"} className="mt-8">
-      <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[14px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Add a product
       </p>
-      <h1 className="mt-4 font-heading text-[34px] leading-[1.04] tracking-tight md:text-[44px]">
+      <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[48px]">
         Your new product.
       </h1>
-      <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
+      <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
         Complete every section, then review before submitting. Editorial
         review typically takes two business days.
       </p>
@@ -1234,7 +1234,7 @@ function SinglePageSubmit({
       <ErrorSummary errors={errors} step={2} />
 
       <div className="mt-12 flex flex-col gap-3 border-t border-[var(--color-line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[12px] text-[var(--color-ink-3)]">
+        <p className="text-[14px] text-[var(--color-ink-3)]">
           Continue when you&rsquo;re ready &mdash; we&rsquo;ll flag anything
           that needs your attention.
         </p>
@@ -1249,7 +1249,7 @@ function SinglePageSubmit({
             scrollTargetRef.current = null;
             setView("review");
           }}
-          className="group inline-flex h-12 items-center justify-center gap-2 bg-[var(--color-ink)] px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
+          className="group inline-flex h-12 items-center justify-center gap-2 bg-[var(--color-ink)] px-6 text-[14px] uppercase tracking-[0.2em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
         >
           Continue to review
           <ArrowRight
@@ -1276,10 +1276,10 @@ function Section({
   return (
     <section>
       <header className="flex items-baseline gap-3 border-b border-[var(--color-line-strong)] pb-3">
-        <span className="num text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+        <span className="num text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
           {String(n).padStart(2, "0")}
         </span>
-        <h2 className="font-heading text-[22px] leading-tight tracking-tight md:text-[26px]">
+        <h2 className="font-heading text-[24px] leading-tight tracking-tight md:text-[28px]">
           {title}
         </h2>
       </header>
@@ -1307,7 +1307,7 @@ function Field({
     <div className="flex flex-col gap-2">
       <label
         htmlFor={htmlFor}
-        className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]"
+        className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]"
       >
         {label}
         {required ? <span className="text-[var(--color-magenta)]"> *</span> : null}
@@ -1316,14 +1316,14 @@ function Field({
       {error ? (
         <FieldError message={error} />
       ) : hint ? (
-        <p className="text-[12px] text-[var(--color-ink-3)]">{hint}</p>
+        <p className="text-[14px] text-[var(--color-ink-3)]">{hint}</p>
       ) : null}
     </div>
   );
 }
 
 const inputCls =
-  "h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none";
+  "h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none";
 
 /** Append the coral error border to an input class string when the
  *  field has an error. Cheaper than a per-field cn() at each call. */
@@ -1334,7 +1334,7 @@ function inputClsWithError(err?: string | null): string {
 }
 
 const textareaCls =
-  "border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2.5 text-[14px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none";
+  "border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2.5 text-[16px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none";
 
 function textareaClsWithError(err?: string | null): string {
   return err
@@ -1379,7 +1379,7 @@ function CompanyStep({
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <p className="md:col-span-2 -mt-2 text-[13px] leading-relaxed text-[var(--color-ink-2)]">
+      <p className="md:col-span-2 -mt-2 text-[15px] leading-relaxed text-[var(--color-ink-2)]">
         A one-time step to set up your public company profile. Future
         product submissions skip straight to product details.
       </p>
@@ -1487,7 +1487,7 @@ function CompanyStep({
             className={textareaClsWithError(err(errors, "companyDescription"))}
             aria-invalid={!!err(errors, "companyDescription")}
           />
-          <p className="text-[11px] text-[var(--color-ink-3)]">
+          <p className="text-[13px] text-[var(--color-ink-3)]">
             <span className="num">{data.companyDescription.length}</span> /{" "}
             <span className="num">1500</span>
           </p>
@@ -1498,10 +1498,10 @@ function CompanyStep({
         id="step1-companyGallery"
         className="md:col-span-2 scroll-mt-24"
       >
-        <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
+        <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Company gallery
         </p>
-        <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
+        <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">
           Up to 8 photos &mdash; office, team, product screenshots. PNG,
           JPG, or WebP up to 2 MB each. Alt text optional but recommended
           for accessibility.
@@ -1530,10 +1530,10 @@ function CompanyStep({
         id="step1-companyLogoUrl"
         className="md:col-span-2 scroll-mt-24"
       >
-        <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
+        <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Company logo
         </p>
-        <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
+        <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">
           PNG, JPG, WebP, or SVG up to 1 MB. Square or landscape works best.
         </p>
         <div className="mt-3">
@@ -1620,10 +1620,10 @@ function ToolBasicsStep({
         id="step2-productLogoUrl"
         className="md:col-span-2 scroll-mt-24"
       >
-        <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
+        <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Product logo
         </p>
-        <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
+        <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">
           Optional &mdash; overrides the company logo on this listing only.
           PNG, JPG, WebP, or SVG up to 1 MB. Square or landscape works best
           on the listing card.
@@ -1685,7 +1685,7 @@ function ToolDescStep({
           className={inputClsWithError(err(errors, "tagline"))}
           aria-invalid={!!err(errors, "tagline")}
         />
-        <p className="text-[11px] text-[var(--color-ink-3)]">
+        <p className="text-[13px] text-[var(--color-ink-3)]">
           <span className="num">{data.tagline.length}</span> /{" "}
           <span className="num">140</span>
         </p>
@@ -1711,7 +1711,7 @@ function ToolDescStep({
           className={textareaClsWithError(err(errors, "description"))}
           aria-invalid={!!err(errors, "description")}
         />
-        <p className="text-[11px] text-[var(--color-ink-3)]">
+        <p className="text-[13px] text-[var(--color-ink-3)]">
           <span className="num">{data.description.length}</span> /{" "}
           <span className="num">1200</span>
         </p>
@@ -1863,10 +1863,10 @@ function IndustryPricingStep({
       </div>
 
       <div id="step2-pricing" className="scroll-mt-24">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
+        <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
           Pricing model <span className="text-[var(--color-magenta)]">*</span>
         </p>
-        <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
+        <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">
           Pick the model that best describes how customers buy. We
           don&rsquo;t display actual prices. Choose &ldquo;Other&rdquo; if
           none of these fit.
@@ -1909,7 +1909,7 @@ function IndustryPricingStep({
           <div id="step2-customPricing" className="mt-4 scroll-mt-24">
             <label
               htmlFor="step2-customPricing-input"
-              className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]"
+              className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]"
             >
               Describe the pricing model
             </label>
@@ -1931,7 +1931,7 @@ function IndustryPricingStep({
               aria-invalid={!!err(errors, "customPricing")}
             />
             <FieldError message={err(errors, "customPricing")} />
-            <p className="mt-2 text-[11px] text-[var(--color-ink-3)]">
+            <p className="mt-2 text-[13px] text-[var(--color-ink-3)]">
               Flagged for editorial review. We may rename or merge into a
               canonical model.
             </p>
@@ -1980,10 +1980,10 @@ function PricingCard({
           <span className="block h-1.5 w-1.5 rounded-full bg-[var(--color-ink)]" />
         ) : null}
       </span>
-      <span className="flex min-w-0 flex-1 items-center gap-2 text-[13px]">
+      <span className="flex min-w-0 flex-1 items-center gap-2 text-[15px]">
         <span className="truncate">{label}</span>
         {proposed && checked ? (
-          <span className="ml-auto shrink-0 text-[10px] uppercase tracking-[0.18em] text-[var(--color-canvas)]/70">
+          <span className="ml-auto shrink-0 text-[13px] uppercase tracking-[0.18em] text-[var(--color-canvas)]/70">
             Proposed
           </span>
         ) : null}
@@ -2004,13 +2004,13 @@ function ReviewBlock({
   return (
     <div>
       <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-2">
-        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+        <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
           {title}
         </p>
         <button
           type="button"
           onClick={onEdit}
-          className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] underline-offset-4 hover:text-[var(--color-ink)] hover:underline"
+          className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] underline-offset-4 hover:text-[var(--color-ink)] hover:underline"
         >
           Edit
         </button>
@@ -2031,12 +2031,12 @@ function ReviewRow({
 }) {
   return (
     <div className={cn("grid gap-1", multiline ? "" : "grid-cols-[120px_1fr]")}>
-      <dt className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+      <dt className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
         {label}
       </dt>
       <dd
         className={cn(
-          "text-[14px] text-[var(--color-ink)]",
+          "text-[16px] text-[var(--color-ink)]",
           multiline && "leading-relaxed",
         )}
       >
@@ -2060,10 +2060,10 @@ function ReviewTaxonomyRow({
   const empty = canonical.length === 0 && proposed.length === 0;
   return (
     <div className="grid grid-cols-[120px_1fr] gap-1">
-      <dt className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+      <dt className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
         {label}
       </dt>
-      <dd className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[14px] text-[var(--color-ink)]">
+      <dd className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[16px] text-[var(--color-ink)]">
         {empty ? (
           <span className="text-[var(--color-ink-3)]">— not set —</span>
         ) : (
@@ -2072,10 +2072,10 @@ function ReviewTaxonomyRow({
             {proposed.map((value) => (
               <span
                 key={value}
-                className="inline-flex items-center gap-1.5 border border-dashed border-[var(--color-coral)] bg-[var(--color-canvas-warm)] px-2 py-0.5 text-[12px]"
+                className="inline-flex items-center gap-1.5 border border-dashed border-[var(--color-coral)] bg-[var(--color-canvas-warm)] px-2 py-0.5 text-[14px]"
               >
                 {value}
-                <span className="text-[9px] uppercase tracking-[0.18em] text-[var(--color-coral)]">
+                <span className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-coral)]">
                   Proposed
                 </span>
               </span>
@@ -2120,7 +2120,7 @@ function ChipGroup({
 
   return (
     <div>
-      <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
+      <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
         {label}
         {required ? (
           <span className="text-[var(--color-magenta)]"> *</span>
@@ -2129,7 +2129,7 @@ function ChipGroup({
       {error ? (
         <FieldError message={error} />
       ) : hint ? (
-        <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">{hint}</p>
+        <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">{hint}</p>
       ) : null}
       <ul
         className={cn(
@@ -2148,7 +2148,7 @@ function ChipGroup({
                 aria-pressed={checked}
                 aria-describedby={tipId}
                 className={cn(
-                  "inline-flex items-center gap-1.5 border px-3 py-1.5 text-[12px] transition-colors",
+                  "inline-flex items-center gap-1.5 border px-3 py-1.5 text-[14px] transition-colors",
                   checked
                     ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-[var(--color-canvas)]"
                     : "border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-ink)]",
@@ -2161,7 +2161,7 @@ function ChipGroup({
                 <span
                   id={tipId}
                   role="tooltip"
-                  className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-64 -translate-x-1/2 border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-[12px] leading-relaxed text-[var(--color-ink-2)] shadow-sm group-hover:block group-focus-within:block"
+                  className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-64 -translate-x-1/2 border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-[14px] leading-relaxed text-[var(--color-ink-2)] shadow-sm group-hover:block group-focus-within:block"
                 >
                   {opt.tooltip}
                 </span>
@@ -2172,9 +2172,9 @@ function ChipGroup({
 
         {customs.map((value) => (
           <li key={`custom:${value}`}>
-            <span className="inline-flex items-center gap-1.5 border border-dashed border-[var(--color-coral)] bg-[var(--color-canvas-warm)] px-3 py-1.5 text-[12px] text-[var(--color-ink)]">
+            <span className="inline-flex items-center gap-1.5 border border-dashed border-[var(--color-coral)] bg-[var(--color-canvas-warm)] px-3 py-1.5 text-[14px] text-[var(--color-ink)]">
               <span>{value}</span>
-              <span className="text-[9px] uppercase tracking-[0.18em] text-[var(--color-coral)]">
+              <span className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-coral)]">
                 Proposed
               </span>
               <button
@@ -2252,7 +2252,7 @@ function SuggestChip({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 border border-dashed border-[var(--color-line-strong)] bg-transparent px-3 py-1.5 text-[12px] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
+        className="inline-flex items-center gap-1.5 border border-dashed border-[var(--color-line-strong)] bg-transparent px-3 py-1.5 text-[14px] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
       >
         <Plus size={11} weight="bold" />
         <span>Suggest one</span>
@@ -2262,7 +2262,7 @@ function SuggestChip({
 
   return (
     <span className="inline-flex flex-col gap-1">
-      <span className="inline-flex items-center gap-1 border border-[var(--color-ink)] bg-[var(--color-surface)] px-2 py-1 text-[12px]">
+      <span className="inline-flex items-center gap-1 border border-[var(--color-ink)] bg-[var(--color-surface)] px-2 py-1 text-[14px]">
         <input
           ref={inputRef}
           type="text"
@@ -2282,7 +2282,7 @@ function SuggestChip({
           }}
           maxLength={50}
           placeholder={`New ${label.toLowerCase().replace(/s$/, "")}`}
-          className="w-44 bg-transparent px-1 text-[12px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:outline-none"
+          className="w-44 bg-transparent px-1 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:outline-none"
         />
         <button
           type="button"
@@ -2302,7 +2302,7 @@ function SuggestChip({
         </button>
       </span>
       {error ? (
-        <span className="text-[10px] text-[var(--color-magenta)]">{error}</span>
+        <span className="text-[13px] text-[var(--color-magenta)]">{error}</span>
       ) : null}
     </span>
   );

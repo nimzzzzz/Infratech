@@ -77,10 +77,10 @@ export function AdminHeader({
               <span className="absolute inset-0 rounded-full bloom" />
               <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
             </span>
-            <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)]">
+            <span className="font-heading text-[20px] italic leading-none tracking-tight text-[var(--color-ink)]">
               AllInfratech
             </span>
-            <span className="ml-1 inline-flex items-center gap-1 border border-[var(--color-magenta)]/40 bg-[var(--color-canvas-warm)] px-1.5 py-0.5 text-[9px] uppercase tracking-[0.22em] text-[var(--color-magenta)]">
+            <span className="ml-1 inline-flex items-center gap-1 border border-[var(--color-magenta)]/40 bg-[var(--color-canvas-warm)] px-1.5 py-0.5 text-[13px] uppercase tracking-[0.22em] text-[var(--color-magenta)]">
               <ShieldCheck size={10} weight="fill" />
               Admin
             </span>
@@ -99,7 +99,7 @@ export function AdminHeader({
                       title={item.placeholder ? "Coming soon" : undefined}
                       aria-disabled={item.placeholder || undefined}
                       className={cn(
-                        "relative inline-flex items-center px-3 py-2 text-[13px] font-medium transition-colors",
+                        "relative inline-flex items-center px-3 py-2 text-[15px] transition-colors",
                         active
                           ? "text-[var(--color-ink)]"
                           : item.placeholder
@@ -132,10 +132,10 @@ export function AdminHeader({
           <div className="hidden items-center gap-2.5 sm:flex">
             <UserAvatar avatarUrl={avatarUrl} name={name} size={32} />
             <div className="flex flex-col leading-tight">
-              <span className="text-[13px] text-[var(--color-ink)]">
+              <span className="text-[15px] text-[var(--color-ink)]">
                 {name}
               </span>
-              <span className="text-[11px] text-[var(--color-ink-3)]">
+              <span className="text-[13px] text-[var(--color-ink-3)]">
                 {email}
               </span>
             </div>
@@ -149,7 +149,7 @@ export function AdminHeader({
           <form action={enterVendorView}>
             <button
               type="submit"
-              className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5"
+              className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5"
               title="Open /dashboard as if you were a vendor (for QA)"
             >
               <Eye size={11} weight="regular" />
@@ -159,7 +159,7 @@ export function AdminHeader({
           <button
             type="button"
             onClick={onSignOut}
-            className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5"
+            className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5"
           >
             <SignOut size={11} weight="regular" />
             <span className="hidden sm:inline">Sign out</span>
@@ -183,7 +183,7 @@ export function AdminHeader({
                   title={item.placeholder ? "Coming soon" : undefined}
                   aria-disabled={item.placeholder || undefined}
                   className={cn(
-                    "relative inline-flex items-center px-3 py-3 text-[12px] font-medium transition-colors",
+                    "relative inline-flex items-center px-3 py-3 text-[14px] transition-colors",
                     active
                       ? "text-[var(--color-ink)]"
                       : item.placeholder

@@ -125,13 +125,13 @@ export function ContactForm({
         <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-canvas-warm)] text-[var(--color-coral)] ring-1 ring-[var(--color-line-strong)]">
           <CheckCircle size={28} weight="regular" />
         </span>
-        <p className="mt-7 text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+        <p className="mt-7 text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
           Message sent
         </p>
-        <h2 className="mt-3 font-heading text-[26px] leading-tight tracking-tight md:text-[32px]">
+        <h2 className="mt-3 font-heading text-[28px] leading-tight tracking-tight md:text-[34px]">
           Off to {vendorName}.
         </h2>
-        <p className="mx-auto mt-4 max-w-[48ch] text-[15px] leading-relaxed text-[var(--color-ink-2)]">
+        <p className="mx-auto mt-4 max-w-[48ch] text-[17px] leading-relaxed text-[var(--color-ink-2)]">
           We&rsquo;ve sent your message and emailed a confirmation to{" "}
           <span className="text-[var(--color-ink)]">{data.email}</span>.{" "}
           {vendorName}&rsquo;s team will reply directly to your inbox when they
@@ -140,7 +140,7 @@ export function ContactForm({
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
           <Link
             href={`/apps/${appSlug}`}
-            className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--color-canvas)] transition active:translate-y-[1px]"
+            className="group inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[13px] uppercase tracking-[0.2em] text-[var(--color-canvas)] transition active:translate-y-[1px]"
           >
             Back to {appName}
             <ArrowRight
@@ -151,7 +151,7 @@ export function ContactForm({
           </Link>
           <Link
             href="/"
-            className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] underline-offset-4 hover:text-[var(--color-ink)] hover:underline"
+            className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] underline-offset-4 hover:text-[var(--color-ink)] hover:underline"
           >
             Browse the index
           </Link>
@@ -185,7 +185,7 @@ export function ContactForm({
       {topError ? (
         <div
           role="alert"
-          className="md:col-span-2 border border-[var(--color-magenta)]/40 bg-[var(--color-magenta)]/5 px-4 py-3 text-[13px] text-[var(--color-magenta)]"
+          className="md:col-span-2 border border-[var(--color-magenta)]/40 bg-[var(--color-magenta)]/5 px-4 py-3 text-[15px] text-[var(--color-magenta)]"
         >
           {topError}
         </div>
@@ -290,9 +290,9 @@ export function ContactForm({
             onChange={(e) => update("message", e.target.value)}
             placeholder="Hi — we're evaluating products for…"
             maxLength={3000}
-            className="border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2.5 text-[15px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+            className="border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2.5 text-[17px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
           />
-          <p className="text-[11px] text-[var(--color-ink-3)]">
+          <p className="text-[13px] text-[var(--color-ink-3)]">
             <span className="num">{data.message.length}</span> /{" "}
             <span className="num">3000</span>
           </p>
@@ -300,7 +300,7 @@ export function ContactForm({
       </div>
 
       <div className="md:col-span-2 flex flex-col gap-3 border-t border-[var(--color-line)] pt-6 md:flex-row md:items-center md:justify-between">
-        <p className="text-[11px] leading-relaxed text-[var(--color-ink-3)]">
+        <p className="text-[13px] leading-relaxed text-[var(--color-ink-3)]">
           By sending, you agree to our{" "}
           <Link
             href="/legal/terms"
@@ -314,7 +314,7 @@ export function ContactForm({
           type="submit"
           disabled={!isValid || submitting}
           className={cn(
-            "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-[filter,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
+            "group inline-flex h-12 items-center justify-center gap-2 px-6 text-[14px] uppercase tracking-[0.2em] text-white transition-[filter,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
             isValid && !submitting
               ? "bloom hover:brightness-110"
               : "cursor-not-allowed bg-[var(--color-line)] text-[var(--color-ink-3)]",
@@ -353,7 +353,7 @@ function Field({
     <div className="flex flex-col gap-2">
       <label
         htmlFor={htmlFor}
-        className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]"
+        className="text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]"
       >
         {label}
         {required ? (
@@ -364,16 +364,16 @@ function Field({
       {error ? (
         <p
           role="alert"
-          className="text-[12px] text-[var(--color-magenta)]"
+          className="text-[14px] text-[var(--color-magenta)]"
         >
           {error}
         </p>
       ) : hint ? (
-        <p className="text-[12px] text-[var(--color-ink-3)]">{hint}</p>
+        <p className="text-[14px] text-[var(--color-ink-3)]">{hint}</p>
       ) : null}
     </div>
   );
 }
 
 const inputCls =
-  "h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[15px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none";
+  "h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[17px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none";

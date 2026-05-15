@@ -39,7 +39,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
           {columns.map((col) => (
             <div key={col.title}>
-              <h3 className="font-body text-[12px] uppercase tracking-[0.18em] text-white/40">
+              <h3 className="font-body text-[14px] uppercase tracking-[0.18em] text-white/40">
                 {col.title}
               </h3>
               <ul className="mt-4 space-y-2.5">
@@ -48,7 +48,7 @@ export function Footer() {
                     <Link
                       href={l.href}
                       prefetch
-                      className="text-[15px] text-white/75 transition hover:text-white"
+                      className="text-[17px] text-white/75 transition hover:text-white"
                     >
                       {l.label}
                     </Link>
@@ -61,7 +61,7 @@ export function Footer() {
       </Container>
 
       <div className="relative border-t border-white/10">
-        <Container className="flex flex-col items-start gap-4 py-6 text-[13px] text-white/45 md:flex-row md:items-center">
+        <Container className="flex flex-col items-start gap-4 py-6 text-[15px] text-white/45 md:flex-row md:items-center">
           <Link
             href="/about"
             aria-label="Resolute Management Consultancy"

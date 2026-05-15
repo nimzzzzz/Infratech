@@ -50,11 +50,11 @@ export default function SSOCallbackPage() {
           aria-hidden
           className="block h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-line-strong)] border-t-[var(--color-coral)]"
         />
-        <h1 className="font-heading text-[22px] leading-tight tracking-tight text-[var(--color-ink)] md:text-[24px]">
+        <h1 className="font-heading text-[24px] leading-tight tracking-tight text-[var(--color-ink)] md:text-[26px]">
           Completing sign-in&hellip;
         </h1>
         {slow ? (
-          <p className="max-w-[42ch] text-[13px] leading-relaxed text-[var(--color-ink-3)]">
+          <p className="max-w-[42ch] text-[15px] leading-relaxed text-[var(--color-ink-3)]">
             Taking longer than expected.{" "}
             <Link
               href="/login"
@@ -65,7 +65,7 @@ export default function SSOCallbackPage() {
             </Link>
           </p>
         ) : (
-          <p className="max-w-[42ch] text-[13px] leading-relaxed text-[var(--color-ink-3)]">
+          <p className="max-w-[42ch] text-[15px] leading-relaxed text-[var(--color-ink-3)]">
             Just a moment while we finish handing you off.
           </p>
         )}

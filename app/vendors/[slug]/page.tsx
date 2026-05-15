@@ -105,15 +105,15 @@ export default async function VendorDetailPage({
                   <LetterAvatar name={vendor.name} className="h-16 w-16 shrink-0" />
                 )}
                 <div className="min-w-0">
-                  <p className="text-[12px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+                  <p className="text-[14px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
                     Vendor profile
                   </p>
-                  <h1 className="mt-2 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
+                  <h1 className="mt-2 font-heading text-[44px] leading-[1.04] tracking-tight md:text-[60px]">
                     {vendor.name}
                   </h1>
                 </div>
               </div>
-              <p className="mt-6 max-w-[60ch] text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
+              <p className="mt-6 max-w-[60ch] text-[20px] leading-relaxed text-[var(--color-ink-2)] md:text-[20px]">
                 {vendor.shortBlurb}
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -121,7 +121,7 @@ export default async function VendorDetailPage({
                   href={vendor.websiteUrl ?? "#"}
                   target="_blank"
                   rel="nofollow noopener"
-                  className="group relative inline-flex h-12 items-center gap-2 overflow-hidden bg-[var(--color-coral)] px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-transform active:translate-y-[1px]"
+                  className="group relative inline-flex h-12 items-center gap-2 overflow-hidden bg-[var(--color-coral)] px-5 text-[14px] uppercase tracking-[0.2em] text-white transition-transform active:translate-y-[1px]"
                 >
                   <span className="relative z-10">Visit website</span>
                   <ArrowUpRight
@@ -136,7 +136,7 @@ export default async function VendorDetailPage({
                 </a>
                 <Link
                   href={`#tools`}
-                  className="group inline-flex h-12 items-center gap-2 border border-[var(--color-line-strong)] bg-transparent px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
+                  className="group inline-flex h-12 items-center gap-2 border border-[var(--color-line-strong)] bg-transparent px-5 text-[14px] uppercase tracking-[0.2em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
                 >
                   <Stack size={13} weight="regular" />
                   <span>
@@ -148,7 +148,7 @@ export default async function VendorDetailPage({
 
             {/* Facts panel */}
             <aside className="border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+              <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
                 At a glance
               </p>
               <dl className="mt-5 space-y-4">
@@ -194,10 +194,10 @@ export default async function VendorDetailPage({
         <Container>
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+              <p className="text-[14px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
                 Products by this vendor
               </p>
-              <h2 className="mt-3 font-heading text-[28px] leading-[1.05] tracking-tight md:text-[36px]">
+              <h2 className="mt-3 font-heading text-[30px] leading-[1.05] tracking-tight md:text-[40px]">
                 {tools.length === 1
                   ? `${vendor.name}'s listing.`
                   : `Everything ${vendor.name} has in the index.`}
@@ -205,7 +205,7 @@ export default async function VendorDetailPage({
             </div>
             <Link
               href="/"
-              className="group hidden items-center gap-1.5 self-end text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)] sm:inline-flex"
+              className="group hidden items-center gap-1.5 self-end text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)] sm:inline-flex"
             >
               Browse all
               <ArrowUpRight
@@ -216,7 +216,7 @@ export default async function VendorDetailPage({
             </Link>
           </div>
           {tools.length === 0 ? (
-            <p className="border border-dashed border-[var(--color-line-strong)] bg-[var(--color-surface)] p-12 text-center text-[15px] text-[var(--color-ink-2)]">
+            <p className="border border-dashed border-[var(--color-line-strong)] bg-[var(--color-surface)] p-12 text-center text-[17px] text-[var(--color-ink-2)]">
               No products listed yet.
             </p>
           ) : (
@@ -236,12 +236,12 @@ export default async function VendorDetailPage({
         <Container>
           <div className="md:max-w-[68ch]">
             <Section eyebrow="About the company">
-              <div className="space-y-5 text-[17px] leading-relaxed text-[var(--color-ink)] md:text-[18px]">
+              <div className="space-y-5 text-[19px] leading-relaxed text-[var(--color-ink)] md:text-[20px]">
                 {paragraphs.map((p, i) => (
                   <p key={i}>{p}</p>
                 ))}
               </div>
-              <p className="mt-8 text-[13px] text-[var(--color-ink-3)]">
+              <p className="mt-8 text-[15px] text-[var(--color-ink-3)]">
                 Are you {vendor.name}?{" "}
                 <Link
                   href="/login"
@@ -299,7 +299,7 @@ function GalleryTile({ img }: { img: VendorGalleryImage }) {
 
 function Breadcrumb({ vendorName }: { vendorName: string }) {
   return (
-    <div className="flex items-center gap-2 text-[13px] uppercase tracking-[0.16em] text-[var(--color-ink-3)]">
+    <div className="flex items-center gap-2 text-[15px] uppercase tracking-[0.16em] text-[var(--color-ink-3)]">
       <Link href="/" className="hover:text-[var(--color-ink)]">
         Index
       </Link>
@@ -320,7 +320,7 @@ function Section({
 }) {
   return (
     <section>
-      <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[14px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         {eyebrow}
       </p>
       <div className="mt-5">{children}</div>
@@ -349,10 +349,10 @@ function FactRow({
         className="mt-0.5 shrink-0 text-[var(--color-ink-3)]"
       />
       <div className="flex min-w-0 flex-col">
-        <dt className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+        <dt className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
           {label}
         </dt>
-        <dd className="mt-0.5 text-[15px] text-[var(--color-ink)]">{value}</dd>
+        <dd className="mt-0.5 text-[17px] text-[var(--color-ink)]">{value}</dd>
       </div>
     </div>
   );

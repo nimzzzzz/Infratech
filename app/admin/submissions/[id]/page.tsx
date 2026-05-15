@@ -36,7 +36,7 @@ export default async function AdminSubmissionDetailPage({
       <Link
         href="/admin/submissions"
         prefetch
-        className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
+        className="group inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
       >
         <ArrowLeft
           size={12}

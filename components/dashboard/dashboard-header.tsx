@@ -96,11 +96,11 @@ export function DashboardHeader({
                 <span className="absolute inset-0 rounded-full bloom" />
                 <span className="absolute inset-0 rounded-full bloom animate-ping opacity-40" />
               </span>
-              <span className="font-heading text-[18px] italic leading-none tracking-tight text-[var(--color-ink)]">
+              <span className="font-heading text-[20px] italic leading-none tracking-tight text-[var(--color-ink)]">
                 AllInfratech
               </span>
             </Link>
-            <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+            <span className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
               / Vendor
             </span>
           </div>
@@ -118,7 +118,7 @@ export function DashboardHeader({
                         href={item.href}
                         prefetch
                         className={cn(
-                          "relative inline-flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors",
+                          "relative inline-flex items-center gap-1.5 px-3 py-2 text-[15px] transition-colors",
                           active
                             ? "text-[var(--color-ink)]"
                             : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
@@ -134,7 +134,7 @@ export function DashboardHeader({
                           ) : null}
                         </span>
                         {showBadge ? (
-                          <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[10px] font-medium text-white">
+                          <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[13px] text-white">
                             {unreadCount}
                           </span>
                         ) : null}
@@ -157,7 +157,7 @@ export function DashboardHeader({
           {!isOnboarding && (
             <Link
               href="/"
-              className="group hidden items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)] sm:inline-flex"
+              className="group hidden items-center gap-1 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)] sm:inline-flex"
             >
               Browse directory
               <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">
@@ -168,10 +168,10 @@ export function DashboardHeader({
           <div className="hidden items-center gap-2.5 sm:flex">
             <UserAvatar avatarUrl={userAvatarUrl} name={userName} size={32} />
             <div className="flex flex-col leading-tight">
-              <span className="text-[13px] text-[var(--color-ink)]">
+              <span className="text-[15px] text-[var(--color-ink)]">
                 {userName}
               </span>
-              <span className="text-[11px] text-[var(--color-ink-3)]">
+              <span className="text-[13px] text-[var(--color-ink-3)]">
                 {companyName}
                 {userTitle ? ` · ${userTitle}` : ""}
               </span>
@@ -193,8 +193,8 @@ export function DashboardHeader({
             className={cn(
               "group inline-flex items-center gap-1.5 border transition-colors active:translate-y-[1px]",
               isOnboarding
-                ? "h-10 border-[var(--color-ink)] px-4 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
-                : "h-9 border-[var(--color-line-strong)] px-3 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5",
+                ? "h-10 border-[var(--color-ink)] px-4 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
+                : "h-9 border-[var(--color-line-strong)] px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] sm:px-3.5",
             )}
           >
             <SignOut size={isOnboarding ? 13 : 11} weight="regular" />
@@ -221,7 +221,7 @@ export function DashboardHeader({
                     href={item.href}
                     prefetch
                     className={cn(
-                      "relative inline-flex items-center gap-1.5 px-3 py-3 text-[12px] font-medium transition-colors",
+                      "relative inline-flex items-center gap-1.5 px-3 py-3 text-[14px] transition-colors",
                       active
                         ? "text-[var(--color-ink)]"
                         : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
@@ -237,7 +237,7 @@ export function DashboardHeader({
                       ) : null}
                     </span>
                     {showBadge ? (
-                      <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[10px] font-medium text-white">
+                      <span className="num inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-coral)] px-1 text-[13px] text-white">
                         {unreadCount}
                       </span>
                     ) : null}

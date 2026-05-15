@@ -25,20 +25,20 @@ export function AppCard({ app }: { app: AppCardData }) {
           <LetterAvatar
             name={app.name}
             className="h-16 w-16"
-            letterClassName="text-[32px]"
+            letterClassName="text-[34px]"
           />
         )}
       </div>
 
       <div className="flex flex-1 flex-col p-6">
         <div className="flex flex-col gap-2">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-magenta)]">
+          <p className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-magenta)]">
             {app.vendor.name}
           </p>
-          <p className="font-heading text-[23px] leading-tight text-[var(--color-ink)]">
+          <p className="font-heading text-[24px] leading-tight text-[var(--color-ink)]">
             {app.name}
           </p>
-          <p className="text-[15px] leading-relaxed text-[var(--color-ink-2)]">
+          <p className="text-[17px] leading-relaxed text-[var(--color-ink-2)]">
             {app.tagline}
           </p>
         </div>
@@ -47,13 +47,13 @@ export function AppCard({ app }: { app: AppCardData }) {
           <ul className="flex flex-wrap gap-1.5">
             {app.stages.map((s) => (
               <li key={s.slug}>
-                <span className="inline-block border border-[var(--color-line-strong)] px-2 py-[3px] text-[11px] uppercase tracking-[0.14em] text-[var(--color-ink-2)]">
+                <span className="inline-block border border-[var(--color-line-strong)] px-2 py-[3px] text-[13px] uppercase tracking-[0.14em] text-[var(--color-ink-2)]">
                   {formatStageLabel(s.slug)}
                 </span>
               </li>
             ))}
           </ul>
-          <p className="mt-3 border-t border-[var(--color-line)] pt-3 text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+          <p className="mt-3 border-t border-[var(--color-line)] pt-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
             {pricingLabel}
           </p>
         </div>

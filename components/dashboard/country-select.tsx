@@ -57,7 +57,7 @@ export function CountrySelect({
         id={id}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-10 w-full items-center justify-between border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-left text-[14px] text-[var(--color-ink)] focus:border-[var(--color-ink)] focus:outline-none"
+        className="flex h-10 w-full items-center justify-between border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-left text-[16px] text-[var(--color-ink)] focus:border-[var(--color-ink)] focus:outline-none"
       >
         <span className={value ? "" : "text-[var(--color-ink-3)]"}>
           {value || placeholder}
@@ -81,12 +81,12 @@ export function CountrySelect({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search countries…"
-              className="h-8 w-full border border-transparent bg-[var(--color-canvas)] px-2 text-[13px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+              className="h-8 w-full border border-transparent bg-[var(--color-canvas)] px-2 text-[15px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
             />
           </div>
           <ul className="max-h-64 overflow-y-auto py-1">
             {filtered.length === 0 ? (
-              <li className="px-3 py-2 text-[13px] text-[var(--color-ink-3)]">
+              <li className="px-3 py-2 text-[15px] text-[var(--color-ink-3)]">
                 No matches.
               </li>
             ) : (
@@ -99,8 +99,8 @@ export function CountrySelect({
                       setOpen(false);
                     }}
                     className={cn(
-                      "block w-full px-3 py-1.5 text-left text-[13px] text-[var(--color-ink)] hover:bg-[var(--color-canvas-warm)]",
-                      c.name === value && "bg-[var(--color-canvas-warm)] font-medium",
+                      "block w-full px-3 py-1.5 text-left text-[15px] text-[var(--color-ink)] hover:bg-[var(--color-canvas-warm)]",
+                      c.name === value && "bg-[var(--color-canvas-warm)]",
                     )}
                   >
                     {c.name}

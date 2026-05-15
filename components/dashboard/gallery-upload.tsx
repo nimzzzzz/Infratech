@@ -68,10 +68,10 @@ export function GalleryUpload({
 
   return (
     <div className="md:col-span-2">
-      <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
+      <p className="text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]">
         Gallery <span className="text-[var(--color-ink-3)] normal-case tracking-normal">(optional)</span>
       </p>
-      <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
+      <p className="mt-1 text-[14px] text-[var(--color-ink-3)]">
         Up to {MAX_IMAGES} photos &mdash; office, team, product screenshots,
         events. PNG / JPG / WebP / SVG, max 1 MB each. Each requires alt text.
       </p>
@@ -98,10 +98,10 @@ export function GalleryUpload({
                   <Plus size={16} weight="bold" />
                 )}
               </span>
-              <p className="text-[13px] text-[var(--color-ink)]">
+              <p className="text-[15px] text-[var(--color-ink)]">
                 {items.length === 0 ? "Add gallery photos" : "Add another"}
               </p>
-              <p className="text-[11px] text-[var(--color-ink-3)]">
+              <p className="text-[13px] text-[var(--color-ink-3)]">
                 {items.length} / {MAX_IMAGES} used
               </p>
               <input
@@ -122,7 +122,7 @@ export function GalleryUpload({
       </ul>
 
       {error ? (
-        <p className="mt-2 text-[12px] text-[var(--color-magenta)]">
+        <p className="mt-2 text-[14px] text-[var(--color-magenta)]">
           {error}
         </p>
       ) : null}
@@ -162,10 +162,10 @@ function GalleryItemRow({
             ) : null}
           </span>
           <div className="flex min-w-0 flex-1 flex-col">
-            <p className="truncate text-[12px] text-[var(--color-ink)]">
+            <p className="truncate text-[14px] text-[var(--color-ink)]">
               {item.file.name}
             </p>
-            <p className="num text-[11px] text-[var(--color-ink-3)]">
+            <p className="num text-[13px] text-[var(--color-ink-3)]">
               {(item.file.size / 1024).toFixed(0)} KB
             </p>
           </div>
@@ -186,7 +186,7 @@ function GalleryItemRow({
           onChange={(e) => onAltChange(e.target.value)}
           placeholder="Alt text — describe this image *"
           maxLength={120}
-          className="h-9 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[13px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+          className="h-9 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 text-[15px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
         />
       </div>
     </li>

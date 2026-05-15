@@ -48,13 +48,13 @@ export default async function OnboardingSubmittedPage({
       <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-canvas-warm)] text-[var(--color-coral)] ring-1 ring-[var(--color-line-strong)]">
         <CheckCircle size={28} weight="regular" />
       </span>
-      <p className="mt-8 text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="mt-8 text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Submitted &middot; In review
       </p>
-      <h1 className="mt-5 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
+      <h1 className="mt-5 font-heading text-[44px] leading-[1.04] tracking-tight md:text-[60px]">
         Thanks. We&rsquo;ll take it from here.
       </h1>
-      <p className="mx-auto mt-5 max-w-[58ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
+      <p className="mx-auto mt-5 max-w-[58ch] text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
         {productName ? (
           <>
             Your product{" "}
@@ -77,7 +77,7 @@ export default async function OnboardingSubmittedPage({
         <Link
           href="/dashboard"
           prefetch
-          className="group inline-flex h-11 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
+          className="group inline-flex h-11 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
         >
           View dashboard
           <ArrowRight
@@ -89,7 +89,7 @@ export default async function OnboardingSubmittedPage({
         <Link
           href="/dashboard/onboarding/submit?as=returning"
           prefetch
-          className="group inline-flex h-11 items-center justify-center gap-1.5 bg-[var(--color-ink)] px-5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
+          className="group inline-flex h-11 items-center justify-center gap-1.5 bg-[var(--color-ink)] px-5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
         >
           <Plus size={11} weight="bold" />
           Submit another product

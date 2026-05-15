@@ -91,12 +91,12 @@ export function RejectModal({
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+            <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
               Reject submission
             </p>
             <h2
               id="reject-title"
-              className="mt-3 font-heading text-[24px] leading-tight tracking-tight text-[var(--color-ink)]"
+              className="mt-3 font-heading text-[26px] leading-tight tracking-tight text-[var(--color-ink)]"
             >
               What needs to change?
             </h2>
@@ -112,7 +112,7 @@ export function RejectModal({
           </button>
         </div>
 
-        <p className="mt-4 max-w-[58ch] text-[13px] leading-relaxed text-[var(--color-ink-2)]">
+        <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-[var(--color-ink-2)]">
           The vendor sees this text verbatim in the rejection email and on
           their dashboard. Be specific so they know what to fix and can
           resubmit cleanly.
@@ -129,9 +129,9 @@ export function RejectModal({
           onChange={(e) => setReason(e.target.value)}
           placeholder="e.g. The product description over-promises features the website doesn't list. Trim to factual capabilities and resubmit."
           maxLength={2000}
-          className="mt-4 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2.5 text-[14px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+          className="mt-4 w-full border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2.5 text-[16px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
         />
-        <p className="mt-1 text-[11px] text-[var(--color-ink-3)]">
+        <p className="mt-1 text-[13px] text-[var(--color-ink-3)]">
           <span className="num">{reason.length}</span> /{" "}
           <span className="num">2000</span>
         </p>
@@ -139,7 +139,7 @@ export function RejectModal({
         {error ? (
           <p
             role="alert"
-            className="mt-4 border border-rose-300 bg-rose-50 px-3 py-2 text-[13px] text-rose-900"
+            className="mt-4 border border-rose-300 bg-rose-50 px-3 py-2 text-[15px] text-rose-900"
           >
             {error}
           </p>
@@ -150,7 +150,7 @@ export function RejectModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-10 items-center px-4 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)] disabled:opacity-60"
+            className="inline-flex h-10 items-center px-4 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)] disabled:opacity-60"
           >
             Cancel
           </button>
@@ -158,7 +158,7 @@ export function RejectModal({
             type="submit"
             disabled={submitting}
             className={cn(
-              "inline-flex h-11 items-center gap-2 bg-rose-600 px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-white transition-opacity",
+              "inline-flex h-11 items-center gap-2 bg-rose-600 px-5 text-[14px] uppercase tracking-[0.18em] text-white transition-opacity",
               submitting ? "opacity-70" : "hover:bg-rose-700",
             )}
           >

@@ -32,10 +32,10 @@ export default function AboutPage() {
       />
       <section className="bg-[var(--color-canvas)] pb-24 md:pb-32">
         <Container className="grid gap-14 md:grid-cols-[5fr_7fr]">
-          <h2 className="text-[28px] leading-tight tracking-tight md:text-[36px]">
+          <h2 className="text-[30px] leading-tight tracking-tight md:text-[40px]">
             Why we built this.
           </h2>
-          <div className="space-y-5 text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
+          <div className="space-y-5 text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
             <p>
               Project teams ask us the same question repeatedly: &ldquo;What
               software should we use for X?&rdquo; The honest answer depends on
@@ -70,16 +70,16 @@ export default function AboutPage() {
         className="border-t border-[var(--color-line)] bg-[var(--color-canvas)] pb-24 md:pb-32 pt-16 md:pt-20 scroll-mt-24"
       >
         <Container className="grid gap-14 md:grid-cols-[5fr_7fr]">
-          <h2 className="text-[28px] leading-tight tracking-tight md:text-[36px]">
+          <h2 className="text-[30px] leading-tight tracking-tight md:text-[40px]">
             Contact Resolute.
           </h2>
-          <div className="space-y-5 text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
+          <div className="space-y-5 text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
             <p>
               Reach out about the directory, partnership enquiries, or the
               wider work of the Digital &amp; AI Practice.
             </p>
             <address className="not-italic space-y-1.5 text-[var(--color-ink)]">
-              <p className="font-medium">Resolute Management Consultancy</p>
+              <p className="">Resolute Management Consultancy</p>
               {/* TODO: fill in once the user provides them. */}
               <p className="text-[var(--color-ink-3)]">
                 [Address line — TODO]

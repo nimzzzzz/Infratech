@@ -7,7 +7,7 @@ export function LetterAvatar({
 }: {
   name: string;
   className?: string;
-  /** Override the default text-[24px] italic letter sizing (e.g. for larger avatars). */
+  /** Override the default text-[26px] italic letter sizing (e.g. for larger avatars). */
   letterClassName?: string;
 }) {
   const letter = name.trim().charAt(0);
@@ -23,7 +23,7 @@ export function LetterAvatar({
     >
       <span
         className={cn(
-          "font-heading text-[24px] italic leading-none text-[var(--color-ink)]",
+          "font-heading text-[26px] italic leading-none text-[var(--color-ink)]",
           letterClassName,
         )}
       >

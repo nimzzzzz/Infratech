@@ -79,13 +79,13 @@ export function SubmissionDetail({
     <div className="mt-6">
       <div className="flex items-baseline justify-between gap-4">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+          <p className="text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
             {humanStatus(submission.status)}
           </p>
-          <h1 className="mt-3 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[44px]">
+          <h1 className="mt-3 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[48px]">
             {((edits?.name ?? payload?.name) as string | undefined) ?? "—"}
           </h1>
-          <p className="mt-2 text-[14px] text-[var(--color-ink-2)]">
+          <p className="mt-2 text-[16px] text-[var(--color-ink-2)]">
             from{" "}
             <span className="text-[var(--color-ink)]">
               {submission.vendor.name}
@@ -105,8 +105,8 @@ export function SubmissionDetail({
           (PR 2 will write to vendorFeedback; PR 1 reads it
           defensively in case of seeded data). */}
       {submission.vendorFeedback ? (
-        <aside className="mt-8 border border-amber-300 bg-amber-50 p-4 text-[13px] leading-relaxed text-amber-900">
-          <p className="font-medium uppercase tracking-[0.18em] text-[10px] mb-1">
+        <aside className="mt-8 border border-amber-300 bg-amber-50 p-4 text-[15px] leading-relaxed text-amber-900">
+          <p className="uppercase tracking-[0.18em] text-[13px] mb-1">
             Vendor feedback
           </p>
           <p className="whitespace-pre-wrap">{submission.vendorFeedback}</p>
@@ -114,8 +114,8 @@ export function SubmissionDetail({
       ) : null}
 
       {submission.rejectionReason ? (
-        <aside className="mt-8 border border-rose-300 bg-rose-50 p-4 text-[13px] leading-relaxed text-rose-900">
-          <p className="font-medium uppercase tracking-[0.18em] text-[10px] mb-1">
+        <aside className="mt-8 border border-rose-300 bg-rose-50 p-4 text-[15px] leading-relaxed text-rose-900">
+          <p className="uppercase tracking-[0.18em] text-[13px] mb-1">
             Rejection reason on record
           </p>
           <p className="whitespace-pre-wrap">{submission.rejectionReason}</p>
@@ -125,7 +125,7 @@ export function SubmissionDetail({
       {error ? (
         <p
           role="alert"
-          className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
+          className="mt-6 border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[15px] text-[var(--color-coral)]"
         >
           {error}
         </p>
@@ -152,7 +152,7 @@ export function SubmissionDetail({
             type="button"
             onClick={() => setRejectOpen(true)}
             disabled={busy}
-            className="group inline-flex h-11 items-center gap-2 border border-[var(--color-line-strong)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-rose-400 hover:text-rose-700"
+            className="group inline-flex h-11 items-center gap-2 border border-[var(--color-line-strong)] px-5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:border-rose-400 hover:text-rose-700"
           >
             <XCircle size={13} weight="regular" />
             Reject
@@ -162,7 +162,7 @@ export function SubmissionDetail({
               type="button"
               onClick={() => setMode("edit")}
               disabled={busy}
-              className="group inline-flex h-11 items-center gap-2 border border-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
+              className="group inline-flex h-11 items-center gap-2 border border-[var(--color-ink)] px-5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
             >
               <PencilSimple size={13} weight="regular" />
               Edit
@@ -172,7 +172,7 @@ export function SubmissionDetail({
               onClick={onApprove}
               disabled={busy}
               className={cn(
-                "group inline-flex h-11 items-center gap-2 bg-[var(--color-coral)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-white transition-opacity",
+                "group inline-flex h-11 items-center gap-2 bg-[var(--color-coral)] px-5 text-[14px] uppercase tracking-[0.18em] text-white transition-opacity",
                 busy ? "opacity-70" : "",
               )}
             >
@@ -221,7 +221,7 @@ function ReadView({
   return (
     <section className="mt-10 space-y-8 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
       {adminEdits ? (
-        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+        <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
           Showing admin edits (waiting on vendor approval)
         </p>
       ) : null}
@@ -249,12 +249,12 @@ function Row({
 }) {
   return (
     <div className={multiline ? "" : "grid grid-cols-[140px_1fr] gap-3"}>
-      <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+      <p className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
         {label}
       </p>
       <p
         className={cn(
-          "text-[14px] text-[var(--color-ink)]",
+          "text-[16px] text-[var(--color-ink)]",
           multiline && "mt-1 leading-relaxed whitespace-pre-wrap",
         )}
       >

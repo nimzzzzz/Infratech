@@ -66,17 +66,17 @@ export default async function AdminSubmissionsPage({
 
   return (
     <Container className="max-w-6xl py-12 md:py-16">
-      <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Editorial admin
       </p>
       <div className="mt-4 flex items-end justify-between gap-4">
-        <h1 className="font-heading text-[36px] leading-[1.04] tracking-tight md:text-[44px]">
+        <h1 className="font-heading text-[40px] leading-[1.04] tracking-tight md:text-[48px]">
           Submissions
         </h1>
         <Link
           href="/admin"
           prefetch
-          className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
+          className="group inline-flex items-center gap-1.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
         >
           Overview
           <ArrowRight

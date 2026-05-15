@@ -122,7 +122,7 @@ export function EditForm({
 
   return (
     <form onSubmit={onSubmit} className="mt-10 space-y-6">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+      <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
         Editing — saving sends the submission back to the vendor for approval
       </p>
 
@@ -138,7 +138,7 @@ export function EditForm({
       {error ? (
         <p
           role="alert"
-          className="border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[13px] text-[var(--color-coral)]"
+          className="border border-[var(--color-coral)]/40 bg-[var(--color-coral)]/5 px-3 py-2 text-[15px] text-[var(--color-coral)]"
         >
           {error}
         </p>
@@ -149,7 +149,7 @@ export function EditForm({
           type="button"
           onClick={onCancel}
           disabled={submitting}
-          className="inline-flex h-10 items-center gap-1.5 px-4 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
+          className="inline-flex h-10 items-center gap-1.5 px-4 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
         >
           Cancel
         </button>
@@ -157,7 +157,7 @@ export function EditForm({
           type="submit"
           disabled={submitting}
           className={cn(
-            "inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
+            "inline-flex h-11 items-center gap-2 bg-[var(--color-ink)] px-5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-colors hover:bg-[var(--color-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]",
             submitting ? "opacity-70" : "",
           )}
         >
@@ -186,7 +186,7 @@ function FieldText({
     <div className="flex flex-col gap-2">
       <label
         htmlFor={htmlFor}
-        className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]"
+        className="text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]"
       >
         {label}
       </label>
@@ -195,10 +195,10 @@ function FieldText({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+        className="h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
       />
       {hint ? (
-        <p className="text-[12px] text-[var(--color-ink-3)]">{hint}</p>
+        <p className="text-[14px] text-[var(--color-ink-3)]">{hint}</p>
       ) : null}
     </div>
   );
@@ -221,7 +221,7 @@ function FieldTextarea({
     <div className="flex flex-col gap-2">
       <label
         htmlFor={htmlFor}
-        className="text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]"
+        className="text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]"
       >
         {label}
       </label>
@@ -230,7 +230,7 @@ function FieldTextarea({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
-        className="w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2.5 text-[14px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+        className="w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2.5 text-[16px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
       />
     </div>
   );

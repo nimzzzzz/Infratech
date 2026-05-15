@@ -101,14 +101,14 @@ export function LogoUpload({
             />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-coral)]">
+            <p className="flex items-center gap-1.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-coral)]">
               <Check size={11} weight="bold" />
               Selected
             </p>
-            <p className="truncate font-heading text-[16px] leading-tight">
+            <p className="truncate font-heading text-[18px] leading-tight">
               {file.name}
             </p>
-            <p className="num text-[11px] text-[var(--color-ink-3)]">
+            <p className="num text-[13px] text-[var(--color-ink-3)]">
               {sizeLabel} &middot; {file.type.replace("image/", "").toUpperCase()}
             </p>
           </div>
@@ -139,13 +139,13 @@ export function LogoUpload({
           <span className="grid h-10 w-10 place-items-center bg-[var(--color-canvas)] text-[var(--color-ink-2)] ring-1 ring-[var(--color-line-strong)]">
             <UploadSimple size={18} weight="regular" />
           </span>
-          <p className="text-[13px] text-[var(--color-ink)]">
-            <span className="font-medium">Click to choose</span>{" "}
+          <p className="text-[15px] text-[var(--color-ink)]">
+            <span className="">Click to choose</span>{" "}
             <span className="text-[var(--color-ink-3)]">
               or drop a file here
             </span>
           </p>
-          <p className="text-[11px] text-[var(--color-ink-3)]">
+          <p className="text-[13px] text-[var(--color-ink-3)]">
             PNG, JPG, WebP, or SVG &middot; up to 1 MB
           </p>
           <input
@@ -160,7 +160,7 @@ export function LogoUpload({
       )}
 
       {error ? (
-        <p className="mt-2 text-[12px] text-[var(--color-magenta)]">
+        <p className="mt-2 text-[14px] text-[var(--color-magenta)]">
           {error}
         </p>
       ) : null}
@@ -169,7 +169,7 @@ export function LogoUpload({
         <div className="mt-4 flex flex-col gap-2">
           <label
             htmlFor="logoAlt"
-            className="flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]"
+            className="flex items-center gap-1.5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)]"
           >
             <ImageIcon size={11} weight="regular" />
             Alt text
@@ -181,9 +181,9 @@ export function LogoUpload({
             onChange={(e) => onAltChange(e.target.value)}
             placeholder='e.g. "AllInfratech wordmark in coral"'
             maxLength={100}
-            className="h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
+            className="h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none"
           />
-          <p className="text-[11px] text-[var(--color-ink-3)]">
+          <p className="text-[13px] text-[var(--color-ink-3)]">
             Optional &mdash; short description for accessibility.
           </p>
         </div>

@@ -22,14 +22,14 @@ export function InnerHero({
         }}
       />
       <Container className={align === "center" ? "text-center" : ""}>
-        <p className="text-[12px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+        <p className="text-[14px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
           {eyebrow}
         </p>
-        <h1 className="mt-5 max-w-[22ch] text-[40px] leading-[1.04] tracking-tight md:text-[68px]">
+        <h1 className="mt-5 max-w-[22ch] text-[44px] leading-[1.04] tracking-tight md:text-[72px]">
           {title}
         </h1>
         {body ? (
-          <div className="mt-6 max-w-[60ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[18px]">
+          <div className="mt-6 max-w-[60ch] text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[20px]">
             {body}
           </div>
         ) : null}

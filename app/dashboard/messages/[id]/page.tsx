@@ -61,7 +61,7 @@ export default async function MessageDetailPage({
       <Link
         href="/dashboard/messages"
         prefetch
-        className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
+        className="group inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
       >
         <ArrowLeft
           size={12}
@@ -73,7 +73,7 @@ export default async function MessageDetailPage({
 
       <div className="mt-8 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+          <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
             Inquiry &middot; about{" "}
             <Link
               href={`/apps/${msg.appSlug}`}
@@ -82,19 +82,19 @@ export default async function MessageDetailPage({
               {msg.appName}
             </Link>
           </p>
-          <h1 className="mt-3 font-heading text-[28px] leading-[1.1] tracking-tight md:text-[36px]">
+          <h1 className="mt-3 font-heading text-[30px] leading-[1.1] tracking-tight md:text-[40px]">
             {msg.subject}
           </h1>
         </div>
-        <p className="num shrink-0 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+        <p className="num shrink-0 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
           {relativeDays(msg.createdAt.toISOString().slice(0, 10)).label}
         </p>
       </div>
 
       <div className="mt-8 grid gap-6 border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)]/40 p-5 md:grid-cols-[1fr_auto] md:items-center md:p-6">
-        <dl className="grid gap-3 text-[13px] sm:grid-cols-[auto_1fr] sm:gap-x-6">
+        <dl className="grid gap-3 text-[15px] sm:grid-cols-[auto_1fr] sm:gap-x-6">
           <Row icon={At} label="From">
-            <span className="font-medium text-[var(--color-ink)]">
+            <span className="text-[var(--color-ink)]">
               {msg.senderName}
             </span>{" "}
             <a
@@ -117,7 +117,7 @@ export default async function MessageDetailPage({
         </dl>
         <a
           href={mailto}
-          className="group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden bg-[var(--color-coral)] px-5 text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-transform active:translate-y-[1px]"
+          className="group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden bg-[var(--color-coral)] px-5 text-[14px] uppercase tracking-[0.2em] text-white transition-transform active:translate-y-[1px]"
         >
           <EnvelopeSimple size={14} weight="regular" />
           <span>Reply via email</span>
@@ -129,7 +129,7 @@ export default async function MessageDetailPage({
         </a>
       </div>
 
-      <article className="mt-10 space-y-5 border-l border-[var(--color-line)] pl-6 text-[16px] leading-relaxed text-[var(--color-ink)] md:text-[17px]">
+      <article className="mt-10 space-y-5 border-l border-[var(--color-line)] pl-6 text-[18px] leading-relaxed text-[var(--color-ink)] md:text-[19px]">
         {paragraphs.map((p, i) => (
           <p key={i} className="whitespace-pre-line">
             {p}
@@ -137,7 +137,7 @@ export default async function MessageDetailPage({
         ))}
       </article>
 
-      <p className="mt-12 max-w-[60ch] text-[12px] leading-relaxed text-[var(--color-ink-3)]">
+      <p className="mt-12 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-3)]">
         Replying via email opens your default mail client with{" "}
         <span className="text-[var(--color-ink-2)]">{msg.senderEmail}</span>{" "}
         pre-filled. The visitor will see the reply land directly in their
@@ -162,7 +162,7 @@ function Row({
 }) {
   return (
     <>
-      <dt className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+      <dt className="flex items-center gap-1.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
         <Icon size={12} weight="regular" />
         {label}
       </dt>

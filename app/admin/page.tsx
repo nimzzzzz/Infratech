@@ -63,13 +63,13 @@ export default async function AdminOverviewPage() {
 
   return (
     <Container className="max-w-6xl py-12 md:py-16">
-      <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Editorial admin
       </p>
-      <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[52px]">
+      <h1 className="mt-4 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
         Good {timeOfDay()}, {firstName}.
       </h1>
-      <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
+      <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-[var(--color-ink-2)] md:text-[17px]">
         <span className="num text-[var(--color-ink)]">{pending}</span> new
         submissions waiting on you.{" "}
         <Link
@@ -110,13 +110,13 @@ export default async function AdminOverviewPage() {
 
       <section className="mt-14">
         <header className="flex items-end justify-between gap-4 border-b border-[var(--color-line-strong)] pb-3">
-          <h2 className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
+          <h2 className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
             Recent activity
           </h2>
           <Link
             href="/admin/submissions"
             prefetch
-            className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
+            className="group inline-flex items-center gap-1.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
           >
             All activity
             <ArrowRight
@@ -141,14 +141,14 @@ export default async function AdminOverviewPage() {
                   prefetch
                   className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[100px_1fr_auto_72px] md:gap-6 md:px-3"
                 >
-                  <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+                  <span className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
                     {sub.type === "new" ? "New product" : "Claim"}
                   </span>
                   <div className="min-w-0">
-                    <p className="font-heading text-[18px] leading-tight">
+                    <p className="font-heading text-[20px] leading-tight">
                       {title}
                     </p>
-                    <p className="mt-0.5 truncate text-[12px] text-[var(--color-ink-3)]">
+                    <p className="mt-0.5 truncate text-[14px] text-[var(--color-ink-3)]">
                       {company}
                     </p>
                   </div>
@@ -156,7 +156,7 @@ export default async function AdminOverviewPage() {
                     status={mapStatusForPill(sub.status)}
                     className="hidden md:inline-flex"
                   />
-                  <span className="num text-right text-[12px] text-[var(--color-ink-3)]">
+                  <span className="num text-right text-[14px] text-[var(--color-ink-3)]">
                     {
                       relativeDays(sub.submittedAt.toISOString().slice(0, 10))
                         .label
@@ -224,10 +224,10 @@ function StatCard({
           />
         </div>
         <div>
-          <p className="num font-heading text-[36px] leading-none tracking-tight md:text-[44px]">
+          <p className="num font-heading text-[40px] leading-none tracking-tight md:text-[48px]">
             {String(value).padStart(2, "0")}
           </p>
-          <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+          <p className="mt-2 text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
             {label}
           </p>
         </div>

@@ -43,15 +43,15 @@ export function DashboardEmptyState({
 
   return (
     <Container className="max-w-3xl py-16 md:py-24">
-      <p className="text-[12px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
+      <p className="text-[14px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
         Vendor dashboard
       </p>
-      <h1 className="mt-4 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[48px]">
+      <h1 className="mt-4 font-heading text-[40px] leading-[1.04] tracking-tight md:text-[52px]">
         {hasPending
           ? `Hang tight, ${firstName}.`
           : `Welcome, ${firstName}.`}
       </h1>
-      <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-[var(--color-ink-2)] md:text-[16px]">
+      <p className="mt-4 max-w-[58ch] text-[17px] leading-relaxed text-[var(--color-ink-2)] md:text-[18px]">
         {hasPending
           ? `${vendorName}'s submission is in the editorial review queue. We'll email you within two business days — either with a publish confirmation or with specific edits we'd like before going live.`
           : `${vendorName} doesn't have a published listing yet. Submit your first product when you're ready — editorial review usually takes two business days.`}
@@ -60,7 +60,7 @@ export function DashboardEmptyState({
       {hasPending ? (
         <section className="mt-12">
           <header className="border-b border-[var(--color-line-strong)] pb-3">
-            <h2 className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
+            <h2 className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-2)]">
               In review
             </h2>
           </header>
@@ -77,10 +77,10 @@ export function DashboardEmptyState({
                   <Stack size={16} weight="regular" />
                 </span>
                 <div className="min-w-0">
-                  <p className="font-heading text-[20px] leading-tight">
+                  <p className="font-heading text-[22px] leading-tight">
                     {s.productName}
                   </p>
-                  <p className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
+                  <p className="mt-0.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
                     Submitted{" "}
                     <span className="num">
                       {
@@ -92,7 +92,7 @@ export function DashboardEmptyState({
                 </div>
                 <span
                   className={cn(
-                    "inline-flex items-center px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] ring-1",
+                    "inline-flex items-center px-2 py-0.5 text-[13px] uppercase tracking-[0.18em] ring-1",
                     "bg-[var(--color-coral)]/10 text-[var(--color-coral)] ring-[var(--color-coral)]/40",
                   )}
                 >
@@ -106,7 +106,7 @@ export function DashboardEmptyState({
             <Link
               href="/dashboard/onboarding/submit?as=returning"
               prefetch
-              className="group inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
+              className="group inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
             >
               <Plus size={11} weight="bold" />
               Submit another product
@@ -129,13 +129,13 @@ export function DashboardEmptyState({
               <Plus size={20} weight="regular" />
             </span>
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+              <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
                 Submit a new product
               </p>
-              <p className="mt-2 font-heading text-[22px] leading-tight tracking-tight md:text-[26px]">
+              <p className="mt-2 font-heading text-[24px] leading-tight tracking-tight md:text-[28px]">
                 Add your tool to the directory.
               </p>
-              <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)]">
+              <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-[var(--color-ink-2)]">
                 Three short steps. We&rsquo;ll review and email you when it
                 goes live, usually within two business days.
               </p>

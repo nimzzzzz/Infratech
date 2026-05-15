@@ -8,13 +8,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/legal/cookies" },
 };
 
-const h2 = "mt-10 mb-3 font-heading text-[22px] leading-tight text-[var(--color-ink)] md:text-[24px]";
+const h2 = "mt-10 mb-3 font-heading text-[24px] leading-tight text-[var(--color-ink)] md:text-[26px]";
 const ul = "list-disc space-y-2 pl-6";
 
 export default function CookiesPage() {
   return (
     <LegalShell title="Cookie Policy" updated={TERMS_LAST_UPDATED}>
-      <p className="text-[14px] text-[var(--color-ink-3)]">
+      <p className="text-[16px] text-[var(--color-ink-3)]">
         AllInfratech &mdash; Cookie Policy. Effective date: {TERMS_LAST_UPDATED}. Version 1.0.
       </p>
 

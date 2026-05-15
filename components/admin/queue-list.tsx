@@ -56,7 +56,7 @@ export function QueueList({ items }: { items: Submission[] }) {
               type="button"
               onClick={() => setFilter(f.key)}
               className={cn(
-                "px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] transition-colors",
+                "px-3 py-1.5 text-[13px] uppercase tracking-[0.18em] transition-colors",
                 active
                   ? "bg-[var(--color-ink)] text-[var(--color-canvas)]"
                   : "text-[var(--color-ink-2)] hover:text-[var(--color-ink)]",
@@ -70,7 +70,7 @@ export function QueueList({ items }: { items: Submission[] }) {
 
       <ul className="mt-6 divide-y divide-[var(--color-line)] border-y border-[var(--color-line)]">
         {visible.length === 0 ? (
-          <li className="py-12 text-center text-[13px] text-[var(--color-ink-3)]">
+          <li className="py-12 text-center text-[15px] text-[var(--color-ink-3)]">
             No submissions match this filter.
           </li>
         ) : (
@@ -115,15 +115,15 @@ function SubmissionRow({
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+              <span className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
                 {sub.type === "new" ? "New product" : "Claim"}
               </span>
               <StatusPill status={decision ?? sub.status} />
             </div>
-            <p className="mt-1 font-heading text-[20px] leading-tight md:text-[22px]">
+            <p className="mt-1 font-heading text-[22px] leading-tight md:text-[24px]">
               {title}
             </p>
-            <p className="mt-0.5 truncate text-[12px] text-[var(--color-ink-3)]">
+            <p className="mt-0.5 truncate text-[14px] text-[var(--color-ink-3)]">
               <span className="text-[var(--color-coral)]">{vendor}</span>{" "}
               &middot; submitted by {sub.submitter.name},{" "}
               {sub.submitter.title}{" "}
@@ -136,7 +136,7 @@ function SubmissionRow({
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
-            className="hidden text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] underline-offset-4 hover:text-[var(--color-ink)] hover:underline md:inline-flex"
+            className="hidden text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] underline-offset-4 hover:text-[var(--color-ink)] hover:underline md:inline-flex"
           >
             {open ? "Hide" : "Details"}
           </button>
@@ -224,7 +224,7 @@ function ActionButton({
       onClick={onClick}
       title={label}
       className={cn(
-        "inline-flex h-9 items-center justify-center gap-1 border px-2.5 text-[10px] uppercase tracking-[0.18em] transition-colors disabled:cursor-not-allowed disabled:opacity-40 sm:px-3",
+        "inline-flex h-9 items-center justify-center gap-1 border px-2.5 text-[13px] uppercase tracking-[0.18em] transition-colors disabled:cursor-not-allowed disabled:opacity-40 sm:px-3",
         tones[tone],
       )}
     >
@@ -288,7 +288,7 @@ function SubmissionDetail({ sub }: { sub: Submission }) {
                 </span>
               }
             />
-            <p className="mt-2 text-[11px] leading-relaxed text-[var(--color-coral)]">
+            <p className="mt-2 text-[13px] leading-relaxed text-[var(--color-coral)]">
               First submission from this vendor &mdash; approving the product also
               publishes the company profile.
             </p>
@@ -355,7 +355,7 @@ function SubmissionDetail({ sub }: { sub: Submission }) {
                 </Link>
               }
             />
-            <p className="mt-2 text-[11px] leading-relaxed text-[var(--color-ink-3)]">
+            <p className="mt-2 text-[13px] leading-relaxed text-[var(--color-ink-3)]">
               Cross-check the submitter&rsquo;s LinkedIn affiliation with the
               vendor on the public listing before approving.
             </p>
@@ -375,7 +375,7 @@ function DetailBlock({
 }) {
   return (
     <div>
-      <p className="border-b border-[var(--color-line)] pb-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+      <p className="border-b border-[var(--color-line)] pb-2 text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
         {title}
       </p>
       <dl className="mt-3 space-y-1.5">{children}</dl>
@@ -391,7 +391,7 @@ function DetailRow({
   value: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[100px_1fr] gap-2 text-[12px]">
+    <div className="grid grid-cols-[100px_1fr] gap-2 text-[14px]">
       <dt className="uppercase tracking-[0.16em] text-[var(--color-ink-3)]">
         {label}
       </dt>
@@ -410,7 +410,7 @@ function TaxonomyDetailRow({
   proposed: string[];
 }) {
   return (
-    <div className="grid grid-cols-[100px_1fr] gap-2 text-[12px]">
+    <div className="grid grid-cols-[100px_1fr] gap-2 text-[14px]">
       <dt className="uppercase tracking-[0.16em] text-[var(--color-ink-3)]">
         {label}
       </dt>
@@ -419,11 +419,11 @@ function TaxonomyDetailRow({
         {proposed.map((p) => (
           <span
             key={p}
-            className="inline-flex items-center gap-1 border border-dashed border-[var(--color-coral)] bg-[var(--color-canvas)] px-1.5 py-0.5 text-[11px]"
+            className="inline-flex items-center gap-1 border border-dashed border-[var(--color-coral)] bg-[var(--color-canvas)] px-1.5 py-0.5 text-[13px]"
           >
             <Tag size={10} weight="regular" className="text-[var(--color-coral)]" />
             {p}
-            <span className="text-[9px] uppercase tracking-[0.18em] text-[var(--color-coral)]">
+            <span className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-coral)]">
               Proposed
             </span>
           </span>
