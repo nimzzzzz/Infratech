@@ -73,7 +73,7 @@ const FIELD_LABELS: Record<string, string> = {
   url: "Product website",
   tagline: "Tagline",
   description: "Product description",
-  stages: "Project stages",
+  stages: "Infrastructure Stages",
   capabilities: "Capabilities",
   industries: "Industries",
   pricing: "Pricing model",
@@ -624,7 +624,7 @@ export function SubmitWizard({
         <div hidden={step !== 2}>
           <div className="space-y-14">
             <div id="section-basics" className="scroll-mt-24">
-              <Section title="Product basics" n={1}>
+              <Section title="Product basics">
                 <ToolBasicsStep
                   data={data}
                   update={update}
@@ -634,7 +634,7 @@ export function SubmitWizard({
               </Section>
             </div>
             <div id="section-description" className="scroll-mt-24">
-              <Section title="Product description" n={2}>
+              <Section title="Product description">
                 <ToolDescStep
                   data={data}
                   update={update}
@@ -644,7 +644,7 @@ export function SubmitWizard({
               </Section>
             </div>
             <div id="section-taxonomy" className="scroll-mt-24">
-              <Section title="Stages & capabilities" n={3}>
+              <Section title="Stages & capabilities">
                 <TaxonomyStep
                   data={data}
                   toggle={toggle}
@@ -656,7 +656,7 @@ export function SubmitWizard({
               </Section>
             </div>
             <div id="section-industries" className="scroll-mt-24">
-              <Section title="Industries & pricing" n={4}>
+              <Section title="Industries & pricing">
                 <IndustryPricingStep
                   data={data}
                   toggle={toggle}
@@ -1190,7 +1190,7 @@ function SinglePageSubmit({
 
       <div className="mt-12 space-y-14">
         <div id="section-basics" className="scroll-mt-24">
-          <Section title="Product basics" n={1}>
+          <Section title="Product basics">
             <ToolBasicsStep
               data={data}
               update={update}
@@ -1200,7 +1200,7 @@ function SinglePageSubmit({
           </Section>
         </div>
         <div id="section-description" className="scroll-mt-24">
-          <Section title="Product description" n={2}>
+          <Section title="Product description">
             <ToolDescStep
               data={data}
               update={update}
@@ -1210,7 +1210,7 @@ function SinglePageSubmit({
           </Section>
         </div>
         <div id="section-taxonomy" className="scroll-mt-24">
-          <Section title="Stages & capabilities" n={3}>
+          <Section title="Stages & capabilities">
             <TaxonomyStep
               data={data}
               toggle={toggle}
@@ -1222,7 +1222,7 @@ function SinglePageSubmit({
           </Section>
         </div>
         <div id="section-industries" className="scroll-mt-24">
-          <Section title="Industries & pricing" n={4}>
+          <Section title="Industries & pricing">
             <IndustryPricingStep
               data={data}
               toggle={toggle}
@@ -1271,19 +1271,14 @@ function SinglePageSubmit({
 
 function Section({
   title,
-  n,
   children,
 }: {
   title: string;
-  n: number;
   children: React.ReactNode;
 }) {
   return (
     <section>
       <header className="flex items-baseline gap-3 border-b border-[var(--color-line-strong)] pb-3">
-        <span className="num text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
-          {String(n).padStart(2, "0")}
-        </span>
         <h2 className="font-heading text-[24px] leading-tight tracking-tight md:text-[28px]">
           {title}
         </h2>
@@ -1394,7 +1389,6 @@ function CompanyStep({
           label="Company name"
           htmlFor="step1-companyName"
           required
-          hint="Pre-filled from LinkedIn — edit if it should display differently."
           error={err(errors, "companyName")}
         >
           <input
@@ -1413,7 +1407,7 @@ function CompanyStep({
         htmlFor="step1-companyWebsite"
         required
         error={err(errors, "companyWebsite")}
-        hint="example.com or https://example.com — we'll add https:// if you skip it."
+        hint="example.com or https://example.com"
       >
         <input
           id="step1-companyWebsite"
@@ -1463,7 +1457,7 @@ function CompanyStep({
         <ChipGroup
           label="Regions you operate in"
           required
-          hint="Pick every region where the company actively serves customers. Choose Global if you serve worldwide."
+          hint="Pick every region where the company can serve customers."
           options={regions}
           selected={data.companyRegions}
           onToggle={(slug) => {
@@ -1479,7 +1473,7 @@ function CompanyStep({
           label="Company description"
           htmlFor="step1-companyDescription"
           required
-          hint="Two short paragraphs at most. What the company does, who it's for, founding context. Plain English — no marketing language."
+          hint="A brief description of the company. (Product descriptions will come later.)"
           error={err(errors, "companyDescription")}
         >
           <textarea
@@ -1573,7 +1567,7 @@ function ToolBasicsStep({
           htmlFor="step2-url"
           required
           error={err(errors, "url")}
-          hint="example.com or https://example.com — we'll add https:// if you skip it."
+          hint="example.com or https://example.com"
         >
           <input
             id="step2-url"
@@ -1639,7 +1633,7 @@ function ToolDescStep({
   return (
     <div className="flex flex-col gap-6">
       <Field
-        label="Tagline"
+        label="Unique Selling Point or Target Use Case"
         htmlFor="step2-tagline"
         required
         hint="One sentence, plain English. Describe the product, not the company. Avoid 'elevate', 'seamless', 'next-gen'."
@@ -1775,7 +1769,7 @@ function TaxonomyStep({
     <div className="flex flex-col gap-10">
       <div id="step2-stages" className="scroll-mt-24">
         <ChipGroup
-          label="Project stages"
+          label="Infrastructure Stages"
           required
           hint="Pick every stage your product actively supports. Stages are the directory's primary axis and aren't open for new proposals."
           options={stages.map((s) => ({
