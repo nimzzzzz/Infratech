@@ -29,7 +29,7 @@ export type AppCard = {
   tagline: string | null;
   logoUrl: string | null;
   vendor: { slug: string; name: string };
-  pricingSlug: string | null;
+  pricingSlugs: string[];
   stages: { slug: string; name: string }[];
   /** Slug-only arrays used by the filter / sort logic. */
   capabilitySlugs: string[];
@@ -43,7 +43,7 @@ export type AppDetail = App & {
   stages: { slug: string; name: string }[];
   capabilities: { slug: string; name: string }[];
   industries: { slug: string; name: string }[];
-  pricing: { slug: string; name: string } | null;
+  pricingModels: { slug: string; name: string }[];
   screenshots: AppScreenshot[];
 };
 
@@ -111,8 +111,12 @@ async function fetchCards(appIds: number[]): Promise<AppCard[]> {
     arr.push(r.slug);
     indsByApp.set(r.appId, arr);
   }
-  const pricingByApp = new Map<number, string>();
-  for (const r of pricingRows) pricingByApp.set(r.appId, r.slug);
+  const pricingByApp = new Map<number, string[]>();
+  for (const r of pricingRows) {
+    const arr = pricingByApp.get(r.appId) ?? [];
+    arr.push(r.slug);
+    pricingByApp.set(r.appId, arr);
+  }
 
   const byId = new Map<number, AppCard>();
   for (const b of baseRows) {
@@ -123,7 +127,7 @@ async function fetchCards(appIds: number[]): Promise<AppCard[]> {
       tagline: b.tagline,
       logoUrl: b.logoUrl,
       vendor: { slug: b.vendorSlug, name: b.vendorName },
-      pricingSlug: pricingByApp.get(b.id) ?? null,
+      pricingSlugs: pricingByApp.get(b.id) ?? [],
       stages: stagesByApp.get(b.id) ?? [],
       capabilitySlugs: capsByApp.get(b.id) ?? [],
       industrySlugs: indsByApp.get(b.id) ?? [],
@@ -157,7 +161,7 @@ export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
     .limit(1);
   if (!base) return null;
 
-  const [stageRows, capRows, indRows, pricingRow, screenshots] =
+  const [stageRows, capRows, indRows, pricingRows, screenshots] =
     await Promise.all([
       db
         .select({ slug: stages.slug, name: stages.name })
@@ -184,9 +188,7 @@ export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
           pricingModels,
           eq(pricingModels.id, appPricingModels.pricingModelId),
         )
-        .where(eq(appPricingModels.appId, base.app.id))
-        .limit(1)
-        .then((rows) => rows[0] ?? null),
+        .where(eq(appPricingModels.appId, base.app.id)),
       db
         .select()
         .from(appScreenshots)
@@ -200,7 +202,7 @@ export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
     stages: stageRows,
     capabilities: capRows,
     industries: indRows,
-    pricing: pricingRow,
+    pricingModels: pricingRows,
     screenshots,
   };
 }

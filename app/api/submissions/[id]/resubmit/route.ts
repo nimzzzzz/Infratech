@@ -126,7 +126,6 @@ export async function POST(
   // Construct the new payload from the request body. Same shape as
   // the original /api/submissions writer — the new payload
   // overwrites the rejected one entirely.
-  const pricingIsCustom = body.pricing === "__custom__";
   const newPayload = {
     slug: submission.payload && typeof submission.payload === "object"
       ? (submission.payload as { slug?: string }).slug
@@ -140,10 +139,10 @@ export async function POST(
     stages: body.stages,
     capabilities: body.capabilities,
     industries: body.industries,
-    pricing: body.pricing,
+    pricingModels: body.pricingModels,
     customCapabilities: body.customCapabilities ?? [],
     customIndustries: body.customIndustries ?? [],
-    customPricing: pricingIsCustom ? body.customPricing : null,
+    customPricing: body.pricingModels.includes("__custom__") ? body.customPricing : null,
     termsVersionAtSubmit: TERMS_VERSION,
   };
 

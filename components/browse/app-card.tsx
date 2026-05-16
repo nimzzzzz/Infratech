@@ -5,9 +5,12 @@ import { formatStageLabel } from "@/lib/stages/format";
 import { LetterAvatar } from "./letter-avatar";
 
 export function AppCard({ app }: { app: AppCardData }) {
-  const pricingLabel = app.pricingSlug
-    ? (lookups.pricing.get(app.pricingSlug) ?? app.pricingSlug)
-    : "—";
+  const pricingLabel =
+    app.pricingSlugs.length > 0
+      ? app.pricingSlugs
+          .map((s) => lookups.pricing.get(s) ?? s)
+          .join(", ")
+      : "—";
   return (
     <Link
       href={`/apps/${app.slug}`}

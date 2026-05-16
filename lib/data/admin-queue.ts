@@ -41,7 +41,7 @@ export type NewAppSubmission = {
     stages: string[];
     capabilities: string[];
     industries: string[];
-    pricing: string;
+    pricingModels: string[];
     customCapabilities: string[];
     customIndustries: string[];
     customPricing: string;
@@ -94,7 +94,7 @@ export const queue: Submission[] = [
       stages: ["definition", "delivery"],
       capabilities: ["document-control"],
       industries: ["construction"],
-      pricing: "subscription",
+      pricingModels: ["user-subscription-freemium"],
       customCapabilities: ["AI permit lookup"],
       customIndustries: [],
       customPricing: "",
@@ -136,7 +136,7 @@ export const queue: Submission[] = [
       stages: ["definition", "delivery"],
       capabilities: ["scheduling", "risk-management"],
       industries: ["infrastructure", "construction"],
-      pricing: "subscription",
+      pricingModels: ["user-subscription-freemium"],
       customCapabilities: [],
       customIndustries: [],
       customPricing: "",
@@ -178,7 +178,7 @@ export const queue: Submission[] = [
       stages: ["delivery"],
       capabilities: ["field-management", "quality"],
       industries: ["construction"],
-      pricing: "subscription",
+      pricingModels: ["user-subscription-freemium"],
       customCapabilities: [],
       customIndustries: ["Mining"],
       customPricing: "",

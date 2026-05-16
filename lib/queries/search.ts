@@ -246,8 +246,12 @@ async function fetchCardsInOrder(ids: number[]): Promise<AppCard[]> {
     arr.push(r.slug);
     indsByApp.set(r.appId, arr);
   }
-  const pricingByApp = new Map<number, string>();
-  for (const r of pricingRows) pricingByApp.set(r.appId, r.slug);
+  const pricingByApp = new Map<number, string[]>();
+  for (const r of pricingRows) {
+    const arr = pricingByApp.get(r.appId) ?? [];
+    arr.push(r.slug);
+    pricingByApp.set(r.appId, arr);
+  }
 
   const byId = new Map<number, AppCard>();
   for (const b of baseRows) {
@@ -258,7 +262,7 @@ async function fetchCardsInOrder(ids: number[]): Promise<AppCard[]> {
       tagline: b.tagline,
       logoUrl: b.logoUrl,
       vendor: { slug: b.vendorSlug, name: b.vendorName },
-      pricingSlug: pricingByApp.get(b.id) ?? null,
+      pricingSlugs: pricingByApp.get(b.id) ?? [],
       stages: stagesByApp.get(b.id) ?? [],
       capabilitySlugs: capsByApp.get(b.id) ?? [],
       industrySlugs: indsByApp.get(b.id) ?? [],

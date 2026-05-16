@@ -336,7 +336,9 @@ function SubmissionDetail({ sub }: { sub: Submission }) {
               value={
                 sub.app.customPricing
                   ? `${sub.app.customPricing} (proposed)`
-                  : lookups.pricing.get(sub.app.pricing) ?? sub.app.pricing
+                  : sub.app.pricingModels
+                      .map((s) => lookups.pricing.get(s) ?? s)
+                      .join(", ")
               }
             />
           </DetailBlock>

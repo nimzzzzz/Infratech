@@ -173,11 +173,11 @@ export default async function AppDetailPage({
                     }
                   />
                 ) : null}
-                {app.pricing ? (
+                {app.pricingModels.length > 0 ? (
                   <FactRow
                     icon={Tag}
                     label="Pricing model"
-                    value={app.pricing.name}
+                    value={app.pricingModels.map((p) => p.name).join(", ")}
                   />
                 ) : null}
                 <FactRow
@@ -296,10 +296,10 @@ export default async function AppDetailPage({
             </Section>
           ) : null}
 
-          {app.pricing ? (
+          {app.pricingModels.length > 0 ? (
             <Section eyebrow="Pricing">
               <p className="font-heading text-[30px] leading-tight">
-                {app.pricing.name}
+                {app.pricingModels.map((p) => p.name).join(", ")}
               </p>
               <p className="mt-3 text-[18px] leading-relaxed text-[var(--color-ink-2)]">
                 The directory describes how vendors charge. We don&rsquo;t
@@ -464,16 +464,17 @@ function JsonLd({ app }: { app: AppDetail }) {
       name: app.vendor.name,
       url: app.vendor.websiteUrl,
     },
-    offers: app.pricing
-      ? {
-          "@type": "Offer",
-          url: app.websiteUrl,
-          priceSpecification: {
-            "@type": "PriceSpecification",
-            description: app.pricing.name,
-          },
-        }
-      : undefined,
+    offers:
+      app.pricingModels.length > 0
+        ? {
+            "@type": "Offer",
+            url: app.websiteUrl,
+            priceSpecification: {
+              "@type": "PriceSpecification",
+              description: app.pricingModels.map((p) => p.name).join(", "),
+            },
+          }
+        : undefined,
   };
   const breadcrumbs = {
     "@context": "https://schema.org",

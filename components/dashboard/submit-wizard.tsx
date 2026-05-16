@@ -85,7 +85,7 @@ const FIELD_LABELS: Record<string, string> = {
   stages: "Infrastructure Stages",
   capabilities: "Capabilities",
   industries: "Industries",
-  pricing: "Pricing model",
+  pricingModels: "Pricing model",
   customPricing: "Custom pricing description",
   productLogoUrl: "Product logo",
   productLogoAlt: "Product logo alt text",
@@ -203,7 +203,7 @@ type FormState = {
   stages: string[];
   capabilities: string[];
   industries: string[];
-  pricing: string;
+  pricingModels: string[];
   customCapabilities: string[];
   customIndustries: string[];
   customPricing: string;
@@ -230,7 +230,7 @@ const initialState = (companyName: string, domain: string): FormState => ({
   stages: [],
   capabilities: [],
   industries: [],
-  pricing: "",
+  pricingModels: [],
   customCapabilities: [],
   customIndustries: [],
   customPricing: "",
@@ -319,7 +319,7 @@ export function SubmitWizard({
     setData((d) => ({ ...d, [key]: value }));
 
   const toggle = (
-    key: "stages" | "capabilities" | "industries" | "companyRegions",
+    key: "stages" | "capabilities" | "industries" | "companyRegions" | "pricingModels",
     slug: string,
   ) =>
     setData((d) => ({
@@ -334,7 +334,7 @@ export function SubmitWizard({
   // toggling a single value. The sentinel never reaches FormState or
   // the API payload.
   const toggleTaxonomy = (
-    key: "stages" | "capabilities" | "industries",
+    key: "stages" | "capabilities" | "industries" | "pricingModels",
     slug: string,
   ) => {
     if (key === "stages" && slug === "__all__") {
@@ -393,7 +393,7 @@ export function SubmitWizard({
       customCapabilities: data.customCapabilities,
       industries: data.industries,
       customIndustries: data.customIndustries,
-      pricing: data.pricing,
+      pricingModels: data.pricingModels,
       // Phase C — product-level media. videoUrl gets normalised to
       // the embed URL by the schema transform; productLogoUrl is
       // refined against the Blob host suffix; productGallery is the
@@ -402,8 +402,9 @@ export function SubmitWizard({
       productLogoAlt: data.logoAlt,
       videoUrl: data.videoUrl,
       productGallery: data.productGallery,
-      customPricing:
-        data.pricing === CUSTOM_PRICING_SLUG ? data.customPricing : undefined,
+      customPricing: data.pricingModels.includes(CUSTOM_PRICING_SLUG)
+        ? data.customPricing
+        : undefined,
     };
   };
 
@@ -467,7 +468,7 @@ export function SubmitWizard({
     setSubmitting(true);
     setSubmitError(null);
 
-    const pricingIsCustom = data.pricing === CUSTOM_PRICING_SLUG;
+    const pricingIsCustom = data.pricingModels.includes(CUSTOM_PRICING_SLUG);
     const body = {
       // Company block — server only consumes these when vendor_id IS NULL
       companyName: data.companyName,
@@ -490,7 +491,7 @@ export function SubmitWizard({
       stages: data.stages,
       capabilities: data.capabilities,
       industries: data.industries,
-      pricing: pricingIsCustom ? CUSTOM_PRICING_SLUG : data.pricing,
+      pricingModels: data.pricingModels,
       customCapabilities: data.customCapabilities,
       customIndustries: data.customIndustries,
       customPricing: pricingIsCustom ? data.customPricing : undefined,
@@ -955,11 +956,15 @@ function FullReviewView({
         />
         <ReviewRow
           label="Pricing"
-          value={
-            data.pricing === CUSTOM_PRICING_SLUG
-              ? `${data.customPricing} (proposed)`
-              : pricingModels.find((p) => p.slug === data.pricing)?.name ?? ""
-          }
+          value={[
+            ...data.pricingModels
+              .filter((s) => s !== CUSTOM_PRICING_SLUG)
+              .map((s) => pricingModels.find((p) => p.slug === s)?.name ?? s),
+            ...(data.pricingModels.includes(CUSTOM_PRICING_SLUG) &&
+            data.customPricing
+              ? [`${data.customPricing} (proposed)`]
+              : []),
+          ].join(", ")}
         />
       </ReviewBlock>
     </div>
@@ -984,7 +989,7 @@ function SinglePageSubmit({
   data: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
   toggle: (
-    key: "stages" | "capabilities" | "industries",
+    key: "stages" | "capabilities" | "industries" | "pricingModels",
     slug: string,
   ) => void;
   addCustom: (key: CustomKey, value: string) => void;
@@ -1122,12 +1127,15 @@ function SinglePageSubmit({
             />
             <ReviewRow
               label="Pricing"
-              value={
-                data.pricing === CUSTOM_PRICING_SLUG
-                  ? `${data.customPricing} (proposed)`
-                  : pricingModels.find((p) => p.slug === data.pricing)?.name ??
-                    ""
-              }
+              value={[
+                ...data.pricingModels
+                  .filter((s) => s !== CUSTOM_PRICING_SLUG)
+                  .map((s) => pricingModels.find((p) => p.slug === s)?.name ?? s),
+                ...(data.pricingModels.includes(CUSTOM_PRICING_SLUG) &&
+                data.customPricing
+                  ? [`${data.customPricing} (proposed)`]
+                  : []),
+              ].join(", ")}
             />
           </ReviewBlock>
         </div>
@@ -1800,7 +1808,7 @@ function TaxonomyStep({
 }: {
   data: FormState;
   toggle: (
-    key: "stages" | "capabilities" | "industries",
+    key: "stages" | "capabilities" | "industries" | "pricingModels",
     slug: string,
   ) => void;
   addCustom: (key: CustomKey, value: string) => void;
@@ -1875,7 +1883,7 @@ function IndustryPricingStep({
 }: {
   data: FormState;
   toggle: (
-    key: "stages" | "capabilities" | "industries",
+    key: "stages" | "capabilities" | "industries" | "pricingModels",
     slug: string,
   ) => void;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
@@ -1884,7 +1892,7 @@ function IndustryPricingStep({
   errors: FieldErrors;
   clearError: (key: string) => void;
 }) {
-  const customSelected = data.pricing === CUSTOM_PRICING_SLUG;
+  const customSelected = data.pricingModels.includes(CUSTOM_PRICING_SLUG);
   return (
     <div className="flex flex-col gap-10">
       <div id="step2-industries" className="scroll-mt-24">
@@ -1913,21 +1921,20 @@ function IndustryPricingStep({
           Pricing model <span className="text-[var(--color-magenta)]">*</span>
         </p>
         <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">
-          Pick the model that best describes how customers buy. We
-          don&rsquo;t display actual prices. Choose &ldquo;Other&rdquo; if
-          none of these fit.
+          Pick all models that apply. We don&rsquo;t display actual prices.
+          Choose &ldquo;Other&rdquo; if none of these fit.
         </p>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
           {pricingModels.map((p) => {
-            const checked = data.pricing === p.slug;
+            const checked = data.pricingModels.includes(p.slug);
             return (
               <li key={p.slug}>
                 <PricingCard
                   checked={checked}
                   label={p.name}
                   onClick={() => {
-                    update("pricing", p.slug);
-                    clearError("pricing");
+                    toggle("pricingModels", p.slug);
+                    clearError("pricingModels");
                   }}
                 />
               </li>
@@ -1943,13 +1950,13 @@ function IndustryPricingStep({
               }
               proposed
               onClick={() => {
-                update("pricing", CUSTOM_PRICING_SLUG);
-                clearError("pricing");
+                toggle("pricingModels", CUSTOM_PRICING_SLUG);
+                clearError("pricingModels");
               }}
             />
           </li>
         </ul>
-        <FieldError message={err(errors, "pricing")} />
+        <FieldError message={err(errors, "pricingModels")} />
 
         {customSelected ? (
           <div id="step2-customPricing" className="mt-4 scroll-mt-24">
@@ -2003,7 +2010,8 @@ function PricingCard({
     <button
       type="button"
       onClick={onClick}
-      aria-pressed={checked}
+      aria-checked={checked}
+      role="checkbox"
       className={cn(
         "group flex w-full items-center gap-3 border px-4 py-3 text-left transition-colors",
         checked
@@ -2016,14 +2024,26 @@ function PricingCard({
       <span
         aria-hidden
         className={cn(
-          "grid h-4 w-4 shrink-0 place-items-center rounded-full border transition-colors",
+          "grid h-4 w-4 shrink-0 place-items-center border transition-colors",
           checked
             ? "border-[var(--color-canvas)] bg-[var(--color-canvas)]"
             : "border-[var(--color-line-strong)]",
         )}
       >
         {checked ? (
-          <span className="block h-1.5 w-1.5 rounded-full bg-[var(--color-ink)]" />
+          <svg
+            viewBox="0 0 10 8"
+            fill="none"
+            className="h-2.5 w-2.5 text-[var(--color-ink)]"
+          >
+            <path
+              d="M1 4l2.5 2.5L9 1"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         ) : null}
       </span>
       <span className="flex min-w-0 flex-1 items-center gap-2 text-[15px]">
