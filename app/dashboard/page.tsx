@@ -153,6 +153,19 @@ export default async function DashboardOverviewPage({
         status sit here.
       </p>
 
+      <Link
+        href="/dashboard/company"
+        prefetch
+        className="group mt-5 inline-flex items-center gap-1.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
+      >
+        Edit company profile
+        <ArrowRight
+          size={11}
+          weight="bold"
+          className="transition-transform duration-300 group-hover:translate-x-0.5"
+        />
+      </Link>
+
       <ul className="mt-10 grid grid-cols-1 gap-px border border-[var(--color-line-strong)] bg-[var(--color-line-strong)] sm:grid-cols-3">
         <StatCard
           icon={EnvelopeSimple}
