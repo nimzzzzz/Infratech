@@ -11,7 +11,7 @@ import {
 
 export type SubmissionListItem = {
   id: number;
-  type: "new" | "claim";
+  type: "new" | "claim" | "company_edit";
   status: SubmissionStatus;
   submittedAt: Date;
   submitterName: string | null;
