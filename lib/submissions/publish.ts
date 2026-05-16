@@ -42,7 +42,7 @@ export type PublishPayload = {
   stages?: string[];
   capabilities?: string[];
   industries?: string[];
-  pricing?: string;
+  pricingModels?: string[];
   // Phase C — product-level media. Carried on every submission.
   // Empty / null values are treated as "no logo" / "no video"
   // (the public detail page falls back to LetterAvatar / no
@@ -147,7 +147,7 @@ export async function publishSubmissionInTx(
     insertStageJoins(tx, appId, p.stages ?? []),
     insertCapabilityJoins(tx, appId, p.capabilities ?? []),
     insertIndustryJoins(tx, appId, p.industries ?? []),
-    insertPricingJoins(tx, appId, p.pricing ? [p.pricing] : []),
+    insertPricingJoins(tx, appId, (p.pricingModels ?? []).filter((s) => s !== "__custom__")),
   ]);
 
   // Phase C — company-level logo. Conditional on the payload

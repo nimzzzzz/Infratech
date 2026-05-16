@@ -58,7 +58,7 @@ export function applyFilters(apps: AppCard[], state: FilterState): AppCard[] {
       matchesQuery(a, state.q) &&
       matchesCategory(state.stage, stageSlugs(a)) &&
       matchesCategory(state.capability, a.capabilitySlugs) &&
-      matchesCategory(state.pricing, a.pricingSlug) &&
+      matchesCategory(state.pricing, a.pricingSlugs) &&
       matchesCategory(state.industry, a.industrySlugs),
   );
   // Always alphabetical by name — sort tabs were removed.
@@ -83,14 +83,14 @@ export function facetCounts(
       matchesQuery(a, stateWithoutCategory.q) &&
       matchesCategory(stateWithoutCategory.stage, stageSlugs(a)) &&
       matchesCategory(stateWithoutCategory.capability, a.capabilitySlugs) &&
-      matchesCategory(stateWithoutCategory.pricing, a.pricingSlug) &&
+      matchesCategory(stateWithoutCategory.pricing, a.pricingSlugs) &&
       matchesCategory(stateWithoutCategory.industry, a.industrySlugs),
   );
 
   const accessor = (a: AppCard): string[] => {
     if (category === "stage") return stageSlugs(a);
     if (category === "capability") return a.capabilitySlugs;
-    if (category === "pricing") return a.pricingSlug ? [a.pricingSlug] : [];
+    if (category === "pricing") return a.pricingSlugs;
     return a.industrySlugs;
   };
 

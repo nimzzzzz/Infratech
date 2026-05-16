@@ -261,7 +261,7 @@ export async function POST(req: Request) {
             stages: body.stages,
             capabilities: body.capabilities,
             industries: body.industries,
-            pricing: body.pricing,
+            pricingModels: body.pricingModels,
             customCapabilities: body.customCapabilities ?? [],
             customIndustries: body.customIndustries ?? [],
             customPricing: body.customPricing ?? null,

@@ -205,7 +205,7 @@ export const productStepSchema = z
     customCapabilities: z.array(plainText(80)).max(10).optional(),
     industries: slugArray.max(20),
     customIndustries: z.array(plainText(80)).max(10).optional(),
-    pricing: z.string().trim().min(1, "Pick a pricing model").max(80),
+    pricingModels: slugArray.min(1, "Pick at least one pricing model"),
     customPricing: optionalPlainText(80),
     // Phase C — all optional. App detail page falls back to the
     // LetterAvatar / no-video / no-gallery treatment if these
@@ -240,7 +240,7 @@ export const productStepSchema = z
     }
     // "Other" pricing requires the free-text describer.
     if (
-      d.pricing === "__custom__" &&
+      d.pricingModels.includes("__custom__") &&
       (d.customPricing?.trim().length ?? 0) === 0
     ) {
       ctx.addIssue({
@@ -285,7 +285,7 @@ export const submissionBodySchema = z.object({
   stages: slugArray.min(1).max(10),
   capabilities: slugArray.max(20),
   industries: slugArray.max(20),
-  pricing: z.string().trim().min(1).max(80),
+  pricingModels: slugArray.min(1),
   customCapabilities: z.array(plainText(80)).max(10).optional(),
   customIndustries: z.array(plainText(80)).max(10).optional(),
   customPricing: optionalPlainText(80),
