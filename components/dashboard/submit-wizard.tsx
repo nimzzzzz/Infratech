@@ -54,6 +54,15 @@ function FieldError({ message }: { message?: string | null }) {
   );
 }
 
+// Geographic region slugs — every entry in `regions` except the "All"
+// meta-chip (slug "global"). Used to expand/collapse the All selector.
+const GEO_REGION_SLUGS = regions
+  .filter((r) => r.slug !== "global")
+  .map((r) => r.slug);
+
+// All real stage slugs. Used to expand/collapse the All selector.
+const ALL_STAGE_SLUGS = stages.map((s) => s.slug);
+
 /**
  * Human labels for field keys. Used by `<ErrorSummary>` so a Zod
  * `companyLogoUrl` error shows "Company logo" in the anchor list,
@@ -320,6 +329,22 @@ export function SubmitWizard({
         : [...d[key], slug],
     }));
 
+  // Wraps `toggle` for the taxonomy step. Intercepts the synthetic
+  // "__all__" stages slug and bulk-sets the stages array instead of
+  // toggling a single value. The sentinel never reaches FormState or
+  // the API payload.
+  const toggleTaxonomy = (
+    key: "stages" | "capabilities" | "industries",
+    slug: string,
+  ) => {
+    if (key === "stages" && slug === "__all__") {
+      const allSelected = ALL_STAGE_SLUGS.every((s) => data.stages.includes(s));
+      update("stages", allSelected ? [] : ALL_STAGE_SLUGS);
+      return;
+    }
+    toggle(key, slug);
+  };
+
   const customKeyOf = (k: CustomKey): "customCapabilities" | "customIndustries" =>
     k === "capabilities" ? "customCapabilities" : "customIndustries";
 
@@ -576,7 +601,7 @@ export function SubmitWizard({
       <SinglePageSubmit
         data={data}
         update={update}
-        toggle={toggle}
+        toggle={toggleTaxonomy}
         addCustom={addCustom}
         removeCustom={removeCustom}
         errors={errors}
@@ -647,7 +672,7 @@ export function SubmitWizard({
               <Section title="Stages & capabilities">
                 <TaxonomyStep
                   data={data}
-                  toggle={toggle}
+                  toggle={toggleTaxonomy}
                   addCustom={addCustom}
                   removeCustom={removeCustom}
                   errors={errors}
@@ -1454,18 +1479,36 @@ function CompanyStep({
       </Field>
 
       <div id="step1-companyRegions" className="md:col-span-2 scroll-mt-24">
-        <ChipGroup
-          label="Regions you operate in"
-          required
-          hint="Pick every region where the company can serve customers."
-          options={regions}
-          selected={data.companyRegions}
-          onToggle={(slug) => {
-            toggle("companyRegions", slug);
-            clearError("companyRegions");
-          }}
-          error={err(errors, "companyRegions")}
-        />
+        {(() => {
+          const allGeoSelected = GEO_REGION_SLUGS.every((s) =>
+            data.companyRegions.includes(s),
+          );
+          return (
+            <ChipGroup
+              label="Regions you operate in"
+              required
+              hint="Pick every region where the company can serve customers."
+              options={regions}
+              selected={
+                allGeoSelected
+                  ? [...data.companyRegions, "global"]
+                  : data.companyRegions
+              }
+              onToggle={(slug) => {
+                if (slug === "global") {
+                  update(
+                    "companyRegions",
+                    allGeoSelected ? [] : GEO_REGION_SLUGS,
+                  );
+                } else {
+                  toggle("companyRegions", slug);
+                }
+                clearError("companyRegions");
+              }}
+              error={err(errors, "companyRegions")}
+            />
+          );
+        })()}
       </div>
 
       <div className="md:col-span-2">
@@ -1772,12 +1815,19 @@ function TaxonomyStep({
           label="Infrastructure Stages"
           required
           hint="Pick every stage your product actively supports. Stages are the directory's primary axis and aren't open for new proposals."
-          options={stages.map((s) => ({
-            slug: s.slug,
-            name: formatStageLabel(s.slug),
-            tooltip: s.description,
-          }))}
-          selected={data.stages}
+          options={[
+            { slug: "__all__", name: "All" },
+            ...stages.map((s) => ({
+              slug: s.slug,
+              name: formatStageLabel(s.slug),
+              tooltip: s.description,
+            })),
+          ]}
+          selected={
+            ALL_STAGE_SLUGS.every((s) => data.stages.includes(s))
+              ? [...data.stages, "__all__"]
+              : data.stages
+          }
           onToggle={(slug) => {
             toggle("stages", slug);
             clearError("stages");

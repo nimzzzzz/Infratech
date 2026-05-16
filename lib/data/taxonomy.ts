@@ -43,14 +43,14 @@ export const industries: TaxonomyItem[] = [
 ];
 
 export const regions: TaxonomyItem[] = [
+  { slug: "global", name: "All" },
   { slug: "north-america", name: "North America" },
   { slug: "south-america", name: "South America" },
   { slug: "europe", name: "Europe" },
   { slug: "middle-east", name: "Middle East" },
   { slug: "africa", name: "Africa" },
   { slug: "asia-pacific", name: "Asia Pacific" },
-  { slug: "oceania", name: "Oceania" },
-  { slug: "global", name: "Global" },
+  { slug: "oceania", name: "Australia" },
 ];
 
 export const lookups = {
