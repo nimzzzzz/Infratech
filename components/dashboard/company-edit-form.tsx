@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Check, CheckCircle, Clock, XCircle } from "@phosphor-icons/react";
 import { CountrySelect } from "@/components/dashboard/country-select";
 import { LogoUploadField } from "@/components/dashboard/logo-upload-field";
-import { regions } from "@/lib/data/taxonomy";
+import { CompanyProfilePreview } from "@/components/dashboard/company-profile-preview";
+import { lookups, regions } from "@/lib/data/taxonomy";
 import { companyStepSchema } from "@/app/api/submissions/schema";
 import { cn } from "@/lib/utils";
 import type { CompanyEditStatus, VendorWithRegions } from "@/lib/queries/company-edit";
@@ -221,23 +222,49 @@ export function CompanyEditForm({ vendor, editStatus }: Props) {
     );
   }
 
-  // ── PENDING STATE — no editable form ──────────────────────────────
+  const allGeoSelected = GEO_REGION_SLUGS.every((s) =>
+    data.companyRegions.includes(s),
+  );
+
+  const previewData = {
+    name: data.companyName,
+    websiteUrl: data.companyWebsite,
+    foundedYear: data.companyFounded,
+    hqCountry: data.companyHeadquarters,
+    description: data.companyDescription,
+    logoUrl: data.companyLogoUrl,
+    regionsLabel:
+      data.companyRegions.length === 0
+        ? null
+        : allGeoSelected
+          ? "All regions"
+          : data.companyRegions
+              .map((s) => lookups.region.get(s) ?? s)
+              .join(", "),
+  };
+
+  // ── PENDING STATE — no editable form, preview still shown ─────────
   if (isPendingReview) {
     return (
-      <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-5">
-        <Clock
-          size={20}
-          weight="fill"
-          className="mt-0.5 shrink-0 text-amber-600"
-        />
-        <div>
-          <p className="font-medium text-amber-800">Edit under review</p>
-          <p className="mt-1 text-[15px] text-amber-700">
-            Your most recent company profile update is being reviewed by the
-            Resolute team. You can&rsquo;t submit another edit until this one
-            is processed.
-          </p>
+      <div className="grid gap-10 md:grid-cols-[3fr_2fr] md:gap-12">
+        <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-5">
+          <Clock
+            size={20}
+            weight="fill"
+            className="mt-0.5 shrink-0 text-amber-600"
+          />
+          <div>
+            <p className="font-medium text-amber-800">Edit under review</p>
+            <p className="mt-1 text-[15px] text-amber-700">
+              Your most recent company profile update is being reviewed by the
+              Resolute team. You can&rsquo;t submit another edit until this one
+              is processed.
+            </p>
+          </div>
         </div>
+        <aside>
+          <CompanyProfilePreview data={previewData} />
+        </aside>
       </div>
     );
   }
@@ -265,16 +292,18 @@ export function CompanyEditForm({ vendor, editStatus }: Props) {
       </div>
     ) : null;
 
-  const allGeoSelected = GEO_REGION_SLUGS.every((s) =>
-    data.companyRegions.includes(s),
-  );
-
   // ── EDIT FORM — mirrors wizard's CompanyStep ──────────────────────
+  // Wrapped in a split-view: form on the left, live preview on the
+  // right at md+ (stacks below on mobile). Preview is a deliberate V.1
+  // feature, not part of the wizard's design language — that's the
+  // only intentional difference from the wizard's CompanyStep besides
+  // the submit button copy, locked slug, and banner states.
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      {rejectedBanner}
+    <div className="grid gap-10 md:grid-cols-[3fr_2fr] md:gap-12">
+      <form onSubmit={handleSubmit} noValidate>
+        {rejectedBanner}
 
-      <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
         <div className="md:col-span-2">
           <Field
             label="Company name"
@@ -443,16 +472,21 @@ export function CompanyEditForm({ vendor, editStatus }: Props) {
         </p>
       ) : null}
 
-      <div className="mt-8 flex justify-end">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="inline-flex h-12 items-center gap-2 bg-[var(--color-coral)] px-6 text-[14px] uppercase tracking-[0.2em] text-white transition-opacity disabled:opacity-60"
-        >
-          {isPending ? "Submitting…" : "Submit edit"}
-        </button>
-      </div>
-    </form>
+        <div className="mt-8 flex justify-end">
+          <button
+            type="submit"
+            disabled={isPending}
+            className="inline-flex h-12 items-center gap-2 bg-[var(--color-coral)] px-6 text-[14px] uppercase tracking-[0.2em] text-white transition-opacity disabled:opacity-60"
+          >
+            {isPending ? "Submitting…" : "Submit edit"}
+          </button>
+        </div>
+      </form>
+
+      <aside>
+        <CompanyProfilePreview data={previewData} />
+      </aside>
+    </div>
   );
 }
 
