@@ -78,6 +78,11 @@ Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
   - Maybe a "Clear all filters" prominent at the bottom
 - Trigger: when QA-ing for public launch.
 
+### fix/extract-company-fields — share company form between wizard and edit form
+- **Context (2026-05-17, surfaced by `fix/company-edit-match-wizard`):** the signup wizard's `CompanyStep` and the V.1 `/dashboard/company` edit form collect the same data, but they shipped as two independent implementations. They drifted within days — the edit form had an extra `employeeBand` field the wizard never collected, a different region picker (no "All" selector), different label copy, different input styles, and different validation behaviour. Patched in this PR by rewriting the edit form to mirror the wizard byte-for-byte, including duplicated copies of the wizard-private `Field`, `FieldError`, `ChipGroup`, `inputClsWithError`, `textareaClsWithError`, `err`, and `GEO_REGION_SLUGS` primitives.
+- **The fix:** lift those primitives + the company field set into a shared component (e.g. `components/dashboard/company-fields.tsx`) that both the wizard step and the edit form render. Wizard wraps it in its multi-step shell; edit form wraps it in the pending/rejected/success banner shell. One source of truth, no drift possible.
+- **Trigger:** before the next feature touches either surface, OR before PR 1 of vendor product editing lands (the product wizard/edit story will replay the exact same drift unless this is solved first).
+
 ## 🟢 Notes / decisions that future-self might forget
 
 ### Why we use Vercel

@@ -2,20 +2,33 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, Clock, XCircle } from "@phosphor-icons/react";
+import { Check, CheckCircle, Clock, XCircle } from "@phosphor-icons/react";
 import { CountrySelect } from "@/components/dashboard/country-select";
 import { LogoUploadField } from "@/components/dashboard/logo-upload-field";
-import { CompanyProfilePreview } from "@/components/dashboard/company-profile-preview";
+import { regions } from "@/lib/data/taxonomy";
+import { companyStepSchema } from "@/app/api/submissions/schema";
 import { cn } from "@/lib/utils";
-import { EMPLOYEE_BANDS } from "@/app/api/company-edit/schema";
 import type { CompanyEditStatus, VendorWithRegions } from "@/lib/queries/company-edit";
 
-type Region = { slug: string; name: string };
+/**
+ * Company profile edit form. By design, this MUST mirror the signup
+ * wizard's CompanyStep (components/dashboard/submit-wizard.tsx) field
+ * for field — same labels, hints, input types, validation rules, and
+ * chip behaviour. The only allowed differences are:
+ *   - the submit button copy
+ *   - the pending / rejected / success banner states (edit-only UX)
+ *
+ * The duplicated UI primitives below (Field, FieldError, ChipGroup,
+ * inputClsWithError, textareaClsWithError, err, GEO_REGION_SLUGS) are
+ * copies of the wizard-private helpers. Lifting them into a shared
+ * module is tracked in BACKLOG.md as "fix/extract-company-fields" so
+ * this drift can't happen again — until then, ANY edit here should be
+ * mirrored in submit-wizard.tsx and vice versa.
+ */
 
 type Props = {
   vendor: VendorWithRegions;
   editStatus: CompanyEditStatus;
-  availableRegions: Region[];
 };
 
 type FormState = {
@@ -27,10 +40,15 @@ type FormState = {
   companyDescription: string;
   companyLogoUrl: string | null;
   companyLogoAlt: string;
-  employeeBand: string;
 };
 
-type FieldErrors = Partial<Record<keyof FormState, string[]>>;
+type FieldErrors = Partial<Record<string, string[]>>;
+
+// Mirror of the wizard's GEO_REGION_SLUGS — geographic regions only,
+// excluding the "global" UI meta-chip.
+const GEO_REGION_SLUGS = regions
+  .filter((r) => r.slug !== "global")
+  .map((r) => r.slug);
 
 function vendorToFormState(vendor: VendorWithRegions): FormState {
   return {
@@ -42,7 +60,6 @@ function vendorToFormState(vendor: VendorWithRegions): FormState {
     companyDescription: vendor.description ?? "",
     companyLogoUrl: vendor.logoUrl ?? null,
     companyLogoAlt: "",
-    employeeBand: vendor.employeeBand ?? "",
   };
 }
 
@@ -58,67 +75,98 @@ function payloadToFormState(payload: Record<string, unknown>): FormState {
     companyDescription: (payload.companyDescription as string) ?? "",
     companyLogoUrl: (payload.companyLogoUrl as string | null) ?? null,
     companyLogoAlt: (payload.companyLogoAlt as string) ?? "",
-    employeeBand: (payload.employeeBand as string) ?? "",
   };
 }
 
-function toggleRegion(regions: string[], slug: string): string[] {
-  return regions.includes(slug)
-    ? regions.filter((s) => s !== slug)
-    : [...regions, slug];
-}
-
-export function CompanyEditForm({
-  vendor,
-  editStatus,
-  availableRegions,
-}: Props) {
+export function CompanyEditForm({ vendor, editStatus }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  // Determine initial edit mode state.
   const isPendingReview = editStatus?.status === "pending_review";
   const isRejected = editStatus?.status === "rejected";
 
-  // Pre-fill from rejected payload so the vendor can fix and resubmit.
   const initialState: FormState =
     isRejected && editStatus.payload
       ? payloadToFormState(editStatus.payload)
       : vendorToFormState(vendor);
 
-  const [form, setForm] = useState<FormState>(initialState);
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [data, setData] = useState<FormState>(initialState);
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const regionNameMap = new Map(availableRegions.map((r) => [r.slug, r.name]));
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setData((d) => ({ ...d, [key]: value }));
 
-  const previewData = {
-    name: form.companyName,
-    websiteUrl: form.companyWebsite,
-    foundedYear: form.companyFounded,
-    hqCountry: form.companyHeadquarters,
-    employeeBand: form.employeeBand,
-    description: form.companyDescription,
-    logoUrl: form.companyLogoUrl,
-    regionNames: form.companyRegions
-      .filter((s) => s !== "global")
-      .map((s) => regionNameMap.get(s) ?? s),
+  const toggleRegion = (slug: string) =>
+    setData((d) => ({
+      ...d,
+      companyRegions: d.companyRegions.includes(slug)
+        ? d.companyRegions.filter((s) => s !== slug)
+        : [...d.companyRegions, slug],
+    }));
+
+  const clearError = (key: string) => {
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   };
 
-  function set<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
-    setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
+  const setField = <K extends keyof FormState>(key: K) =>
+    (value: FormState[K]) => {
+      update(key, value);
+      clearError(key as string);
+    };
+
+  function validate(): boolean {
+    const result = companyStepSchema.safeParse({
+      companyName: data.companyName,
+      companyWebsite: data.companyWebsite,
+      companyFounded: data.companyFounded,
+      companyHeadquarters: data.companyHeadquarters,
+      companyRegions: data.companyRegions,
+      companyDescription: data.companyDescription,
+      companyLogoUrl: data.companyLogoUrl ?? "",
+      companyLogoAlt: data.companyLogoAlt,
+    });
+    if (!result.success) {
+      const flat = result.error.flatten().fieldErrors as FieldErrors;
+      setErrors(flat);
+      const firstKey = Object.keys(flat)[0];
+      if (firstKey) {
+        requestAnimationFrame(() => {
+          document
+            .getElementById(firstKey)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
+      }
+      return false;
+    }
+    // Apply transforms (URL normalisation) back into state so the user
+    // sees "https://example.com" instead of the raw "example.com" they
+    // typed if the POST round-trips an error.
+    setData((d) => ({ ...d, ...(result.data as Partial<FormState>) }));
+    setErrors({});
+    return true;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitError(null);
-    setFieldErrors({});
+    if (!validate()) return;
 
     const body = {
-      ...form,
-      companyLogoUrl: form.companyLogoUrl ?? "",
+      companyName: data.companyName,
+      companyWebsite: data.companyWebsite,
+      companyFounded: data.companyFounded,
+      companyHeadquarters: data.companyHeadquarters,
+      companyRegions: data.companyRegions,
+      companyDescription: data.companyDescription,
+      companyLogoUrl: data.companyLogoUrl ?? "",
+      companyLogoAlt: data.companyLogoAlt,
     };
 
     startTransition(async () => {
@@ -137,7 +185,7 @@ export function CompanyEditForm({
 
         if (!res.ok) {
           if (json.fieldErrors) {
-            setFieldErrors(json.fieldErrors as FieldErrors);
+            setErrors(json.fieldErrors as FieldErrors);
           }
           setSubmitError(json.error ?? "Something went wrong.");
           return;
@@ -173,27 +221,22 @@ export function CompanyEditForm({
     );
   }
 
-  // ── PENDING STATE ─────────────────────────────────────────────────
+  // ── PENDING STATE — no editable form ──────────────────────────────
   if (isPendingReview) {
     return (
-      <div>
-        <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-5">
-          <Clock
-            size={20}
-            weight="fill"
-            className="mt-0.5 shrink-0 text-amber-600"
-          />
-          <div>
-            <p className="font-medium text-amber-800">Edit under review</p>
-            <p className="mt-1 text-[15px] text-amber-700">
-              Your most recent company profile update is being reviewed by the
-              Resolute team. You can&rsquo;t submit another edit until this one
-              is processed.
-            </p>
-          </div>
-        </div>
-        <div className="mt-8">
-          <CompanyProfilePreview data={previewData} />
+      <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-5">
+        <Clock
+          size={20}
+          weight="fill"
+          className="mt-0.5 shrink-0 text-amber-600"
+        />
+        <div>
+          <p className="font-medium text-amber-800">Edit under review</p>
+          <p className="mt-1 text-[15px] text-amber-700">
+            Your most recent company profile update is being reviewed by the
+            Resolute team. You can&rsquo;t submit another edit until this one
+            is processed.
+          </p>
         </div>
       </div>
     );
@@ -222,258 +265,321 @@ export function CompanyEditForm({
       </div>
     ) : null;
 
-  // ── EDIT FORM ─────────────────────────────────────────────────────
+  const allGeoSelected = GEO_REGION_SLUGS.every((s) =>
+    data.companyRegions.includes(s),
+  );
+
+  // ── EDIT FORM — mirrors wizard's CompanyStep ──────────────────────
   return (
-    <div>
+    <form onSubmit={handleSubmit} noValidate>
       {rejectedBanner}
-      <div className="grid gap-10 md:grid-cols-[3fr_2fr] md:gap-12">
-        {/* FORM */}
-        <form onSubmit={handleSubmit} noValidate className="space-y-8">
-          {/* Company name */}
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="md:col-span-2">
           <Field
             label="Company name"
-            htmlFor="company-name"
-            error={fieldErrors.companyName?.[0]}
+            htmlFor="companyName"
             required
+            error={err(errors, "companyName")}
           >
             <input
-              id="company-name"
+              id="companyName"
               type="text"
-              value={form.companyName}
-              onChange={(e) => set("companyName", e.target.value)}
-              maxLength={200}
-              className={inputCls(!!fieldErrors.companyName?.length)}
-              placeholder="Acme Corp"
+              value={data.companyName}
+              onChange={(e) => setField("companyName")(e.target.value)}
+              className={inputClsWithError(err(errors, "companyName"))}
+              aria-invalid={!!err(errors, "companyName")}
             />
           </Field>
+        </div>
 
-          {/* Website */}
-          <Field
-            label="Website"
-            htmlFor="company-website"
-            error={fieldErrors.companyWebsite?.[0]}
+        <Field
+          label="Company website"
+          htmlFor="companyWebsite"
+          required
+          error={err(errors, "companyWebsite")}
+          hint="example.com or https://example.com"
+        >
+          <input
+            id="companyWebsite"
+            type="text"
+            value={data.companyWebsite}
+            onChange={(e) => setField("companyWebsite")(e.target.value)}
+            placeholder="example.com"
+            className={inputClsWithError(err(errors, "companyWebsite"))}
+            aria-invalid={!!err(errors, "companyWebsite")}
+          />
+        </Field>
+
+        <Field
+          label="Year founded"
+          htmlFor="companyFounded"
+          required
+          error={err(errors, "companyFounded")}
+        >
+          <input
+            id="companyFounded"
+            type="number"
+            inputMode="numeric"
+            value={data.companyFounded}
+            onChange={(e) => setField("companyFounded")(e.target.value)}
+            placeholder="e.g. 2017"
+            min={1900}
+            max={new Date().getFullYear()}
+            className={cn(
+              inputClsWithError(err(errors, "companyFounded")),
+              "num",
+            )}
+            aria-invalid={!!err(errors, "companyFounded")}
+          />
+        </Field>
+
+        <Field
+          label="Headquarters country"
+          htmlFor="companyHeadquarters"
+          required
+          hint="Where the company is legally based."
+          error={err(errors, "companyHeadquarters")}
+        >
+          <CountrySelect
+            id="companyHeadquarters"
+            value={data.companyHeadquarters}
+            onChange={(v) => setField("companyHeadquarters")(v)}
+          />
+        </Field>
+
+        <div id="companyRegions" className="md:col-span-2 scroll-mt-24">
+          <ChipGroup
+            label="Regions you operate in"
             required
-          >
-            <input
-              id="company-website"
-              type="url"
-              value={form.companyWebsite}
-              onChange={(e) => set("companyWebsite", e.target.value)}
-              maxLength={500}
-              className={inputCls(!!fieldErrors.companyWebsite?.length)}
-              placeholder="https://example.com"
-            />
-          </Field>
-
-          {/* Founded year + Employee band (side by side on md+) */}
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Field
-              label="Founded year"
-              htmlFor="company-founded"
-              error={fieldErrors.companyFounded?.[0]}
-              required
-            >
-              <input
-                id="company-founded"
-                type="text"
-                inputMode="numeric"
-                value={form.companyFounded}
-                onChange={(e) => set("companyFounded", e.target.value)}
-                maxLength={4}
-                className={inputCls(!!fieldErrors.companyFounded?.length)}
-                placeholder="2018"
-              />
-            </Field>
-            <Field
-              label="Team size"
-              htmlFor="employee-band"
-              error={fieldErrors.employeeBand?.[0]}
-            >
-              <select
-                id="employee-band"
-                value={form.employeeBand}
-                onChange={(e) => set("employeeBand", e.target.value)}
-                className={cn(inputCls(!!fieldErrors.employeeBand?.length), "appearance-none")}
-              >
-                <option value="">Select…</option>
-                {EMPLOYEE_BANDS.map((b) => (
-                  <option key={b} value={b}>
-                    {b} employees
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </div>
-
-          {/* Headquarters */}
-          <Field
-            label="Headquarters country"
-            htmlFor="company-hq"
-            error={fieldErrors.companyHeadquarters?.[0]}
-            required
-          >
-            <CountrySelect
-              id="company-hq"
-              value={form.companyHeadquarters}
-              onChange={(v) => set("companyHeadquarters", v)}
-            />
-          </Field>
-
-          {/* Regions */}
-          <Field
-            label="Regions served"
-            error={fieldErrors.companyRegions?.[0]}
-            hint="Select all regions where you actively operate."
-            required
-          >
-            <div className="mt-2 flex flex-wrap gap-2">
-              {availableRegions.map((r) => {
-                const active = form.companyRegions.includes(r.slug);
-                return (
-                  <button
-                    key={r.slug}
-                    type="button"
-                    onClick={() =>
-                      set("companyRegions", toggleRegion(form.companyRegions, r.slug))
-                    }
-                    aria-pressed={active}
-                    className={cn(
-                      "px-3 py-1.5 text-[13px] uppercase tracking-[0.18em] transition-colors border",
-                      active
-                        ? "border-[var(--color-coral)] bg-[var(--color-coral)]/10 text-[var(--color-coral)]"
-                        : "border-[var(--color-line-strong)] text-[var(--color-ink-2)] hover:border-[var(--color-ink-2)]",
-                    )}
-                  >
-                    {r.name}
-                  </button>
+            hint="Pick every region where the company can serve customers."
+            options={regions}
+            selected={
+              allGeoSelected
+                ? [...data.companyRegions, "global"]
+                : data.companyRegions
+            }
+            onToggle={(slug) => {
+              if (slug === "global") {
+                update(
+                  "companyRegions",
+                  allGeoSelected ? [] : GEO_REGION_SLUGS,
                 );
-              })}
-            </div>
-          </Field>
+              } else {
+                toggleRegion(slug);
+              }
+              clearError("companyRegions");
+            }}
+            error={err(errors, "companyRegions")}
+          />
+        </div>
 
-          {/* Description */}
+        <div className="md:col-span-2">
           <Field
             label="Company description"
-            htmlFor="company-description"
-            error={fieldErrors.companyDescription?.[0]}
-            hint="Describe what your company does. Shown on your vendor profile page."
+            htmlFor="companyDescription"
             required
+            hint="A brief description of the company. (Product descriptions will come later.)"
+            error={err(errors, "companyDescription")}
           >
             <textarea
-              id="company-description"
-              value={form.companyDescription}
-              onChange={(e) => set("companyDescription", e.target.value)}
-              maxLength={2000}
+              id="companyDescription"
               rows={6}
-              className={inputCls(!!fieldErrors.companyDescription?.length)}
-              placeholder="We build software for infrastructure project teams…"
+              value={data.companyDescription}
+              onChange={(e) => setField("companyDescription")(e.target.value)}
+              placeholder="What the company builds. Founding context or distinctive angle."
+              maxLength={2000}
+              className={textareaClsWithError(err(errors, "companyDescription"))}
+              aria-invalid={!!err(errors, "companyDescription")}
             />
-            <p className="mt-1 text-right text-[12px] text-[var(--color-ink-3)]">
-              {form.companyDescription.length}/2000
+            <p className="text-[13px] text-[var(--color-ink-3)]">
+              <span className="num">{data.companyDescription.length}</span> /{" "}
+              <span className="num">2000</span>
             </p>
           </Field>
+        </div>
 
-          {/* Logo */}
-          <Field
-            label="Company logo"
-            error={fieldErrors.companyLogoUrl?.[0]}
-            hint="PNG or JPG, max 2 MB. Square logos work best."
-          >
+        <div id="companyLogoUrl" className="md:col-span-2 scroll-mt-24">
+          <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
+            Company logo
+          </p>
+          <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">
+            PNG, JPG, WebP, or SVG up to 1 MB. Square or landscape works best.
+          </p>
+          <div className="mt-3">
             <LogoUploadField
               scope="vendor_logo"
               value={{
-                url: form.companyLogoUrl,
-                alt: form.companyLogoAlt,
+                url: data.companyLogoUrl,
+                alt: data.companyLogoAlt,
               }}
               onChange={(next) => {
-                set("companyLogoUrl", next.url);
-                set("companyLogoAlt", next.alt);
+                update("companyLogoUrl", next.url);
+                update("companyLogoAlt", next.alt);
+                clearError("companyLogoUrl");
               }}
-              error={fieldErrors.companyLogoUrl?.[0]}
+              error={err(errors, "companyLogoUrl")}
             />
-          </Field>
-
-          {/* Honeypot */}
-          <input
-            type="text"
-            name="honeypot"
-            tabIndex={-1}
-            aria-hidden
-            className="absolute left-[-9999px] opacity-0"
-            autoComplete="off"
-          />
-
-          {/* Global error */}
-          {submitError ? (
-            <p role="alert" className="text-[14px] text-[var(--color-coral)]">
-              {submitError}
-            </p>
-          ) : null}
-
-          <button
-            type="submit"
-            disabled={isPending}
-            className="inline-flex h-12 items-center gap-2 bg-[var(--color-coral)] px-6 text-[14px] uppercase tracking-[0.2em] text-white transition-opacity disabled:opacity-60"
-          >
-            {isPending ? "Submitting…" : "Submit for review"}
-          </button>
-        </form>
-
-        {/* PREVIEW */}
-        <aside className="hidden md:block">
-          <CompanyProfilePreview data={previewData} />
-        </aside>
+          </div>
+        </div>
       </div>
-    </div>
+
+      {/* Honeypot — sr-only input; bots fill every input they see. */}
+      <input
+        type="text"
+        name="honeypot"
+        tabIndex={-1}
+        aria-hidden
+        className="absolute left-[-9999px] opacity-0"
+        autoComplete="off"
+      />
+
+      {submitError ? (
+        <p
+          role="alert"
+          className="mt-6 text-[14px] text-[var(--color-coral)]"
+        >
+          {submitError}
+        </p>
+      ) : null}
+
+      <div className="mt-8 flex justify-end">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="inline-flex h-12 items-center gap-2 bg-[var(--color-coral)] px-6 text-[14px] uppercase tracking-[0.2em] text-white transition-opacity disabled:opacity-60"
+        >
+          {isPending ? "Submitting…" : "Submit edit"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Local copies of wizard-private primitives. Source of truth lives in
+// components/dashboard/submit-wizard.tsx — keep these byte-equivalent.
+// Tracked in BACKLOG.md as fix/extract-company-fields.
+// ──────────────────────────────────────────────────────────────────────
+
+function FieldError({ message }: { message?: string | null }) {
+  if (!message) return null;
+  return (
+    <p role="alert" className="mt-1 text-[14px] text-[var(--color-coral)]">
+      {message}
+    </p>
   );
 }
 
 function Field({
   label,
   htmlFor,
-  error,
-  hint,
   required,
+  hint,
+  error,
   children,
 }: {
   label: string;
-  htmlFor?: string;
-  error?: string;
-  hint?: string;
+  htmlFor: string;
   required?: boolean;
+  hint?: string;
+  error?: string | null;
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    <div className="flex flex-col gap-2">
       <label
         htmlFor={htmlFor}
-        className="mb-1.5 block text-[14px] font-medium text-[var(--color-ink)]"
+        className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]"
       >
         {label}
-        {required ? (
-          <span className="ml-1 text-[var(--color-coral)]" aria-hidden>
-            *
-          </span>
-        ) : null}
+        {required ? <span className="text-[var(--color-magenta)]"> *</span> : null}
       </label>
-      {hint ? (
-        <p className="mb-2 text-[13px] text-[var(--color-ink-3)]">{hint}</p>
-      ) : null}
       {children}
       {error ? (
-        <p role="alert" className="mt-1.5 text-[13px] text-[var(--color-coral)]">
-          {error}
-        </p>
+        <FieldError message={error} />
+      ) : hint ? (
+        <p className="text-[16px] text-[var(--color-ink-3)]">{hint}</p>
       ) : null}
     </div>
   );
 }
 
-function inputCls(hasError: boolean) {
-  return cn(
-    "w-full border bg-[var(--color-canvas)] px-3 py-2.5 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:outline-none focus:ring-2 focus:ring-[var(--color-coral)]/40",
-    hasError
-      ? "border-[var(--color-coral)]"
-      : "border-[var(--color-line-strong)]",
+const inputCls =
+  "h-11 w-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[16px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none";
+
+function inputClsWithError(err?: string | null): string {
+  return err
+    ? `${inputCls} border-[var(--color-coral)] focus:border-[var(--color-coral)]`
+    : inputCls;
+}
+
+const textareaCls =
+  "border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2.5 text-[16px] leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-3)] focus:border-[var(--color-ink)] focus:outline-none";
+
+function textareaClsWithError(err?: string | null): string {
+  return err
+    ? `${textareaCls} border-[var(--color-coral)] focus:border-[var(--color-coral)]`
+    : textareaCls;
+}
+
+function err(errors: FieldErrors, key: string): string | null {
+  return errors[key]?.[0] ?? null;
+}
+
+function ChipGroup({
+  label,
+  required,
+  hint,
+  options,
+  selected,
+  onToggle,
+  error,
+}: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  options: { slug: string; name: string }[];
+  selected: string[];
+  onToggle: (slug: string) => void;
+  error?: string | null;
+}) {
+  return (
+    <div>
+      <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
+        {label}
+        {required ? (
+          <span className="text-[var(--color-magenta)]"> *</span>
+        ) : null}
+      </p>
+      {error ? (
+        <FieldError message={error} />
+      ) : hint ? (
+        <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">{hint}</p>
+      ) : null}
+      <ul className="mt-4 flex flex-wrap gap-2">
+        {options.map((opt) => {
+          const checked = selected.includes(opt.slug);
+          return (
+            <li key={opt.slug}>
+              <button
+                type="button"
+                onClick={() => onToggle(opt.slug)}
+                aria-pressed={checked}
+                className={cn(
+                  "inline-flex items-center gap-1.5 border px-3 py-1.5 text-[14px] transition-colors",
+                  checked
+                    ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-[var(--color-canvas)]"
+                    : "border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-ink)]",
+                )}
+              >
+                {checked ? <Check size={11} weight="bold" /> : null}
+                <span>{opt.name}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
