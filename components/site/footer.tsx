@@ -84,7 +84,9 @@ export function Footer() {
             >
               Resolute Management Consultancy
             </Link>
-            . &copy; {new Date().getFullYear()}. All product and company names
+            .
+            <br />
+            &copy; {new Date().getFullYear()}. All product and company names
             belong to their respective owners.
           </p>
         </Container>
