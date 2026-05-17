@@ -78,6 +78,11 @@ Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
   - Maybe a "Clear all filters" prominent at the bottom
 - Trigger: when QA-ing for public launch.
 
+### Product rename / slug override (admin-only)
+- **Context (2026-05-18, surfaced by `feat/product-edit-vendor-facing`):** product editing locks the slug. Vendors can rename a product (the apps.name field is editable) but the URL `/apps/<slug>` stays at the original slug forever — set when the product was first published. If a vendor substantially rebrands a product (e.g. "Acme Tasks" → "Acme Field"), external links and SEO continue to point at the old slug + an outdated mental model.
+- **The fix:** add an admin-only slug override on the submission detail page (PR 2 admin review surface or a follow-up). Validates uniqueness, publishes the new slug, optionally writes a redirect from the old `/apps/<old-slug>` to `/apps/<new-slug>` so external links don't 404 mid-transition. Probably a `app_slug_redirects` table or a Next.js redirect rule generated from a column on `apps`.
+- **Trigger:** the first time a vendor substantively renames a product OR the first time it surfaces as a real SEO ask. Out of scope for product-edit PRs 1–3.
+
 ### fix/extract-company-fields — share company form between wizard and edit form
 - **Context (2026-05-17, surfaced by `fix/company-edit-match-wizard`):** the signup wizard's `CompanyStep` and the V.1 `/dashboard/company` edit form collect the same data, but they shipped as two independent implementations. They drifted within days — the edit form had an extra `employeeBand` field the wizard never collected, a different region picker (no "All" selector), different label copy, different input styles, and different validation behaviour. Patched in this PR by rewriting the edit form to mirror the wizard byte-for-byte, including duplicated copies of the wizard-private `Field`, `FieldError`, `ChipGroup`, `inputClsWithError`, `textareaClsWithError`, `err`, and `GEO_REGION_SLUGS` primitives.
 - **The fix:** lift those primitives + the company field set into a shared component (e.g. `components/dashboard/company-fields.tsx`) that both the wizard step and the edit form render. Wizard wraps it in its multi-step shell; edit form wraps it in the pending/rejected/success banner shell. One source of truth, no drift possible.

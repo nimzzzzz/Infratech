@@ -178,7 +178,47 @@ export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
     .where(and(eq(apps.slug, slug), eq(apps.status, "published")))
     .limit(1);
   if (!base) return null;
+  return loadAppDetailFromBase(base);
+}
 
+/**
+ * Same shape as getAppBySlug but keyed on apps.id and NOT filtered
+ * on status="published" — the product edit page needs to load an
+ * app regardless of publish state (an admin-unpublished product
+ * whose edit is mid-review is still legitimately reachable by the
+ * owning vendor). Ownership is verified at the page level so we
+ * don't gate it here.
+ */
+export async function getAppById(appId: number): Promise<AppDetail | null> {
+  const [base] = await db
+    .select({
+      app: apps,
+      vendor: {
+        slug: vendors.slug,
+        name: vendors.name,
+        websiteUrl: vendors.websiteUrl,
+        foundedYear: vendors.foundedYear,
+        hqCountry: vendors.hqCountry,
+      },
+    })
+    .from(apps)
+    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+    .where(eq(apps.id, appId))
+    .limit(1);
+  if (!base) return null;
+  return loadAppDetailFromBase(base);
+}
+
+/**
+ * Shared join-fetcher used by getAppBySlug + getAppById. Takes the
+ * already-resolved base row (apps + thin vendor projection) and
+ * loads the remaining joins (taxonomy, screenshots, vendor regions)
+ * in a single parallel batch.
+ */
+async function loadAppDetailFromBase(base: {
+  app: App;
+  vendor: AppDetail["vendor"];
+}): Promise<AppDetail> {
   const [stageRows, capRows, indRows, pricingRows, screenshots, vendorRegionSlugs] =
     await Promise.all([
       db
