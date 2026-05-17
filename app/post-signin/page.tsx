@@ -138,7 +138,17 @@ export default async function PostSigninPage({
   }
 
   if (intent === "submit") {
-    redirect("/dashboard/onboarding/submit?as=returning");
+    // Only flag the wizard as "returning" when the member already has
+    // a company row on file. Brand-new sign-ups have member.vendorId
+    // = NULL — they MUST see the company step, so don't send
+    // ?as=returning. The wizard's own gate also guards against this
+    // (it now checks the live vendor row, not the URL flag) but
+    // sending the right URL keeps debugging clear.
+    redirect(
+      member.vendorId !== null
+        ? "/dashboard/onboarding/submit?as=returning"
+        : "/dashboard/onboarding/submit",
+    );
   }
 
   redirect("/dashboard");

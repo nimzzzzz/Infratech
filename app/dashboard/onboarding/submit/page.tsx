@@ -130,16 +130,18 @@ export default async function SubmitPage({
     resubmitValues = payloadToWizardValues(row.payload);
   }
 
-  // ?as=returning → skips the "Your company" step (vendor profile
-  // already on file). Otherwise: skip iff a vendor row already
-  // exists. The previous heuristic used `vendorMember.onboarded`,
-  // which is wrong post-B.1 schema split — `onboarded` now means
-  // "accepted legal terms", which is independent of "has a vendor
-  // row" (the modal can be accepted before the wizard runs).
-  // On resubmit the company step is always skipped — the vendor
-  // already has a vendor row (we verified ownership above).
-  const skipCompanyStep =
-    resubmitId !== null || asParam === "returning" || vendor != null;
+  // Skip the "Your company" step iff there's already a vendor row on
+  // file (or this is a resubmit, where ownership of the rejected row
+  // was verified above and the vendor exists by definition).
+  //
+  // The live vendor row is the source of truth — NOT the ?as=returning
+  // URL flag. The flag used to participate in the OR and caused a bug
+  // where /post-signin pinned ?as=returning for brand-new users with
+  // no vendor row, skipping the company step they were required to
+  // complete. The flag is now purely informational (the post-signin
+  // redirect still sets it, but only when accurate); the gate ignores
+  // it. asParam is still consumed for the demo toggle below.
+  const skipCompanyStep = resubmitId !== null || vendor != null;
 
   return (
     <Container className="max-w-3xl py-10 md:py-14">
