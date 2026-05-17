@@ -113,13 +113,17 @@ export default async function AppDetailPage({
         <Container className="relative">
           <Breadcrumb appName={app.name} />
 
-          <div className="mt-8 flex h-[200px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] md:h-[260px]">
+          <div className="mt-8 flex h-[200px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] p-[20px] md:h-[260px]">
             {app.logoUrl ? (
+              // Smart scaling — same logic as the browse cards: fits
+              // to whichever axis constrains, preserves aspect, never
+              // upscales past natural size. 20px padding via the
+              // container.
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={app.logoUrl}
                 alt=""
-                className="h-40 w-40 object-contain md:h-52 md:w-52"
+                className="h-auto max-h-full w-auto max-w-full object-contain"
               />
             ) : (
               <LetterAvatar
