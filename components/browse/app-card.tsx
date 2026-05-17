@@ -16,7 +16,7 @@ export function AppCard({ app }: { app: AppCardData }) {
       href={`/apps/${app.slug}`}
       className="group relative flex h-full flex-col overflow-hidden border border-[var(--color-line)] bg-[var(--color-surface)] transition-colors duration-300 hover:border-[var(--color-ink)]/40"
     >
-      <div className="flex h-[120px] shrink-0 items-center justify-center border-b border-[var(--color-line)] bg-[var(--color-canvas-warm)] p-[10px]">
+      <div className="flex h-[120px] shrink-0 items-center justify-center border-b border-[var(--color-line)] bg-[var(--color-canvas-warm)] p-[20px]">
         {app.logoUrl ? (
           // Logo scales to fit the (padded) container on whichever axis
           // is the constraint, never upscales past its natural size.
