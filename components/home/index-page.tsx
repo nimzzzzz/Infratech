@@ -42,7 +42,7 @@ export async function HomeIndex({
     <article className="bg-[var(--color-canvas)]">
       {/* SEARCH + STAGE QUICK FILTER */}
       <section className="relative bg-[var(--color-canvas)]">
-        <Container className="pt-8 md:pt-10">
+        <Container className="pt-8 pb-6 md:pt-10 md:pb-8">
           <div className="max-w-3xl">
             <SearchBar />
           </div>
