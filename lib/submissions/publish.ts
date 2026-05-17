@@ -1,5 +1,5 @@
 import "server-only";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   apps,
@@ -102,6 +102,11 @@ export async function publishSubmissionInTx(
   if (!p.name) throw new Error("publishSubmissionInTx: name required");
   if (!p.url) throw new Error("publishSubmissionInTx: url required");
 
+  // Base fields shared by INSERT (first publish) and UPDATE (every
+  // subsequent product_edit approval). publishedAt is handled
+  // separately below — INSERT always stamps it; UPDATE preserves the
+  // existing publishedAt via COALESCE so "First published on …"
+  // reflects the FIRST publish date, not the most recent edit.
   const base = {
     slug: p.slug,
     name: p.name,
@@ -114,7 +119,6 @@ export async function publishSubmissionInTx(
     logoUrl: p.productLogoUrl ?? null,
     videoUrl: p.videoUrl ?? null,
     status: "published" as const,
-    publishedAt: new Date(),
     updatedAt: new Date(),
   };
 
@@ -122,7 +126,15 @@ export async function publishSubmissionInTx(
   if (opts.existingAppId !== null) {
     const [updated] = await tx
       .update(apps)
-      .set(base)
+      .set({
+        ...base,
+        // Preserve the original publishedAt on subsequent edits — a
+        // product_edit approval shouldn't reset "First published on"
+        // to today's date. COALESCE keeps the existing value if
+        // present, falls back to NOW() if somehow null (defensive —
+        // the first INSERT path always stamps it).
+        publishedAt: sql`COALESCE(${apps.publishedAt}, NOW())`,
+      })
       .where(eq(apps.id, opts.existingAppId))
       .returning({ id: apps.id });
     if (!updated) {
@@ -138,7 +150,7 @@ export async function publishSubmissionInTx(
   } else {
     const [inserted] = await tx
       .insert(apps)
-      .values({ ...base, vendorId: opts.vendorId })
+      .values({ ...base, publishedAt: new Date(), vendorId: opts.vendorId })
       .returning({ id: apps.id });
     appId = inserted.id;
   }

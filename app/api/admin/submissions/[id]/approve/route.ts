@@ -16,6 +16,10 @@ import {
   resolveFinalPayload,
   type PublishPayload,
 } from "@/lib/submissions/publish";
+import {
+  publishCompanyEditInTx,
+  type CompanyEditPayload,
+} from "@/lib/submissions/publish-company-edit";
 import { sendSubmissionPublishedEmail } from "@/lib/email/send-submission-status";
 import { approveBodySchema } from "./schema";
 
@@ -86,32 +90,84 @@ export async function POST(
     throw err;
   }
 
-  // Resolve the final payload. Approve = no edits, so the vendor's
-  // payload is taken as-is. (vendor.approve in PR 2 will pass
-  // admin_edits.)
-  const final = resolveFinalPayload(
-    submission.payload as PublishPayload,
-    null,
-  );
-
-  let result: { appId: number; slug: string; productName: string };
+  // Explicit dispatch on submission.type — closes the latent risk of
+  // routing edit-type submissions through the wrong publish helper.
+  // Before this dispatch:
+  //   - "new" works (existingAppId null → INSERT path)
+  //   - "product_edit" worked by happy coincidence (PR 1 wires
+  //     submission.appId, so the UPDATE path was taken — but nothing
+  //     enforced that contract)
+  //   - "company_edit" 500-ed (payload has no slug → publishSubmission
+  //     InTx threw "slug required")
+  //
+  // Now each type routes to its correct publish helper explicitly.
+  // Approve = no edits, so the vendor's payload is taken as-is.
+  type ApproveResult = {
+    appId: number | null;
+    slug: string | null;
+    productName: string;
+  };
+  let result: ApproveResult;
   try {
     result = await db.transaction(async (tx) => {
-      const { appId, slug, name } = await publishSubmissionInTx(tx, {
-        existingAppId: submission.appId,
-        vendorId: submission.submitterVendorId,
-        finalPayload: final,
-      });
+      let publishedAppId: number | null = null;
+      let publishedSlug: string | null = null;
+      let publishedProductName: string;
+
+      if (submission.type === "company_edit") {
+        await publishCompanyEditInTx(
+          tx,
+          submission.submitterVendorId,
+          submission.payload as CompanyEditPayload,
+        );
+        publishedProductName = vendor.name;
+      } else if (submission.type === "product_edit") {
+        if (submission.appId === null) {
+          throw new Error(
+            "product_edit submission has no appId — refusing to publish",
+          );
+        }
+        const final = resolveFinalPayload(
+          submission.payload as PublishPayload,
+          null,
+        );
+        const { appId, slug, name } = await publishSubmissionInTx(tx, {
+          existingAppId: submission.appId,
+          vendorId: submission.submitterVendorId,
+          finalPayload: final,
+        });
+        publishedAppId = appId;
+        publishedSlug = slug;
+        publishedProductName = name;
+      } else {
+        // "new" (or the deprecated "claim" — no production writer)
+        const final = resolveFinalPayload(
+          submission.payload as PublishPayload,
+          null,
+        );
+        const { appId, slug, name } = await publishSubmissionInTx(tx, {
+          existingAppId: submission.appId,
+          vendorId: submission.submitterVendorId,
+          finalPayload: final,
+        });
+        publishedAppId = appId;
+        publishedSlug = slug;
+        publishedProductName = name;
+      }
 
       // Status precondition prevents a concurrent admin from racing
       // an approve against an edit (the UPDATE matches 0 rows if
       // status changed under us). RETURNING used so we can detect
       // the no-op case.
+      //
+      // submission.publishedAt is the submission's "this was approved
+      // at" timestamp — distinct from apps.publishedAt (the FIRST
+      // publish date, preserved across product_edit approvals).
       const updated = await tx
         .update(submissions)
         .set({
           status: nextStatus,
-          appId,
+          appId: publishedAppId ?? submission.appId,
           reviewedBy: actor.id,
           reviewedAt: new Date(),
           publishedAt: new Date(),
@@ -133,10 +189,14 @@ export async function POST(
         submissionId: submission.id,
         action: "submission.approve",
         before: { status: submission.status },
-        after: { status: nextStatus, appId },
+        after: { status: nextStatus, appId: publishedAppId, type: submission.type },
       });
 
-      return { appId, slug, productName: name };
+      return {
+        appId: publishedAppId,
+        slug: publishedSlug,
+        productName: publishedProductName,
+      };
     });
   } catch (err) {
     if (err instanceof Error && err.message === "state_changed") {
@@ -154,15 +214,28 @@ export async function POST(
 
   // Fire the email after the response — Resend latency must not
   // gate the API response.
+  //
+  // TODO(PR 3): emails for product_edit and company_edit approvals.
+  // The existing sendSubmissionPublishedEmail is "your product is
+  // live" copy — wrong for edit approvals. Skip for edit types until
+  // PR 3 wires the right templates ("your edit is live" + "your
+  // company profile update is live"). New product submissions still
+  // send normally.
   const contactEmail = vendor.contactEmail;
-  if (contactEmail) {
+  if (
+    contactEmail &&
+    submission.type !== "product_edit" &&
+    submission.type !== "company_edit" &&
+    result.slug !== null
+  ) {
     const firstName = vendor.name.split(" ")[0] ?? "there";
+    const slug = result.slug;
     after(async () => {
       await sendSubmissionPublishedEmail({
         to: contactEmail,
         firstName,
         productName: result.productName,
-        productSlug: result.slug,
+        productSlug: slug,
       });
     });
   }

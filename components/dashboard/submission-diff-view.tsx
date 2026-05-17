@@ -23,7 +23,22 @@ import {
  * Mobile (<md): each field stacks Label → Original → Edited so
  * the comparison is still scannable at 375px.
  */
-export function SubmissionDiffView({ diff }: { diff: DiffResult }) {
+export function SubmissionDiffView({
+  diff,
+  originalLabel = "Original",
+  editedLabel = "AllInfratech’s edits",
+  emptyMessage = "Our edits matched your submission as-is. Nothing actually changed — you can approve and publish.",
+}: {
+  diff: DiffResult;
+  /** Column header for the left side. Override for the admin-side
+   *  edit review where it reads "Current live values". */
+  originalLabel?: string;
+  /** Column header for the right side. Override for the admin-side
+   *  edit review where it reads "Proposed update". */
+  editedLabel?: string;
+  /** Message shown when no fields changed. Override per consumer. */
+  emptyMessage?: string;
+}) {
   const [showAll, setShowAll] = useState(false);
   const changed = changedFieldKeys(diff);
   const unchanged = unchangedFieldKeys(diff);
@@ -31,8 +46,7 @@ export function SubmissionDiffView({ diff }: { diff: DiffResult }) {
   if (changed.length === 0) {
     return (
       <p className="text-[15px] leading-relaxed text-[var(--color-ink-2)]">
-        Our edits matched your submission as-is. Nothing actually changed —
-        you can approve and publish.
+        {emptyMessage}
       </p>
     );
   }
@@ -43,10 +57,10 @@ export function SubmissionDiffView({ diff }: { diff: DiffResult }) {
           field block below. */}
       <div className="hidden md:grid md:grid-cols-2 md:gap-6 md:border-b md:border-[var(--color-line-strong)] md:pb-2">
         <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-          Original
+          {originalLabel}
         </p>
         <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
-          AllInfratech&rsquo;s edits
+          {editedLabel}
         </p>
       </div>
 

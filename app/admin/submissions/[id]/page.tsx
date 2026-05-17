@@ -6,6 +6,8 @@ import { Container } from "@/components/site/container";
 import { SubmissionDetail } from "@/components/admin/submissions/submission-detail";
 import { getAdminSession } from "@/lib/auth/admin-session";
 import { getSubmissionForAdmin } from "@/lib/queries/submissions";
+import { getAppById } from "@/lib/queries/apps";
+import { getVendorWithRegions } from "@/lib/queries/company-edit";
 
 export const metadata: Metadata = {
   title: "Admin · Submission",
@@ -31,6 +33,20 @@ export default async function AdminSubmissionDetailPage({
   ]);
   if (!submission) notFound();
 
+  // For edit-type submissions, fetch the LIVE original alongside the
+  // submission so the diff view has both sides. For "new" submissions
+  // there's no "live original" — the submission IS the proposal.
+  // Fired only when needed so a "new" submission doesn't pay extra
+  // RTTs.
+  const [liveApp, liveVendor] = await Promise.all([
+    submission.type === "product_edit" && submission.appId
+      ? getAppById(submission.appId)
+      : Promise.resolve(null),
+    submission.type === "company_edit"
+      ? getVendorWithRegions(submission.submitterVendorId)
+      : Promise.resolve(null),
+  ]);
+
   return (
     <Container className="max-w-4xl py-10 md:py-14">
       <Link
@@ -46,7 +62,11 @@ export default async function AdminSubmissionDetailPage({
         Back to submissions
       </Link>
 
-      <SubmissionDetail submission={submission} />
+      <SubmissionDetail
+        submission={submission}
+        liveApp={liveApp}
+        liveVendor={liveVendor}
+      />
     </Container>
   );
 }

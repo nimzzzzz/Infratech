@@ -65,10 +65,10 @@ describe("diffPayload", () => {
         "stages",
         "capabilities",
         "industries",
-        "pricing",
+        "pricingModels",
       ]),
     );
-    // @ts-expect-error — verifying customCapabilities isn't a key
+    // customCapabilities isn't in the whitelist; not present in result.
     expect(d.customCapabilities).toBeUndefined();
   });
 
