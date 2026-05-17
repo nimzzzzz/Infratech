@@ -78,7 +78,9 @@ export async function getMostRecentSubmissionForVendor(vendorId: number) {
   const [row] = await db
     .select({
       id: submissions.id,
+      type: submissions.type,
       status: submissions.status,
+      appId: submissions.appId,
       payload: submissions.payload,
       adminEdits: submissions.adminEdits,
       rejectionReason: submissions.rejectionReason,
@@ -122,6 +124,7 @@ export async function listPendingSubmissionsForVendor(vendorId: number) {
  */
 export type AdminSubmissionListItem = {
   id: number;
+  type: "new" | "claim" | "company_edit" | "product_edit";
   status: SubmissionStatus;
   submittedAt: Date;
   reviewedAt: Date | null;
@@ -165,6 +168,7 @@ export async function listSubmissionsForAdmin(opts?: {
   const rows = await db
     .select({
       id: submissions.id,
+      type: submissions.type,
       status: submissions.status,
       submittedAt: submissions.submittedAt,
       reviewedAt: submissions.reviewedAt,
@@ -182,6 +186,7 @@ export async function listSubmissionsForAdmin(opts?: {
 
   return rows.map((r) => ({
     id: r.id,
+    type: r.type,
     status: r.status,
     submittedAt: r.submittedAt,
     reviewedAt: r.reviewedAt,

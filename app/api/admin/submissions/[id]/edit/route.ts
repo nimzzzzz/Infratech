@@ -48,6 +48,24 @@ export async function POST(
   if (ctx instanceof NextResponse) return ctx;
   const { actor, submission } = ctx;
 
+  // admin.edit is meaningful only for brand-new product submissions
+  // where the admin polishes copy before publish. For company_edit
+  // and product_edit the admin should approve or reject — editing
+  // the vendor's edit creates a confusing extra round trip. The UI
+  // also hides the Edit button for edit types; this gate is defence
+  // in depth against a direct API call.
+  if (submission.type !== "new") {
+    return NextResponse.json(
+      {
+        error:
+          "admin.edit is not available for edit-type submissions. Use approve or reject.",
+        code: "invalid_for_type",
+        type: submission.type,
+      },
+      { status: 400 },
+    );
+  }
+
   let json: unknown;
   try {
     json = await req.json();

@@ -16,6 +16,16 @@ import { apps, submissions, vendors } from "@/lib/db/schema";
 import { listSubmissions } from "@/lib/queries/submissions";
 import { relativeDays } from "@/lib/browse/dates";
 
+/** Human label for each submission_type enum value. Centralised so
+ *  the queue list, the recent-activity row, and the detail page all
+ *  show the same wording. */
+const SUBMISSION_TYPE_LABEL: Record<string, string> = {
+  new: "New product",
+  company_edit: "Company edit",
+  product_edit: "Product edit",
+  claim: "Claim",
+};
+
 export const metadata: Metadata = {
   title: "Admin · Overview",
   alternates: { canonical: "/admin" },
@@ -142,7 +152,7 @@ export default async function AdminOverviewPage() {
                   className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[100px_1fr_auto_72px] md:gap-6 md:px-3"
                 >
                   <span className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-                    {sub.type === "new" ? "New product" : "Claim"}
+                    {SUBMISSION_TYPE_LABEL[sub.type] ?? sub.type}
                   </span>
                   <div className="min-w-0">
                     <p className="font-heading text-[20px] leading-tight">

@@ -33,6 +33,20 @@ const STATUS_TONE: Record<string, string> = {
   rejected: "bg-rose-50 text-rose-700 ring-rose-300",
 };
 
+const TYPE_LABEL: Record<string, string> = {
+  new: "New product",
+  company_edit: "Company edit",
+  product_edit: "Product edit",
+  claim: "Claim",
+};
+
+const TYPE_TONE: Record<string, string> = {
+  new: "text-[var(--color-ink-2)] ring-[var(--color-line-strong)]",
+  company_edit: "text-violet-700 ring-violet-300",
+  product_edit: "text-sky-700 ring-sky-300",
+  claim: "text-[var(--color-ink-2)] ring-[var(--color-line-strong)]",
+};
+
 export function SubmissionList({
   rows,
   activeTab,
@@ -149,7 +163,7 @@ export function SubmissionList({
                 <Link
                   href={`/admin/submissions/${row.id}`}
                   prefetch
-                  className="grid grid-cols-[1fr_auto_88px] items-center gap-4 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[1fr_auto_auto_88px] md:gap-6 md:px-3"
+                  className="grid grid-cols-[1fr_auto_auto_88px] items-center gap-3 py-4 transition-colors hover:bg-[var(--color-canvas-warm)]/40 md:grid-cols-[1fr_auto_auto_auto_88px] md:gap-6 md:px-3"
                 >
                   <div className="min-w-0">
                     <p className="font-heading text-[20px] leading-tight">
@@ -159,6 +173,7 @@ export function SubmissionList({
                       {row.vendor.name}
                     </p>
                   </div>
+                  <TypePill type={row.type} />
                   <StatusPill status={row.status} />
                   <span className="hidden text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)] md:inline">
                     {row.vendor.contactEmail ?? ""}
@@ -184,6 +199,21 @@ function StatusPill({ status }: { status: string }) {
   const tone =
     STATUS_TONE[status] ??
     "bg-[var(--color-canvas-warm)] text-[var(--color-ink-2)] ring-[var(--color-line-strong)]";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center px-2 py-0.5 text-[13px] uppercase tracking-[0.18em] ring-1",
+        tone,
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+function TypePill({ type }: { type: string }) {
+  const label = TYPE_LABEL[type] ?? type;
+  const tone = TYPE_TONE[type] ?? TYPE_TONE.new;
   return (
     <span
       className={cn(
