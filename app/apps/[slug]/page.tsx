@@ -113,19 +113,19 @@ export default async function AppDetailPage({
         <Container className="relative">
           <Breadcrumb appName={app.name} />
 
-          <div className="mt-8 flex h-[300px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] md:h-[480px]">
+          <div className="mt-8 flex h-[200px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] md:h-[260px]">
             {app.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={app.logoUrl}
                 alt=""
-                className="h-44 w-44 object-contain md:h-80 md:w-80"
+                className="h-28 w-28 object-contain md:h-40 md:w-40"
               />
             ) : (
               <LetterAvatar
                 name={app.name}
-                className="h-44 w-44 md:h-80 md:w-80"
-                letterClassName="text-[100px] md:text-[180px]"
+                className="h-28 w-28 md:h-40 md:w-40"
+                letterClassName="text-[72px] md:text-[90px]"
               />
             )}
           </div>
