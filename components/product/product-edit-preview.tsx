@@ -83,7 +83,20 @@ export function ProductEditPreview({
     })),
   };
 
+  // Scale-to-fit: the shared <ProductDetailView> is designed for the
+  // full-width product page (~1280px container). The preview pane in
+  // the edit page is roughly half that, so the inner layout would
+  // cramp (Lifecycle's 6-col ribbon wraps, hero columns go height-
+  // imbalanced which produces a stray border-b under "Contact vendor",
+  // etc.). CSS zoom shrinks the rendered output AND the layout box,
+  // so the inner thinks it's still at full viewport width and reaches
+  // its proper md:/lg: breakpoints — the visual result is just a
+  // faithful miniature. Applied only at lg+ where the side-by-side
+  // layout activates; mobile/tablet stack the pane full-width below
+  // the form, where unscaled native sizing is correct.
   return (
-    <ProductDetailView app={previewApp} related={[]} allStages={allStages} />
+    <div className="lg:[zoom:0.6]">
+      <ProductDetailView app={previewApp} related={[]} allStages={allStages} />
+    </div>
   );
 }
