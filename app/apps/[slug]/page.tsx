@@ -119,13 +119,13 @@ export default async function AppDetailPage({
               <img
                 src={app.logoUrl}
                 alt=""
-                className="h-48 w-48 object-contain md:h-64 md:w-64"
+                className="h-40 w-40 object-contain md:h-52 md:w-52"
               />
             ) : (
               <LetterAvatar
                 name={app.name}
-                className="h-48 w-48 md:h-64 md:w-64"
-                letterClassName="text-[120px] md:text-[150px]"
+                className="h-40 w-40 md:h-52 md:w-52"
+                letterClassName="text-[100px] md:text-[120px]"
               />
             )}
           </div>
