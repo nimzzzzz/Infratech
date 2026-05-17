@@ -16,13 +16,17 @@ export function AppCard({ app }: { app: AppCardData }) {
       href={`/apps/${app.slug}`}
       className="group relative flex h-full flex-col overflow-hidden border border-[var(--color-line)] bg-[var(--color-surface)] transition-colors duration-300 hover:border-[var(--color-ink)]/40"
     >
-      <div className="flex h-[120px] shrink-0 items-center justify-center border-b border-[var(--color-line)] bg-[var(--color-canvas-warm)]">
+      <div className="flex h-[120px] shrink-0 items-center justify-center border-b border-[var(--color-line)] bg-[var(--color-canvas-warm)] p-[10px]">
         {app.logoUrl ? (
+          // Logo scales to fit the (padded) container on whichever axis
+          // is the constraint, never upscales past its natural size.
+          // max-h-full / max-w-full provide the shrink-down ceiling;
+          // h-auto / w-auto + object-contain preserve aspect ratio.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={app.logoUrl}
             alt=""
-            className="h-16 w-16 object-contain"
+            className="h-auto max-h-full w-auto max-w-full object-contain"
           />
         ) : (
           <LetterAvatar
