@@ -106,12 +106,18 @@ export default async function VendorDetailPage({
             <div className="flex flex-col">
               <div className="flex items-start gap-5">
                 {vendor.logoUrl ? (
-                  <span className="grid h-24 w-24 shrink-0 place-items-center overflow-hidden border border-[var(--color-line)] bg-[var(--color-canvas)] md:h-32 md:w-32">
+                  // Smart scaling — same logic as the browse cards:
+                  // fits to whichever axis constrains, preserves
+                  // aspect, never upscales. Padding is 8px (not the
+                  // 20px used on cards / product banner) — the vendor
+                  // box is small (96/128); 20px would eat half of it
+                  // and shrink square logos badly.
+                  <span className="grid h-24 w-24 shrink-0 place-items-center overflow-hidden border border-[var(--color-line)] bg-[var(--color-canvas)] p-[8px] md:h-32 md:w-32">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={vendor.logoUrl}
                       alt=""
-                      className="h-full w-full object-contain"
+                      className="h-auto max-h-full w-auto max-w-full object-contain"
                     />
                   </span>
                 ) : (
