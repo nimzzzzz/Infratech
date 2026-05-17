@@ -6,7 +6,8 @@ import {
   ChatCircleText,
   Buildings,
   Calendar,
-  Tag,
+  Globe,
+  MapPin,
 } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
@@ -21,7 +22,12 @@ import {
 import { listStages } from "@/lib/queries/taxonomy";
 import { formatStageLabel } from "@/lib/stages/format";
 import { VideoEmbed } from "@/components/media/video-embed";
+import { lookups, regions as REGION_TAXONOMY } from "@/lib/data/taxonomy";
 import { cn } from "@/lib/utils";
+
+const GEO_REGION_SLUGS = REGION_TAXONOMY
+  .filter((r) => r.slug !== "global")
+  .map((r) => r.slug);
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -78,6 +84,18 @@ export default async function AppDetailPage({
 
   const supportedStageSlugs = new Set(app.stages.map((s) => s.slug));
 
+  // "About the vendor" card — Regions row uses the same "All regions"
+  // shortcut as the vendor profile page (app/vendors/[slug]/page.tsx)
+  // so the two pages stay consistent.
+  const vendorAllGeoRegions =
+    app.vendorRegionSlugs.length > 0 &&
+    GEO_REGION_SLUGS.every((s) => app.vendorRegionSlugs.includes(s));
+  const vendorRegionLabel = vendorAllGeoRegions
+    ? "All regions"
+    : app.vendorRegionSlugs
+        .map((s) => lookups.region.get(s) ?? s)
+        .join(", ");
+
   return (
     <article className="bg-[var(--color-canvas)]">
       <JsonLd app={app} />
@@ -95,19 +113,19 @@ export default async function AppDetailPage({
         <Container className="relative">
           <Breadcrumb appName={app.name} />
 
-          <div className="mt-8 flex h-[200px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] md:h-[260px]">
+          <div className="mt-8 flex h-[300px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] md:h-[480px]">
             {app.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={app.logoUrl}
                 alt=""
-                className="h-24 w-24 object-contain md:h-32 md:w-32"
+                className="h-44 w-44 object-contain md:h-80 md:w-80"
               />
             ) : (
               <LetterAvatar
                 name={app.name}
-                className="h-24 w-24 md:h-32 md:w-32"
-                letterClassName="text-[60px] md:text-[72px]"
+                className="h-44 w-44 md:h-80 md:w-80"
+                letterClassName="text-[100px] md:text-[180px]"
               />
             )}
           </div>
@@ -161,37 +179,39 @@ export default async function AppDetailPage({
 
             <aside className="border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">
               <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-                At a glance
+                About the vendor
               </p>
               <dl className="mt-5 space-y-4">
-                {app.foundedYear ? (
+                <FactRow
+                  icon={Buildings}
+                  label="Company"
+                  value={app.vendor.name}
+                />
+                {app.vendor.foundedYear ? (
                   <FactRow
                     icon={Calendar}
                     label="Founded"
                     value={
-                      <span className="num">{String(app.foundedYear)}</span>
+                      <span className="num">
+                        {String(app.vendor.foundedYear)}
+                      </span>
                     }
                   />
                 ) : null}
-                {app.pricingModels.length > 0 ? (
+                {app.vendor.hqCountry ? (
                   <FactRow
-                    icon={Tag}
-                    label="Pricing model"
-                    value={app.pricingModels.map((p) => p.name).join(", ")}
+                    icon={MapPin}
+                    label="Headquarters"
+                    value={app.vendor.hqCountry}
                   />
                 ) : null}
-                <FactRow
-                  icon={Buildings}
-                  label="Vendor"
-                  value={
-                    <Link
-                      href={`/vendors/${app.vendor.slug}`}
-                      className="underline-offset-4 hover:underline"
-                    >
-                      {app.vendor.name}
-                    </Link>
-                  }
-                />
+                {app.vendorRegionSlugs.length > 0 ? (
+                  <FactRow
+                    icon={Globe}
+                    label="Regions served"
+                    value={vendorRegionLabel}
+                  />
+                ) : null}
               </dl>
             </aside>
           </div>

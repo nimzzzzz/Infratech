@@ -8,11 +8,13 @@ import {
   capabilities,
   industries,
   pricingModels,
+  regions,
   appStages,
   appCapabilities,
   appIndustries,
   appPricingModels,
   appScreenshots,
+  vendorRegions,
   type App,
   type AppStatus,
   type AppScreenshot,
@@ -39,7 +41,17 @@ export type AppCard = {
 
 /** Full detail shape for /apps/[slug]. */
 export type AppDetail = App & {
-  vendor: { slug: string; name: string; websiteUrl: string | null };
+  vendor: {
+    slug: string;
+    name: string;
+    websiteUrl: string | null;
+    foundedYear: number | null;
+    hqCountry: string | null;
+  };
+  /** Vendor's served-region slugs (NOT including the UI-only "global"
+   *  meta-chip). Used by the product page's "About the vendor" card
+   *  to render the Regions served row + the "All regions" shortcut. */
+  vendorRegionSlugs: string[];
   stages: { slug: string; name: string }[];
   capabilities: { slug: string; name: string }[];
   industries: { slug: string; name: string }[];
@@ -153,7 +165,13 @@ export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
   const [base] = await db
     .select({
       app: apps,
-      vendor: { slug: vendors.slug, name: vendors.name, websiteUrl: vendors.websiteUrl },
+      vendor: {
+        slug: vendors.slug,
+        name: vendors.name,
+        websiteUrl: vendors.websiteUrl,
+        foundedYear: vendors.foundedYear,
+        hqCountry: vendors.hqCountry,
+      },
     })
     .from(apps)
     .innerJoin(vendors, eq(vendors.id, apps.vendorId))
@@ -161,7 +179,7 @@ export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
     .limit(1);
   if (!base) return null;
 
-  const [stageRows, capRows, indRows, pricingRows, screenshots] =
+  const [stageRows, capRows, indRows, pricingRows, screenshots, vendorRegionSlugs] =
     await Promise.all([
       db
         .select({ slug: stages.slug, name: stages.name })
@@ -194,11 +212,18 @@ export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
         .from(appScreenshots)
         .where(eq(appScreenshots.appId, base.app.id))
         .orderBy(appScreenshots.position),
+      db
+        .select({ slug: regions.slug })
+        .from(vendorRegions)
+        .innerJoin(regions, eq(regions.id, vendorRegions.regionId))
+        .where(eq(vendorRegions.vendorId, base.app.vendorId))
+        .then((rows) => rows.map((r) => r.slug)),
     ]);
 
   return {
     ...base.app,
     vendor: base.vendor,
+    vendorRegionSlugs,
     stages: stageRows,
     capabilities: capRows,
     industries: indRows,
