@@ -106,7 +106,7 @@ export default async function VendorDetailPage({
             <div className="flex flex-col">
               <div className="flex items-start gap-5">
                 {vendor.logoUrl ? (
-                  <span className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden border border-[var(--color-line)] bg-[var(--color-canvas)] md:h-24 md:w-24">
+                  <span className="grid h-24 w-24 shrink-0 place-items-center overflow-hidden border border-[var(--color-line)] bg-[var(--color-canvas)] md:h-32 md:w-32">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={vendor.logoUrl}
@@ -117,8 +117,8 @@ export default async function VendorDetailPage({
                 ) : (
                   <LetterAvatar
                     name={vendor.name}
-                    className="h-20 w-20 shrink-0 md:h-24 md:w-24"
-                    letterClassName="text-[36px] md:text-[44px]"
+                    className="h-24 w-24 shrink-0 md:h-32 md:w-32"
+                    letterClassName="text-[48px] md:text-[64px]"
                   />
                 )}
                 <div className="min-w-0">
