@@ -1533,13 +1533,13 @@ function CompanyStep({
             value={data.companyDescription}
             onChange={(e) => setField("companyDescription")(e.target.value)}
             placeholder="What the company builds. Founding context or distinctive angle."
-            maxLength={1500}
+            maxLength={2000}
             className={textareaClsWithError(err(errors, "companyDescription"))}
             aria-invalid={!!err(errors, "companyDescription")}
           />
           <p className="text-[13px] text-[var(--color-ink-3)]">
             <span className="num">{data.companyDescription.length}</span> /{" "}
-            <span className="num">1500</span>
+            <span className="num">2000</span>
           </p>
         </Field>
       </div>

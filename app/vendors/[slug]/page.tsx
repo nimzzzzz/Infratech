@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   Buildings,
   Calendar,
+  Globe,
   MapPin,
   UsersThree,
   Stack,
@@ -14,10 +15,16 @@ import { LetterAvatar } from "@/components/browse/letter-avatar";
 import { AppCard } from "@/components/browse/app-card";
 import {
   getVendorBySlug,
+  getVendorRegionSlugs,
   listAllVendorSlugs,
 } from "@/lib/queries/vendors";
 import { listAppsByVendorSlug } from "@/lib/queries/apps";
+import { lookups, regions as REGION_TAXONOMY } from "@/lib/data/taxonomy";
 import type { Vendor } from "@/lib/db/schema";
+
+const GEO_REGION_SLUGS = REGION_TAXONOMY
+  .filter((r) => r.slug !== "global")
+  .map((r) => r.slug);
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -63,10 +70,20 @@ export default async function VendorDetailPage({
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
 
-  const tools = await listAppsByVendorSlug(vendor.slug);
+  const [tools, regionSlugs] = await Promise.all([
+    listAppsByVendorSlug(vendor.slug),
+    getVendorRegionSlugs(vendor.id),
+  ]);
   const paragraphs = (vendor.description ?? "")
     .split(/\n\n+/)
     .filter((p) => p.trim().length > 0);
+
+  const allGeoRegions =
+    regionSlugs.length > 0 &&
+    GEO_REGION_SLUGS.every((s) => regionSlugs.includes(s));
+  const regionLabel = allGeoRegions
+    ? "All regions"
+    : regionSlugs.map((s) => lookups.region.get(s) ?? s).join(", ");
 
   return (
     <article className="bg-[var(--color-canvas)]">
@@ -169,6 +186,13 @@ export default async function VendorDetailPage({
                     icon={MapPin}
                     label="Headquarters"
                     value={vendor.hqCountry}
+                  />
+                ) : null}
+                {regionSlugs.length > 0 ? (
+                  <FactRow
+                    icon={Globe}
+                    label="Regions served"
+                    value={regionLabel}
                   />
                 ) : null}
                 <FactRow

@@ -13,7 +13,6 @@ export type CompanyEditPayload = {
   companyRegions?: string[];
   companyDescription?: string;
   companyLogoUrl?: string | null;
-  employeeBand?: string;
 };
 
 /**
@@ -45,7 +44,6 @@ export async function publishCompanyEditInTx(
       ...(payload.companyLogoUrl !== undefined
         ? { logoUrl: payload.companyLogoUrl || null }
         : {}),
-      employeeBand: payload.employeeBand || null,
       updatedAt: new Date(),
     })
     .where(eq(vendors.id, vendorId));

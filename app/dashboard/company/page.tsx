@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getVendorSession } from "@/lib/auth/session";
 import { getVendorWithRegions, getCompanyEditStatus } from "@/lib/queries/company-edit";
-import { listRegions } from "@/lib/queries/taxonomy";
 import { Container } from "@/components/site/container";
 import { CompanyEditForm } from "@/components/dashboard/company-edit-form";
 
@@ -13,10 +12,9 @@ export const metadata: Metadata = {
 export default async function CompanyProfilePage() {
   const { vendor } = await getVendorSession();
 
-  const [vendorWithRegions, editStatus, availableRegions] = await Promise.all([
+  const [vendorWithRegions, editStatus] = await Promise.all([
     getVendorWithRegions(vendor.id),
     getCompanyEditStatus(vendor.id),
-    listRegions(),
   ]);
 
   // vendorWithRegions will always be non-null here because getVendorSession
@@ -40,14 +38,7 @@ export default async function CompanyProfilePage() {
       </p>
 
       <div className="mt-10">
-        <CompanyEditForm
-          vendor={vendorData}
-          editStatus={editStatus}
-          availableRegions={availableRegions.map((r) => ({
-            slug: r.slug,
-            name: r.name,
-          }))}
-        />
+        <CompanyEditForm vendor={vendorData} editStatus={editStatus} />
       </div>
     </Container>
   );

@@ -2,7 +2,14 @@ import "server-only";
 import { cache } from "react";
 import { eq, and, ne } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { vendors, vendorMembers, type Vendor, type VendorMember } from "@/lib/db/schema";
+import {
+  vendors,
+  vendorMembers,
+  vendorRegions,
+  regions,
+  type Vendor,
+  type VendorMember,
+} from "@/lib/db/schema";
 
 export async function getVendorBySlug(slug: string) {
   const [row] = await db
@@ -60,3 +67,20 @@ export const listAllVendorSlugs = async () => {
     .where(ne(vendors.suspended, true));
   return rows.map((r) => r.slug);
 };
+
+/**
+ * Return the region slugs a vendor actively serves. Public-facing —
+ * the vendor profile page uses these to render the "Regions served"
+ * fact row. Slugs only; the caller maps to display names via the
+ * static `lookups.region` map so no second DB call is needed.
+ */
+export async function getVendorRegionSlugs(
+  vendorId: number,
+): Promise<string[]> {
+  const rows = await db
+    .select({ slug: regions.slug })
+    .from(vendorRegions)
+    .innerJoin(regions, eq(regions.id, vendorRegions.regionId))
+    .where(eq(vendorRegions.vendorId, vendorId));
+  return rows.map((r) => r.slug);
+}
