@@ -113,7 +113,7 @@ export default async function AppDetailPage({
         <Container className="relative">
           <Breadcrumb appName={app.name} />
 
-          <div className="mt-8 flex h-[200px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] p-[20px] md:h-[260px]">
+          <div className="mt-8 flex h-[200px] items-center justify-center overflow-hidden border border-[var(--color-line-strong)] bg-[var(--color-canvas-warm)] p-[8px] md:h-[260px]">
             {app.logoUrl ? (
               // Smart scaling — same logic as the browse cards: fits
               // to whichever axis constrains, preserves aspect, never
