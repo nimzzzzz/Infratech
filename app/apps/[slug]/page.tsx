@@ -318,9 +318,15 @@ export default async function AppDetailPage({
 
           {app.pricingModels.length > 0 ? (
             <Section eyebrow="Pricing">
-              <p className="font-heading text-[30px] leading-tight">
-                {app.pricingModels.map((p) => p.name).join(", ")}
-              </p>
+              <ul className="flex flex-wrap gap-2">
+                {app.pricingModels.map((p) => (
+                  <li key={p.slug}>
+                    <span className="inline-flex items-center border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-4 py-2 text-[17px] text-[var(--color-ink)]">
+                      {p.name}
+                    </span>
+                  </li>
+                ))}
+              </ul>
               <p className="mt-3 text-[18px] leading-relaxed text-[var(--color-ink-2)]">
                 The directory describes how vendors charge. We don&rsquo;t
                 publish actual prices &mdash; those vary by project size,
