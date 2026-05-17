@@ -29,7 +29,12 @@ import { admins } from "./audit";
  * Suggestions schema is similarly retained but unused — the surface that
  * wrote into it (/suggest) was removed at the same scope-narrowing.
  */
-export const submissionType = pgEnum("submission_type", ["new", "claim", "company_edit"]);
+export const submissionType = pgEnum("submission_type", [
+  "new",
+  "claim",
+  "company_edit",
+  "product_edit",
+]);
 
 /**
  * Submission lifecycle states (Phase A.2 rename + extension).

@@ -283,7 +283,7 @@ export default async function DashboardOverviewPage({
           {listings.map((listing) => (
             <li
               key={listing.slug}
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-5 md:gap-6 md:px-3"
+              className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 py-5 md:gap-6 md:px-3"
             >
               <LetterAvatar name={listing.name} className="h-10 w-10" />
               <div className="min-w-0">
@@ -303,6 +303,22 @@ export default async function DashboardOverviewPage({
                   </span>
                 </p>
               </div>
+              {listing.status === "published" ? (
+                <Link
+                  href={`/dashboard/products/${listing.id}/edit`}
+                  prefetch
+                  className="group inline-flex items-center gap-1.5 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
+                >
+                  Edit
+                  <ArrowRight
+                    size={11}
+                    weight="bold"
+                    className="transition-transform duration-300 group-hover:translate-x-0.5"
+                  />
+                </Link>
+              ) : (
+                <span />
+              )}
               <StatusBadge status={listing.status} />
             </li>
           ))}

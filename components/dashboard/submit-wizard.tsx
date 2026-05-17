@@ -180,7 +180,7 @@ export type GalleryFormItem = {
   position: number;
 };
 
-type FormState = {
+export type FormState = {
   // ── Company-level ── (skipped in real flow if vendor profile already exists)
   companyName: string;
   companyWebsite: string;
@@ -249,6 +249,8 @@ export function SubmitWizard({
   skipCompanyStep = false,
   initialValues,
   submitUrl = "/api/submissions",
+  mode = "submit",
+  onStateChange,
 }: {
   prefill: { vendor: string; domain: string };
   /** Returning vendors already have a published company profile — start at
@@ -259,8 +261,18 @@ export function SubmitWizard({
    *  submission's payload. Merged over `initialState(...)`. */
   initialValues?: Partial<FormState>;
   /** POST target. Default: /api/submissions. Resubmit overrides to
-   *  /api/submissions/:id/resubmit. */
+   *  /api/submissions/:id/resubmit; product edit overrides to
+   *  /api/product-edit/:appId. */
   submitUrl?: string;
+  /** "submit" (default) drives the final-step CTA "Submit for publishing".
+   *  "edit" switches it to "Submit edit" — used by the product edit page
+   *  so vendors can tell the action goes to admin review rather than
+   *  publishing a brand-new listing. */
+  mode?: "submit" | "edit";
+  /** Optional subscriber for live form-state updates. Fired on every
+   *  change so the product edit page's live preview can re-render. The
+   *  wizard's own behavior is unchanged when the prop is omitted. */
+  onStateChange?: (state: FormState) => void;
 }) {
   const router = useRouter();
   const minStep = skipCompanyStep ? 2 : 1;
@@ -269,6 +281,18 @@ export function SubmitWizard({
     ...initialState(prefill.vendor, prefill.domain),
     ...(initialValues ?? {}),
   });
+
+  // Live form-state subscription. The product edit page mounts a
+  // <ProductDetailView> preview that re-renders as the vendor edits;
+  // this effect feeds it the current state on every change. Default-
+  // omitted callers (wizard's primary new-submission flow) skip it
+  // — the effect is a no-op when onStateChange is undefined.
+  useEffect(() => {
+    onStateChange?.(data);
+  }, [data, onStateChange]);
+
+  const submitLabel = mode === "edit" ? "Submit edit" : "Submit for publishing";
+
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Honeypot — sr-only input; bots fill every input they see.
@@ -613,6 +637,7 @@ export function SubmitWizard({
         website3={website3}
         setWebsite3={setWebsite3}
         onSubmit={handleSubmit}
+        submitLabel={submitLabel}
       />
     );
   }
@@ -985,6 +1010,7 @@ function SinglePageSubmit({
   website3,
   setWebsite3,
   onSubmit,
+  submitLabel,
 }: {
   data: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
@@ -1002,6 +1028,9 @@ function SinglePageSubmit({
   website3: string;
   setWebsite3: (v: string) => void;
   onSubmit: () => void;
+  /** CTA label on the submit button — "Submit for publishing" for
+   *  new submissions, "Submit edit" for product edits. */
+  submitLabel: string;
 }) {
   const [view, setView] = useState<"edit" | "review">("edit");
   const scrollTargetRef = useRef<string | null>(null);
@@ -1173,7 +1202,7 @@ function SinglePageSubmit({
             ) : (
               <>
                 <PaperPlaneTilt size={13} weight="regular" />
-                Submit for publishing
+                {submitLabel}
               </>
             )}
           </button>
