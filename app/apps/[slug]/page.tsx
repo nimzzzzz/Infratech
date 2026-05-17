@@ -327,11 +327,6 @@ export default async function AppDetailPage({
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-[18px] leading-relaxed text-[var(--color-ink-2)]">
-                The directory describes how vendors charge. We don&rsquo;t
-                publish actual prices &mdash; those vary by project size,
-                region, and procurement vehicle.
-              </p>
             </Section>
           ) : null}
 

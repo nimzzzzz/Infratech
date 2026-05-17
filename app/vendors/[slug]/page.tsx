@@ -237,16 +237,6 @@ export default async function VendorDetailPage({
                   </a>
                 </p>
               ) : null}
-              <p>
-                Are you {vendor.name}?{" "}
-                <Link
-                  href="/login"
-                  className="underline underline-offset-4 hover:text-[var(--color-ink)]"
-                >
-                  Claim or edit this profile
-                </Link>
-                .
-              </p>
             </div>
           </Section>
         </Container>
