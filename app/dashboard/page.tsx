@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { DashboardEmptyState } from "@/components/dashboard/empty-state";
 import { SubmissionEditedCard } from "@/components/dashboard/submission-edited-card";
 import { SubmissionRejectedCard } from "@/components/dashboard/submission-rejected-card";
-import { EditPendingCard } from "@/components/dashboard/edit-pending-card";
+import { EditPendingStrip } from "@/components/dashboard/edit-pending-strip";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -55,37 +55,41 @@ export default async function DashboardOverviewPage({
   // (status × type) — most cells render no card.
   //
   //                     | new                      | product_edit                 | company_edit
-  //   pending_review    | (listing badge says it)  | EditPendingCard              | EditPendingCard
+  //   pending_review    | (listing badge says it)  | EditPendingStrip *           | EditPendingStrip *
   //   edited_awaiting…  | SubmissionEditedCard     | (admin.edit blocked for edit | (same)
   //                     |                          |  types — never reached)      |
   //   rejected          | SubmissionRejectedCard   | SubmissionRejectedCard       | SubmissionRejectedCard
   //                     | → wizard resubmit URL    | → /dashboard/products/[id]/  | → /dashboard/company
   //                     |                          |   edit (detects rejected)    |   (detects rejected)
   //
+  // * EditPendingStrip renders INSIDE the "Your listings" section
+  //   (not at the top of the page) — a thin amber strip rather than a
+  //   heavy banner. It's computed alongside submissionCard but rendered
+  //   in a different slot. In the empty-state branch where the
+  //   listings section isn't rendered, the strip is hoisted above
+  //   <DashboardEmptyState> so a pending edit always has a surface.
+  //
   // Rendered for both the empty-state branch and the main listings
   // view so a vendor with no published apps still sees in-flight
   // edit context.
+  const sub = mostRecentSubmission;
+  const editTypeName =
+    sub?.type === "company_edit"
+      ? ((sub.payload as { companyName?: string } | null)?.companyName as
+          | string
+          | undefined) ?? vendor.name
+      : ((sub?.adminEdits as { name?: string } | null)?.name as
+          | string
+          | undefined) ??
+        ((sub?.payload as { name?: string } | null)?.name as
+          | string
+          | undefined) ??
+        "your product";
+
   const submissionCard = (() => {
-    const sub = mostRecentSubmission;
     if (!sub) return null;
     const type = sub.type;
     const status = sub.status;
-
-    // Resolve display name. For company_edit the title is the company
-    // name (from payload.companyName); otherwise it's the product
-    // name (admin edits override payload).
-    const productName =
-      type === "company_edit"
-        ? ((sub.payload as { companyName?: string } | null)?.companyName as
-            | string
-            | undefined) ?? vendor.name
-        : ((sub.adminEdits as { name?: string } | null)?.name as
-            | string
-            | undefined) ??
-          ((sub.payload as { name?: string } | null)?.name as
-            | string
-            | undefined) ??
-          "your product";
 
     // edited_awaiting_vendor_approval is "new" only (admin.edit gated
     // off for edit types).
@@ -93,7 +97,7 @@ export default async function DashboardOverviewPage({
       return (
         <SubmissionEditedCard
           submissionId={sub.id}
-          productName={productName}
+          productName={editTypeName}
           payload={sub.payload as Record<string, unknown> | null}
           adminEdits={sub.adminEdits as Record<string, unknown> | null}
         />
@@ -107,10 +111,10 @@ export default async function DashboardOverviewPage({
       if (type === "product_edit" && sub.appId !== null) {
         return (
           <SubmissionRejectedCard
-            productName={productName}
+            productName={editTypeName}
             rejectionReason={rejectionReason}
             editTarget={`/dashboard/products/${sub.appId}/edit`}
-            headline={`We didn’t approve your edit to ${productName}.`}
+            headline={`We didn’t approve your edit to ${editTypeName}.`}
             subhead="Here’s what our editorial team flagged — adjust and resubmit:"
           />
         );
@@ -118,7 +122,7 @@ export default async function DashboardOverviewPage({
       if (type === "company_edit") {
         return (
           <SubmissionRejectedCard
-            productName={productName}
+            productName={editTypeName}
             rejectionReason={rejectionReason}
             editTarget="/dashboard/company"
             headline="We didn’t approve your company profile edit."
@@ -129,36 +133,40 @@ export default async function DashboardOverviewPage({
       // "new" (or legacy claim) — wizard resubmit URL.
       return (
         <SubmissionRejectedCard
-          productName={productName}
+          productName={editTypeName}
           rejectionReason={rejectionReason}
           editTarget={`/dashboard/onboarding/submit?resubmit=${sub.id}`}
         />
       );
     }
 
-    // pending_review for edit types — surface a card. "new" pending
-    // skips this (the listings row's "In review" badge suffices).
-    if (status === "pending_review") {
-      if (type === "product_edit" && sub.appId !== null) {
-        return (
-          <EditPendingCard
-            headline={`Your edit to ${productName} is under review.`}
-            subhead="The Resolute team will publish your changes once they’ve approved them. You can’t submit another edit to this product until this one’s processed."
-            viewTarget={`/dashboard/products/${sub.appId}/edit`}
-          />
-        );
-      }
-      if (type === "company_edit") {
-        return (
-          <EditPendingCard
-            headline="Your company profile edit is under review."
-            subhead="The Resolute team will publish your changes once they’ve approved them. You can’t submit another edit until this one’s processed."
-            viewTarget="/dashboard/company"
-          />
-        );
-      }
-    }
+    return null;
+  })();
 
+  const editPendingStrip = (() => {
+    if (!sub || sub.status !== "pending_review") return null;
+    if (sub.type === "product_edit" && sub.appId !== null) {
+      return (
+        <EditPendingStrip
+          viewTarget={`/dashboard/products/${sub.appId}/edit`}
+          message={
+            <>
+              Your edit to{" "}
+              <span className="text-[var(--color-ink)]">{editTypeName}</span>{" "}
+              is under review.
+            </>
+          }
+        />
+      );
+    }
+    if (sub.type === "company_edit") {
+      return (
+        <EditPendingStrip
+          viewTarget="/dashboard/company"
+          message="Your company profile edit is under review."
+        />
+      );
+    }
     return null;
   })();
 
@@ -171,9 +179,17 @@ export default async function DashboardOverviewPage({
   if (listings.length === 0) {
     return (
       <>
-        {submissionCard ? (
+        {submissionCard || editPendingStrip ? (
           <Container className="max-w-6xl pt-12 md:pt-16">
             {submissionCard}
+            {/* Hoist the strip above the empty state so a pending
+                edit always has a dashboard surface — see Q3 in the
+                planning round (option b). */}
+            {editPendingStrip ? (
+              <div className={submissionCard ? "mt-6" : ""}>
+                {editPendingStrip}
+              </div>
+            ) : null}
           </Container>
         ) : null}
         <DashboardEmptyState
@@ -349,6 +365,10 @@ export default async function DashboardOverviewPage({
             Add another product
           </Link>
         </header>
+
+        {editPendingStrip ? (
+          <div className="mt-4">{editPendingStrip}</div>
+        ) : null}
 
         <ul className="divide-y divide-[var(--color-line)]">
           {listings.map((listing) => (
