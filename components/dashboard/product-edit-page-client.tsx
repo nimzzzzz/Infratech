@@ -85,12 +85,12 @@ export function ProductEditPageClient({
         : appToFormState(app),
     );
     return (
-      // items-start prevents the short amber banner from stretching to
-      // match the (much taller) preview's height — without it, CSS grid
-      // defaults to align-items: stretch and the banner reads as a huge
-      // empty amber slab. Empty space below the compact banner is the
-      // intended layout.
-      <div className="grid items-start gap-10 lg:grid-cols-[5fr_7fr] lg:gap-12">
+      // Single centered column — the pending state has nothing
+      // editable to put in a left form column, so collapse the
+      // side-by-side layout. Banner stacks on top of the preview
+      // box, both clamped to max-w-4xl and centered. The editable
+      // and rejected states keep their wide split-view layouts.
+      <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-5">
           <Clock
             size={20}
@@ -106,20 +106,18 @@ export function ProductEditPageClient({
             </p>
           </div>
         </div>
-        <aside>
-          <div className="border border-[var(--color-line-strong)] bg-[var(--color-surface)]">
-            <div className="border-b border-[var(--color-line)] px-5 py-3">
-              <p className="text-[12px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
-                Preview of pending edit
-              </p>
-            </div>
-            <ProductEditPreview
-              liveApp={app}
-              form={pendingForm}
-              allStages={allStages}
-            />
+        <div className="border border-[var(--color-line-strong)] bg-[var(--color-surface)]">
+          <div className="border-b border-[var(--color-line)] px-5 py-3">
+            <p className="text-[12px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
+              Preview of pending edit
+            </p>
           </div>
-        </aside>
+          <ProductEditPreview
+            liveApp={app}
+            form={pendingForm}
+            allStages={allStages}
+          />
+        </div>
       </div>
     );
   }

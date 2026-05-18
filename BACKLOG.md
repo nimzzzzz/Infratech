@@ -78,6 +78,11 @@ Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
   - Maybe a "Clear all filters" prominent at the bottom
 - Trigger: when QA-ing for public launch.
 
+### Drop the intro paragraph in the rejected state of the product edit page
+- **Context (2026-05-18, `fix/product-edit-pending-layout`):** the product edit page's intro paragraph below the heading ("Changes go through a brief editorial review before going live. The product URL /apps/<slug> stays the same — only the content updates.") was removed for the pending-review state in this PR because the amber "Edit under review" banner already explains the situation. The rejected state still shows it — the rose "Edit not approved" banner makes it equally redundant there. Slug-lock reassurance has residual value but the redundancy outweighs.
+- **The fix:** in `app/dashboard/products/[id]/edit/page.tsx`, gate the intro `<p>` on `!isPendingReview && !isRejected` instead of just `!isPendingReview`. One-line change.
+- **Trigger:** opportunistic — bundle with the next product-edit-page polish PR.
+
 ### Product rename / slug override (admin-only)
 - **Context (2026-05-18, surfaced by `feat/product-edit-vendor-facing`):** product editing locks the slug. Vendors can rename a product (the apps.name field is editable) but the URL `/apps/<slug>` stays at the original slug forever — set when the product was first published. If a vendor substantially rebrands a product (e.g. "Acme Tasks" → "Acme Field"), external links and SEO continue to point at the old slug + an outdated mental model.
 - **The fix:** add an admin-only slug override on the submission detail page (PR 2 admin review surface or a follow-up). Validates uniqueness, publishes the new slug, optionally writes a redirect from the old `/apps/<old-slug>` to `/apps/<new-slug>` so external links don't 404 mid-transition. Probably a `app_slug_redirects` table or a Next.js redirect rule generated from a column on `apps`.
