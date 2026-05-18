@@ -246,7 +246,12 @@ export function CompanyEditForm({ vendor, editStatus }: Props) {
   // ── PENDING STATE — no editable form, preview still shown ─────────
   if (isPendingReview) {
     return (
-      <div className="grid gap-10 md:grid-cols-[3fr_2fr] md:gap-12">
+      // items-start — same fix as the product edit pending state.
+      // Without it the short amber banner stretches to match the
+      // preview's full height (grid default align-items: stretch);
+      // with it the banner sits compact at the top with empty space
+      // below.
+      <div className="grid items-start gap-10 md:grid-cols-[3fr_2fr] md:gap-12">
         <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-5">
           <Clock
             size={20}

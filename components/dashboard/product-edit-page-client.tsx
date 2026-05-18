@@ -85,7 +85,12 @@ export function ProductEditPageClient({
         : appToFormState(app),
     );
     return (
-      <div className="grid gap-10 lg:grid-cols-[5fr_7fr] lg:gap-12">
+      // items-start prevents the short amber banner from stretching to
+      // match the (much taller) preview's height — without it, CSS grid
+      // defaults to align-items: stretch and the banner reads as a huge
+      // empty amber slab. Empty space below the compact banner is the
+      // intended layout.
+      <div className="grid items-start gap-10 lg:grid-cols-[5fr_7fr] lg:gap-12">
         <div className="flex items-start gap-3 border border-amber-200 bg-amber-50 p-5">
           <Clock
             size={20}
