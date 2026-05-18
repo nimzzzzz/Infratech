@@ -6,6 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import Image from "next/image";
 import { LinkedInSignInButton } from "@/components/auth/linkedin-sign-in-button";
+import { LoginErrorBanner } from "@/components/auth/login-error-banner";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -53,10 +54,18 @@ export default async function LoginPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { userId } = await auth();
-  if (userId) redirect("/dashboard");
 
   const sp = await searchParams;
   const intentParam = Array.isArray(sp.intent) ? sp.intent[0] : sp.intent;
+  const errorParam = Array.isArray(sp.error) ? sp.error[0] : sp.error;
+
+  // Signed-in users bounce to the dashboard — UNLESS they arrived
+  // here with an error param. Without the error-aware exception, a
+  // suspended user redirected here from getVendorSession() would
+  // bounce back to /dashboard, which redirects back to /login, and
+  // so on. Pre-existing bug for ?error=suspended; A.4 extends the
+  // exception to ?error=vendor_suspended (company-level).
+  if (userId && !errorParam) redirect("/dashboard");
   // Always land at /post-signin first — that server page reads the
   // vendor_members row and branches on is_admin / intent. The
   // ?intent=submit carry-through preserves the "list your product"
@@ -139,6 +148,7 @@ export default async function LoginPage({
 
         <div className="flex flex-1 items-center px-6 py-12 sm:px-10 md:px-12 md:py-16 lg:px-20">
           <div className="w-full max-w-md">
+            {errorParam ? <LoginErrorBanner code={errorParam} /> : null}
             <p className="text-[13px] uppercase tracking-[0.32em] text-[var(--color-coral)]">
               For vendors
             </p>

@@ -72,6 +72,22 @@ export async function POST(
     return NextResponse.json({ success: true });
   }
 
+  // A.4 — refuse to approve a submission FROM a suspended vendor.
+  // Approving would write content (apps row, vendor row) for a company
+  // that's currently hidden from the public; even if the queries filter
+  // it out, the act of publishing live content from a suspended vendor
+  // is a contradiction. Vendor row was loaded by loadAdminActionContext.
+  if (vendor.suspended) {
+    return NextResponse.json(
+      {
+        error:
+          "This submission is from a suspended vendor. Unsuspend the company before approving.",
+        code: "vendor_suspended",
+      },
+      { status: 409 },
+    );
+  }
+
   // State machine — throws on invalid transition.
   let nextStatus: SubmissionStatus;
   try {

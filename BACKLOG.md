@@ -78,6 +78,11 @@ Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
   - Maybe a "Clear all filters" prominent at the bottom
 - Trigger: when QA-ing for public launch.
 
+### Surface suspension reason on the company detail page
+- **Context (2026-05-19, `feat/admin-vendor-suspend`):** when an admin suspends a company they can supply an optional reason. The reason is currently stored ONLY in the audit_log row (`audit_log.after.reason`) — not on the `vendors` row. The vendor detail page at `/admin/directory/[id]` doesn't surface "why was this company suspended" without an audit_log lookup.
+- **The fix:** either (a) add a `vendors.suspension_reason text` column (one-line migration + write on suspend / clear on unsuspend + render on the detail page when `suspended === true`), or (b) query the latest `audit_log` row for `action = 'vendor.suspend' AND target_type = 'vendor' AND target_id = X` and surface its `after.reason` on the detail page. Option (a) is simpler at the storage level but adds a migration; option (b) is migration-free but adds a join. Recommend (a) for clarity at the data level.
+- **Trigger:** when the admin team starts using suspend regularly and asks "why did we suspend X again?".
+
 ### Drop the intro paragraph in the rejected state of the product edit page
 - **Context (2026-05-18, `fix/product-edit-pending-layout`):** the product edit page's intro paragraph below the heading ("Changes go through a brief editorial review before going live. The product URL /apps/<slug> stays the same — only the content updates.") was removed for the pending-review state in this PR because the amber "Edit under review" banner already explains the situation. The rejected state still shows it — the rose "Edit not approved" banner makes it equally redundant there. Slug-lock reassurance has residual value but the redundancy outweighs.
 - **The fix:** in `app/dashboard/products/[id]/edit/page.tsx`, gate the intro `<p>` on `!isPendingReview && !isRejected` instead of just `!isPendingReview`. One-line change.

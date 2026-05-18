@@ -28,10 +28,10 @@ const nav = [
       p.startsWith("/admin/submissions") || p.startsWith("/admin/queue"),
   },
   {
-    href: "/admin/apps",
-    label: "Vendors",
+    href: "/admin/directory",
+    label: "Directory",
     placeholder: false,
-    match: (p: string) => p.startsWith("/admin/apps") || p.startsWith("/admin/vendors"),
+    match: (p: string) => p.startsWith("/admin/directory"),
   },
   {
     href: "/admin/inquiries",

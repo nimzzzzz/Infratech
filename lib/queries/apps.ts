@@ -175,7 +175,13 @@ export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
     })
     .from(apps)
     .innerJoin(vendors, eq(vendors.id, apps.vendorId))
-    .where(and(eq(apps.slug, slug), eq(apps.status, "published")))
+    .where(
+      and(
+        eq(apps.slug, slug),
+        eq(apps.status, "published"),
+        eq(vendors.suspended, false),
+      ),
+    )
     .limit(1);
   if (!base) return null;
   return loadAppDetailFromBase(base);
@@ -294,7 +300,14 @@ export async function listAppsByStage(stageSlug: string): Promise<AppCard[]> {
     .from(apps)
     .innerJoin(appStages, eq(appStages.appId, apps.id))
     .innerJoin(stages, eq(stages.id, appStages.stageId))
-    .where(and(eq(stages.slug, stageSlug), eq(apps.status, "published")))
+    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+    .where(
+      and(
+        eq(stages.slug, stageSlug),
+        eq(apps.status, "published"),
+        eq(vendors.suspended, false),
+      ),
+    )
     .orderBy(apps.name);
   return fetchCards(ids.map((r) => r.id));
 }
@@ -310,8 +323,13 @@ export async function listAppsByCapability(
       capabilities,
       eq(capabilities.id, appCapabilities.capabilityId),
     )
+    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
     .where(
-      and(eq(capabilities.slug, capabilitySlug), eq(apps.status, "published")),
+      and(
+        eq(capabilities.slug, capabilitySlug),
+        eq(apps.status, "published"),
+        eq(vendors.suspended, false),
+      ),
     )
     .orderBy(apps.name);
   return fetchCards(ids.map((r) => r.id));
@@ -325,8 +343,13 @@ export async function listAppsByIndustry(
     .from(apps)
     .innerJoin(appIndustries, eq(appIndustries.appId, apps.id))
     .innerJoin(industries, eq(industries.id, appIndustries.industryId))
+    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
     .where(
-      and(eq(industries.slug, industrySlug), eq(apps.status, "published")),
+      and(
+        eq(industries.slug, industrySlug),
+        eq(apps.status, "published"),
+        eq(vendors.suspended, false),
+      ),
     )
     .orderBy(apps.name);
   return fetchCards(ids.map((r) => r.id));
@@ -339,7 +362,13 @@ export async function listAppsByVendorSlug(
     .select({ id: apps.id })
     .from(apps)
     .innerJoin(vendors, eq(vendors.id, apps.vendorId))
-    .where(and(eq(vendors.slug, vendorSlug), eq(apps.status, "published")))
+    .where(
+      and(
+        eq(vendors.slug, vendorSlug),
+        eq(apps.status, "published"),
+        eq(vendors.suspended, false),
+      ),
+    )
     .orderBy(apps.name);
   return fetchCards(ids.map((r) => r.id));
 }
@@ -378,7 +407,8 @@ export async function listAllAppSlugs() {
   const rows = await db
     .select({ slug: apps.slug })
     .from(apps)
-    .where(eq(apps.status, "published"));
+    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+    .where(and(eq(apps.status, "published"), eq(vendors.suspended, false)));
   return rows.map((r) => r.slug);
 }
 
@@ -394,9 +424,11 @@ export async function listRelatedApps(
     .select({ id: apps.id, overlap: sql<number>`count(*)`.as("overlap") })
     .from(apps)
     .innerJoin(appStages, eq(appStages.appId, apps.id))
+    .innerJoin(vendors, eq(vendors.id, apps.vendorId))
     .where(
       and(
         eq(apps.status, "published"),
+        eq(vendors.suspended, false),
         ne(apps.id, appId),
         inArray(
           appStages.stageId,
