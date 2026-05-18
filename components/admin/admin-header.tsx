@@ -33,7 +33,12 @@ const nav = [
     placeholder: false,
     match: (p: string) => p.startsWith("/admin/apps") || p.startsWith("/admin/vendors"),
   },
-  { href: "/admin", label: "Inquiries", placeholder: true, match: () => false },
+  {
+    href: "/admin/inquiries",
+    label: "Inquiries",
+    placeholder: false,
+    match: (p: string) => p.startsWith("/admin/inquiries"),
+  },
   { href: "/admin", label: "Analytics", placeholder: true, match: () => false },
   { href: "/admin", label: "Settings", placeholder: true, match: () => false },
 ];

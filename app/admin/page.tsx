@@ -6,6 +6,7 @@ import {
   Stack,
   ChartLineUp,
   ClipboardText,
+  EnvelopeSimple,
 } from "@phosphor-icons/react/dist/ssr";
 import { eq, sql } from "drizzle-orm";
 import { Container } from "@/components/site/container";
@@ -14,6 +15,7 @@ import { getAdminSession } from "@/lib/auth/admin-session";
 import { db } from "@/lib/db/client";
 import { apps, submissions, vendors } from "@/lib/db/schema";
 import { listSubmissions } from "@/lib/queries/submissions";
+import { countInquiriesLast7Days } from "@/lib/queries/messages";
 import { relativeDays } from "@/lib/browse/dates";
 
 /** Human label for each submission_type enum value. Centralised so
@@ -44,25 +46,32 @@ export default async function AdminOverviewPage() {
   // payload scan is gone — listSubmissions now projects
   // payload->>'name' as productName, so the recent-activity list
   // gets product titles in the same query.
-  const [session, submissionCounts, publishedAppsRow, vendorsRow, recentSubs] =
-    await Promise.all([
-      getAdminSession(),
-      db
-        .select({
-          pending: sql<number>`count(*) FILTER (WHERE status = 'pending_review')::int`,
-          inReview: sql<number>`count(*) FILTER (WHERE status = 'edited_awaiting_vendor_approval')::int`,
-        })
-        .from(submissions),
-      db
-        .select({ n: sql<number>`count(*)::int` })
-        .from(apps)
-        .where(eq(apps.status, "published")),
-      db
-        .select({ n: sql<number>`count(*)::int` })
-        .from(vendors)
-        .where(eq(vendors.suspended, false)),
-      listSubmissions(),
-    ]);
+  const [
+    session,
+    submissionCounts,
+    publishedAppsRow,
+    vendorsRow,
+    inquiriesLast7,
+    recentSubs,
+  ] = await Promise.all([
+    getAdminSession(),
+    db
+      .select({
+        pending: sql<number>`count(*) FILTER (WHERE status = 'pending_review')::int`,
+        inReview: sql<number>`count(*) FILTER (WHERE status = 'edited_awaiting_vendor_approval')::int`,
+      })
+      .from(submissions),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(apps)
+      .where(eq(apps.status, "published")),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(vendors)
+      .where(eq(vendors.suspended, false)),
+    countInquiriesLast7Days(),
+    listSubmissions(),
+  ]);
 
   const firstName = session.user.name.split(" ")[0];
   const pending = submissionCounts[0]?.pending ?? 0;
@@ -91,7 +100,7 @@ export default async function AdminOverviewPage() {
         </Link>
       </p>
 
-      <ul className="mt-10 grid grid-cols-2 gap-px border border-[var(--color-line-strong)] bg-[var(--color-line-strong)] md:grid-cols-4">
+      <ul className="mt-10 grid grid-cols-2 gap-px border border-[var(--color-line-strong)] bg-[var(--color-line-strong)] sm:grid-cols-3 md:grid-cols-5">
         <StatCard
           icon={Tray}
           label="Pending"
@@ -115,6 +124,12 @@ export default async function AdminOverviewPage() {
           label="Active vendors"
           value={activeVendors}
           href="/admin/apps"
+        />
+        <StatCard
+          icon={EnvelopeSimple}
+          label="Inquiries · 7d"
+          value={inquiriesLast7}
+          href="/admin/inquiries"
         />
       </ul>
 
