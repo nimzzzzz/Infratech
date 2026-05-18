@@ -20,7 +20,11 @@ import {
   publishCompanyEditInTx,
   type CompanyEditPayload,
 } from "@/lib/submissions/publish-company-edit";
-import { sendSubmissionPublishedEmail } from "@/lib/email/send-submission-status";
+import {
+  sendSubmissionPublishedEmail,
+  sendSubmissionEditPublishedEmail,
+} from "@/lib/email/send-submission-status";
+import { env } from "@/lib/env";
 import { approveBodySchema } from "./schema";
 
 /**
@@ -213,31 +217,45 @@ export async function POST(
   }
 
   // Fire the email after the response — Resend latency must not
-  // gate the API response.
-  //
-  // TODO(PR 3): emails for product_edit and company_edit approvals.
-  // The existing sendSubmissionPublishedEmail is "your product is
-  // live" copy — wrong for edit approvals. Skip for edit types until
-  // PR 3 wires the right templates ("your edit is live" + "your
-  // company profile update is live"). New product submissions still
-  // send normally.
+  // gate the API response. Per-type dispatch: edit types use the
+  // PR-3 templates ("your changes are live" copy); "new" submissions
+  // continue using the original "your product is live" template.
   const contactEmail = vendor.contactEmail;
-  if (
-    contactEmail &&
-    submission.type !== "product_edit" &&
-    submission.type !== "company_edit" &&
-    result.slug !== null
-  ) {
+  if (contactEmail) {
     const firstName = vendor.name.split(" ")[0] ?? "there";
-    const slug = result.slug;
-    after(async () => {
-      await sendSubmissionPublishedEmail({
-        to: contactEmail,
-        firstName,
-        productName: result.productName,
-        productSlug: slug,
+    if (submission.type === "company_edit") {
+      after(async () => {
+        await sendSubmissionEditPublishedEmail({
+          to: contactEmail,
+          firstName,
+          kind: "company",
+          name: vendor.name,
+          viewUrl: `${env.SITE_URL}/vendors/${vendor.slug}`,
+        });
       });
-    });
+    } else if (submission.type === "product_edit" && result.slug !== null) {
+      const slug = result.slug;
+      after(async () => {
+        await sendSubmissionEditPublishedEmail({
+          to: contactEmail,
+          firstName,
+          kind: "product",
+          name: result.productName,
+          viewUrl: `${env.SITE_URL}/apps/${slug}`,
+        });
+      });
+    } else if (result.slug !== null) {
+      // "new" submission — unchanged path.
+      const slug = result.slug;
+      after(async () => {
+        await sendSubmissionPublishedEmail({
+          to: contactEmail,
+          firstName,
+          productName: result.productName,
+          productSlug: slug,
+        });
+      });
+    }
   }
 
   return NextResponse.json({
