@@ -153,15 +153,20 @@ export async function searchApps(
 
   // COUNT(*) and the paginated id select share the same WHERE clause and
   // don't depend on each other — fire them in parallel. Saves one RTT.
+  // Both join vendors to enforce the public-side suspended filter — a
+  // suspended vendor's apps must not appear in the directory or its
+  // search results.
   const [totalRows, idRows] = await Promise.all([
     db
       .select({ total: sql<number>`count(*)::int` })
       .from(apps)
-      .where(and(...conditions)),
+      .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+      .where(and(eq(vendors.suspended, false), ...conditions)),
     db
       .select({ id: apps.id })
       .from(apps)
-      .where(and(...conditions))
+      .innerJoin(vendors, eq(vendors.id, apps.vendorId))
+      .where(and(eq(vendors.suspended, false), ...conditions))
       .orderBy(asc(apps.name))
       .limit(pageSize)
       .offset((page - 1) * pageSize),

@@ -150,6 +150,12 @@ export async function getVendorSession(opts?: {
 
   const { vendor, vendorMember } = result;
   if (vendorMember.suspended) redirect("/login?error=suspended");
+  // A.4 — company-level suspension blocks dashboard access for ALL the
+  // company's humans. Distinct query param so the /login page can
+  // surface different copy ("this company is suspended" vs "this human
+  // is suspended"). Note vendor may be null pre-onboarding; only gate
+  // when a vendor row is linked.
+  if (vendor?.suspended) redirect("/login?error=vendor_suspended");
 
   // PR B.2.1 — onboarding is now a modal mounted in the dashboard
   // layout, not a page redirect. Letting !onboarded users render
