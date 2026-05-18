@@ -11,7 +11,11 @@ import {
   InvalidTransitionError,
   type SubmissionStatus,
 } from "@/lib/submissions/state-machine";
-import { sendSubmissionRejectedEmail } from "@/lib/email/send-submission-status";
+import {
+  sendSubmissionRejectedEmail,
+  sendSubmissionEditRejectedEmail,
+} from "@/lib/email/send-submission-status";
+import { env } from "@/lib/env";
 import { rejectBodySchema } from "./schema";
 
 /**
@@ -119,20 +123,60 @@ export async function POST(
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 
-  // Fire rejection email.
+  // Fire rejection email. Per-type dispatch: edit types use the
+  // PR-3 templates ("your changes need revisions" copy with a
+  // reassurance line that the live listing is unaffected); "new"
+  // submissions continue using the original "submission needs
+  // changes" template.
+  //
+  // This branch also closes a latent miscall from PR 2: the prior
+  // code fired sendSubmissionRejectedEmail for ALL types, reading
+  // payload.name. For company_edit submissions the payload has no
+  // `name` key (only companyName) — so the vendor got an email
+  // saying "we weren't able to publish your product" when they had
+  // rejected a company profile edit. Not data-corrupting, but
+  // confusingly worded; now fixed.
   const contactEmail = vendor.contactEmail;
   if (contactEmail) {
     const firstName = vendor.name.split(" ")[0] ?? "there";
-    const productName =
-      (submission.payload as { name?: string })?.name ?? "your product";
-    after(async () => {
-      await sendSubmissionRejectedEmail({
-        to: contactEmail,
-        firstName,
-        productName,
-        rejectionReason: reason,
+    if (submission.type === "company_edit") {
+      after(async () => {
+        await sendSubmissionEditRejectedEmail({
+          to: contactEmail,
+          firstName,
+          kind: "company",
+          name: vendor.name,
+          rejectionReason: reason,
+          editPageUrl: `${env.SITE_URL}/dashboard/company`,
+        });
       });
-    });
+    } else if (submission.type === "product_edit" && submission.appId !== null) {
+      const productName =
+        (submission.payload as { name?: string })?.name ?? "your product";
+      const appId = submission.appId;
+      after(async () => {
+        await sendSubmissionEditRejectedEmail({
+          to: contactEmail,
+          firstName,
+          kind: "product",
+          name: productName,
+          rejectionReason: reason,
+          editPageUrl: `${env.SITE_URL}/dashboard/products/${appId}/edit`,
+        });
+      });
+    } else {
+      // "new" submission — unchanged path.
+      const productName =
+        (submission.payload as { name?: string })?.name ?? "your product";
+      after(async () => {
+        await sendSubmissionRejectedEmail({
+          to: contactEmail,
+          firstName,
+          productName,
+          rejectionReason: reason,
+        });
+      });
+    }
   }
 
   return NextResponse.json({ success: true });
