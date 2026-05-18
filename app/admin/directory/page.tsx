@@ -58,9 +58,6 @@ export default async function AdminDirectoryPage() {
                   <p className="truncate font-heading text-[20px] leading-tight">
                     {c.name}
                   </p>
-                  <p className="mt-1 truncate text-[13px] text-[var(--color-ink-3)]">
-                    /{c.slug}
-                  </p>
                 </div>
                 <Stat label="Products" value={c.productCount} />
                 <Stat label="Pending" value={c.pendingSubmissionCount} />

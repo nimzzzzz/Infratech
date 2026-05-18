@@ -4,7 +4,6 @@ import { db } from "@/lib/db/client";
 import {
   vendors,
   apps,
-  submissions,
   vendorMembers,
   type AppStatus,
 } from "@/lib/db/schema";
@@ -40,6 +39,14 @@ export type AdminCompanyListItem = {
 export async function listCompaniesForAdmin(): Promise<
   AdminCompanyListItem[]
 > {
+  // Correlated subqueries written as raw SQL strings — NO template
+  // interpolation of Table objects. The prior implementation used
+  // ${apps} / ${submissions} / ${vendorMembers} as FROM targets,
+  // which Drizzle's sql template doesn't emit as table identifiers
+  // the way db.select().from(table) does; the subqueries silently
+  // collapsed and every count came back 0. Plain table + column
+  // names work correctly here — Postgres resolves the correlation
+  // against the outer `vendors` row.
   const rows = await db
     .select({
       id: vendors.id,
@@ -49,17 +56,17 @@ export async function listCompaniesForAdmin(): Promise<
       contactEmail: vendors.contactEmail,
       createdAt: vendors.createdAt,
       productCount: sql<number>`(
-        SELECT COUNT(*)::int FROM ${apps}
-        WHERE ${apps.vendorId} = ${vendors.id}
+        SELECT COUNT(*)::int FROM apps
+        WHERE apps.vendor_id = vendors.id
       )`,
       pendingSubmissionCount: sql<number>`(
-        SELECT COUNT(*)::int FROM ${submissions}
-        WHERE ${submissions.submitterVendorId} = ${vendors.id}
-          AND ${submissions.status} IN ('pending_review', 'edited_awaiting_vendor_approval')
+        SELECT COUNT(*)::int FROM submissions
+        WHERE submissions.submitter_vendor_id = vendors.id
+          AND submissions.status IN ('pending_review', 'edited_awaiting_vendor_approval')
       )`,
       memberCount: sql<number>`(
-        SELECT COUNT(*)::int FROM ${vendorMembers}
-        WHERE ${vendorMembers.vendorId} = ${vendors.id}
+        SELECT COUNT(*)::int FROM vendor_members
+        WHERE vendor_members.vendor_id = vendors.id
       )`,
     })
     .from(vendors)
