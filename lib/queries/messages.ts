@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { contactMessages, apps, vendors } from "@/lib/db/schema";
 
@@ -151,5 +151,108 @@ export async function countUnreadForVendor(vendorId: number) {
         eq(contactMessages.status, "unread"),
       ),
     );
+  return row?.count ?? 0;
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Admin-side inquiry queries (A.5).
+//
+// Read-only by design — the admin pages never mutate
+// contact_messages.status. That status (unread / read / archived) is
+// the VENDOR's workflow on their own dashboard; an admin marking a
+// message read would silently flip the vendor's unread badge.
+// ────────────────────────────────────────────────────────────────────
+
+export type AdminInquiryListItem = {
+  id: number;
+  appId: number;
+  appSlug: string;
+  appName: string;
+  vendorId: number;
+  vendorName: string;
+  vendorSlug: string;
+  senderName: string;
+  senderEmail: string;
+  senderCompany: string | null;
+  senderRole: string | null;
+  subject: string;
+  body: string;
+  status: "unread" | "read" | "archived";
+  createdAt: Date;
+};
+
+/**
+ * Every contact_messages row across all vendors, newest first.
+ * Joined with apps + vendors so the list can show "for <product> /
+ * <vendor>" without a follow-up query. Admin-only — gated by the
+ * page-level getAdminSession() check.
+ */
+export async function listInquiriesForAdmin(): Promise<AdminInquiryListItem[]> {
+  return db
+    .select({
+      id: contactMessages.id,
+      appId: contactMessages.appId,
+      appSlug: apps.slug,
+      appName: apps.name,
+      vendorId: vendors.id,
+      vendorName: vendors.name,
+      vendorSlug: vendors.slug,
+      senderName: contactMessages.senderName,
+      senderEmail: contactMessages.senderEmail,
+      senderCompany: contactMessages.senderCompany,
+      senderRole: contactMessages.senderRole,
+      subject: contactMessages.subject,
+      body: contactMessages.body,
+      status: contactMessages.status,
+      createdAt: contactMessages.createdAt,
+    })
+    .from(contactMessages)
+    .innerJoin(apps, eq(apps.id, contactMessages.appId))
+    .innerJoin(vendors, eq(vendors.id, contactMessages.vendorId))
+    .orderBy(desc(contactMessages.createdAt));
+}
+
+/** Single inquiry by id with the same join shape as the list. Null
+ *  if not found. Admin-only — no vendor scoping. */
+export async function getInquiryByIdForAdmin(
+  id: number,
+): Promise<AdminInquiryListItem | null> {
+  const [row] = await db
+    .select({
+      id: contactMessages.id,
+      appId: contactMessages.appId,
+      appSlug: apps.slug,
+      appName: apps.name,
+      vendorId: vendors.id,
+      vendorName: vendors.name,
+      vendorSlug: vendors.slug,
+      senderName: contactMessages.senderName,
+      senderEmail: contactMessages.senderEmail,
+      senderCompany: contactMessages.senderCompany,
+      senderRole: contactMessages.senderRole,
+      subject: contactMessages.subject,
+      body: contactMessages.body,
+      status: contactMessages.status,
+      createdAt: contactMessages.createdAt,
+    })
+    .from(contactMessages)
+    .innerJoin(apps, eq(apps.id, contactMessages.appId))
+    .innerJoin(vendors, eq(vendors.id, contactMessages.vendorId))
+    .where(eq(contactMessages.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Rolling-window count for the admin dashboard's "Inquiries (last 7
+ * days)" tile. Cheap COUNT(*) on the timestamp filter — one round
+ * trip; fires inside the admin overview's existing Promise.all batch.
+ */
+export async function countInquiriesLast7Days(): Promise<number> {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(contactMessages)
+    .where(gte(contactMessages.createdAt, sevenDaysAgo));
   return row?.count ?? 0;
 }
