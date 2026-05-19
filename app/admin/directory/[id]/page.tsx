@@ -75,13 +75,7 @@ export default async function AdminDirectoryDetailPage({
             {vendor.name}
           </h1>
           <p className="mt-2 text-[14px] text-[var(--color-ink-3)]">
-            <Link
-              href={`/vendors/${vendor.slug}`}
-              className="font-mono text-[var(--color-coral)] underline-offset-4 hover:underline"
-            >
-              /vendors/{vendor.slug}
-            </Link>{" "}
-            · Joined{" "}
+            Joined{" "}
             <span className="num">
               {relativeDays(vendor.createdAt.toISOString().slice(0, 10)).label}
             </span>
@@ -173,9 +167,6 @@ export default async function AdminDirectoryDetailPage({
                   >
                     {p.name}
                   </Link>
-                  <p className="mt-0.5 truncate text-[13px] text-[var(--color-ink-3)]">
-                    /{p.slug}
-                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <AppStatusPill status={p.status} />
