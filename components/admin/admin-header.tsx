@@ -130,13 +130,13 @@ export function AdminHeader({
 
         {/* user pill + sign-out */}
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2.5 sm:flex">
+          <div className="hidden min-w-0 items-center gap-2.5 sm:flex">
             <UserAvatar avatarUrl={avatarUrl} name={name} size={32} />
-            <div className="flex flex-col leading-tight">
-              <span className="text-[15px] text-[var(--color-ink)]">
+            <div className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate text-[15px] text-[var(--color-ink)]">
                 {name}
               </span>
-              <span className="text-[13px] text-[var(--color-ink-3)]">
+              <span className="truncate text-[13px] text-[var(--color-ink-3)]">
                 {email}
               </span>
             </div>
@@ -147,7 +147,7 @@ export function AdminHeader({
               fill) but ahead of it in the row so the higher-impact
               Sign Out is the rightmost element (matches public-site
               button ordering convention). */}
-          <form action={enterVendorView}>
+          <form action={enterVendorView} className="shrink-0">
             <button
               type="submit"
               className="group inline-flex h-9 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
@@ -160,7 +160,7 @@ export function AdminHeader({
           <button
             type="button"
             onClick={onSignOut}
-            className="group inline-flex h-9 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
+            className="shrink-0 group inline-flex h-9 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
           >
             <SignOut size={13} weight="regular" />
             <span className="hidden sm:inline">Sign out</span>
