@@ -1,4 +1,5 @@
 import { NextResponse, after } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   getAppContactContext,
@@ -162,6 +163,13 @@ export async function POST(req: Request) {
       console.error("[contact-vendor] sendContactInquiry threw", err);
     }
   });
+
+  // Surgical — this route fires on every visitor inquiry; nuking the
+  // whole layout cache would be wasteful. Only the vendor's inbox at
+  // /dashboard/messages and the admin's /admin/inquiries are
+  // affected by a new row in contact_messages.
+  revalidatePath("/dashboard/messages");
+  revalidatePath("/admin/inquiries");
 
   return NextResponse.json({ success: true });
 }

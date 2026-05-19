@@ -12,6 +12,7 @@ import {
   type SubmissionStatus,
 } from "@/lib/submissions/state-machine";
 import { sendSubmissionEditedAwaitingApprovalEmail } from "@/lib/email/send-submission-status";
+import { revalidatePath } from "next/cache";
 import { editBodySchema } from "./schema";
 
 /**
@@ -178,6 +179,10 @@ export async function POST(
       });
     });
   }
+
+  // admin.edit doesn't touch published content; only the vendor's
+  // dashboard view of the pending submission changes.
+  revalidatePath("/dashboard", "layout");
 
   return NextResponse.json({
     success: true,

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { submissions } from "@/lib/db/schema";
@@ -123,6 +124,10 @@ export async function POST(
     console.error("[vendor.request_changes] tx failed", err);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
+
+  // Doesn't touch published content; only the vendor's dashboard
+  // submission card + the admin's queue need busting.
+  revalidatePath("/dashboard", "layout");
 
   return NextResponse.json({ success: true });
 }

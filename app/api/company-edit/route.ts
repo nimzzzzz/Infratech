@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
@@ -127,6 +128,10 @@ export async function POST(req: Request) {
         },
       })
       .returning({ id: submissions.id });
+
+    // Submission is pending_review; the vendor's dashboard +
+    // /dashboard/company need to reflect the new pending state.
+    revalidatePath("/dashboard", "layout");
 
     return NextResponse.json({ success: true, submissionId: submission.id });
   } catch (err) {

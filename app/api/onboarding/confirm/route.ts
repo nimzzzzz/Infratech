@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
@@ -181,6 +182,11 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
+
+  // Dashboard layout reads onboarded state to decide whether to mount
+  // the legal-acceptance modal; bust so the next render sees the new
+  // onboarded=true flag.
+  revalidatePath("/dashboard", "layout");
 
   return NextResponse.json({ success: true });
 }

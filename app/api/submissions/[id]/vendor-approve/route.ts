@@ -15,6 +15,8 @@ import {
   type PublishPayload,
 } from "@/lib/submissions/publish";
 import { sendSubmissionPublishedEmail } from "@/lib/email/send-submission-status";
+import { revalidateApp } from "@/lib/cache/revalidate";
+import { revalidatePath } from "next/cache";
 
 /**
  * POST /api/submissions/:id/vendor-approve — vendor signs off on
@@ -145,6 +147,12 @@ export async function POST(
     console.error("[vendor.approve] tx failed", err);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
+
+  // App went live (vendor signed off on admin's edits). Bust /,
+  // /apps/<slug>, /sitemap.xml; also the vendor's dashboard so the
+  // SubmissionEditedCard disappears.
+  revalidateApp(result.slug);
+  revalidatePath("/dashboard", "layout");
 
   const contactEmail = vendor.contactEmail;
   if (contactEmail) {

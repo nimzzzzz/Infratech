@@ -15,6 +15,7 @@ import {
   sendSubmissionRejectedEmail,
   sendSubmissionEditRejectedEmail,
 } from "@/lib/email/send-submission-status";
+import { revalidatePath } from "next/cache";
 import { env } from "@/lib/env";
 import { rejectBodySchema } from "./schema";
 
@@ -122,6 +123,11 @@ export async function POST(
     console.error("[admin.reject] tx failed", err);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
+
+  // Rejection doesn't touch published content — only the vendor's
+  // dashboard view of the submission changes. See lib/cache/revalidate
+  // .ts header.
+  revalidatePath("/dashboard", "layout");
 
   // Fire rejection email. Per-type dispatch: edit types use the
   // PR-3 templates ("your changes need revisions" copy with a

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { submissions } from "@/lib/db/schema";
@@ -194,6 +195,10 @@ export async function POST(
     console.error("[vendor.resubmit] tx failed", err);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
+
+  // Resubmission flips the rejected → pending_review transition;
+  // vendor's dashboard reflects the status change.
+  revalidatePath("/dashboard", "layout");
 
   return NextResponse.json({
     success: true,
