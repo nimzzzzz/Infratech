@@ -410,7 +410,7 @@ export default async function DashboardOverviewPage({
               ) : (
                 <span />
               )}
-              <StatusBadge status={listing.status} />
+              <StatusBadge status={listing.status} flagged={listing.flagged} />
             </li>
           ))}
         </ul>
@@ -477,6 +477,7 @@ function StatCard({
 
 function StatusBadge({
   status,
+  flagged,
 }: {
   status:
     | "draft"
@@ -485,7 +486,20 @@ function StatusBadge({
     | "changes_requested"
     | "rejected"
     | "unpublished";
+  flagged?: boolean;
 }) {
+  // A flagged published product REPLACES the green "Live" pill with a
+  // rose "Flagged" pill — the vendor needs to know the listing is
+  // hidden, but we don't stack two pills on the row. Flag only ever
+  // co-occurs with `published` (the flag route 400s on anything else),
+  // so for other statuses we ignore the prop.
+  if (flagged && status === "published") {
+    return (
+      <span className="inline-flex items-center bg-rose-50 px-2 py-0.5 text-[13px] uppercase tracking-[0.18em] text-rose-700 ring-1 ring-rose-300">
+        Flagged
+      </span>
+    );
+  }
   const config: Record<
     typeof status,
     { label: string; className: string }

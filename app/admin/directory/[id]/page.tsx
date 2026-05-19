@@ -16,6 +16,7 @@ import { getCompanyDetailForAdmin } from "@/lib/queries/directory";
 import { relativeDays } from "@/lib/browse/dates";
 import { cn } from "@/lib/utils";
 import { ModerationActions } from "@/components/admin/directory/moderation-actions";
+import { ProductFlagButton } from "@/components/admin/directory/product-flag-button";
 
 export async function generateMetadata({
   params,
@@ -163,7 +164,7 @@ export default async function AdminDirectoryDetailPage({
             {products.map((p) => (
               <li
                 key={p.id}
-                className="grid grid-cols-[1fr_auto] items-center gap-4 py-4 md:px-3"
+                className="grid grid-cols-[1fr_auto_auto] items-center gap-4 py-4 md:px-3"
               >
                 <div className="min-w-0">
                   <Link
@@ -176,8 +177,20 @@ export default async function AdminDirectoryDetailPage({
                     /{p.slug}
                   </p>
                 </div>
-                <AppStatusPill status={p.status} />
-                {/* TODO(A.4 PR 3): per-product Flag button here. */}
+                <div className="flex items-center gap-2">
+                  <AppStatusPill status={p.status} />
+                  {p.flagged ? <FlaggedPill /> : null}
+                </div>
+                {p.status === "published" ? (
+                  <ProductFlagButton
+                    appId={p.id}
+                    appName={p.name}
+                    flagged={p.flagged}
+                    hasContactEmail={Boolean(vendor.contactEmail)}
+                  />
+                ) : (
+                  <span />
+                )}
               </li>
             ))}
           </ul>
@@ -284,6 +297,14 @@ function AppStatusPill({ status }: { status: string }) {
       )}
     >
       {status.replace(/_/g, " ")}
+    </span>
+  );
+}
+
+function FlaggedPill() {
+  return (
+    <span className="inline-flex items-center bg-rose-50 px-2 py-0.5 text-[13px] uppercase tracking-[0.18em] text-rose-700 ring-1 ring-rose-300">
+      Flagged
     </span>
   );
 }

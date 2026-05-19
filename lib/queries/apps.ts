@@ -180,6 +180,7 @@ export async function getAppBySlug(slug: string): Promise<AppDetail | null> {
         eq(apps.slug, slug),
         eq(apps.status, "published"),
         eq(vendors.suspended, false),
+        eq(apps.flagged, false),
       ),
     )
     .limit(1);
@@ -306,6 +307,7 @@ export async function listAppsByStage(stageSlug: string): Promise<AppCard[]> {
         eq(stages.slug, stageSlug),
         eq(apps.status, "published"),
         eq(vendors.suspended, false),
+        eq(apps.flagged, false),
       ),
     )
     .orderBy(apps.name);
@@ -329,6 +331,7 @@ export async function listAppsByCapability(
         eq(capabilities.slug, capabilitySlug),
         eq(apps.status, "published"),
         eq(vendors.suspended, false),
+        eq(apps.flagged, false),
       ),
     )
     .orderBy(apps.name);
@@ -349,6 +352,7 @@ export async function listAppsByIndustry(
         eq(industries.slug, industrySlug),
         eq(apps.status, "published"),
         eq(vendors.suspended, false),
+        eq(apps.flagged, false),
       ),
     )
     .orderBy(apps.name);
@@ -367,6 +371,7 @@ export async function listAppsByVendorSlug(
         eq(vendors.slug, vendorSlug),
         eq(apps.status, "published"),
         eq(vendors.suspended, false),
+        eq(apps.flagged, false),
       ),
     )
     .orderBy(apps.name);
@@ -382,6 +387,7 @@ export type OwnerAppRow = {
   slug: string;
   name: string;
   status: AppStatus;
+  flagged: boolean;
   publishedAt: Date | null;
   createdAt: Date;
 };
@@ -395,6 +401,7 @@ export async function listAppsForOwnerVendor(
       slug: apps.slug,
       name: apps.name,
       status: apps.status,
+      flagged: apps.flagged,
       publishedAt: apps.publishedAt,
       createdAt: apps.createdAt,
     })
@@ -408,7 +415,13 @@ export async function listAllAppSlugs() {
     .select({ slug: apps.slug })
     .from(apps)
     .innerJoin(vendors, eq(vendors.id, apps.vendorId))
-    .where(and(eq(apps.status, "published"), eq(vendors.suspended, false)));
+    .where(
+      and(
+        eq(apps.status, "published"),
+        eq(vendors.suspended, false),
+        eq(apps.flagged, false),
+      ),
+    );
   return rows.map((r) => r.slug);
 }
 
@@ -429,6 +442,7 @@ export async function listRelatedApps(
       and(
         eq(apps.status, "published"),
         eq(vendors.suspended, false),
+        eq(apps.flagged, false),
         ne(apps.id, appId),
         inArray(
           appStages.stageId,

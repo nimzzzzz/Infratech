@@ -93,6 +93,7 @@ export type AdminCompanyDetail = {
     slug: string;
     name: string;
     status: AppStatus;
+    flagged: boolean;
     publishedAt: Date | null;
   }>;
   members: Array<{
@@ -140,6 +141,7 @@ export async function getCompanyDetailForAdmin(
         slug: apps.slug,
         name: apps.name,
         status: apps.status,
+        flagged: apps.flagged,
         publishedAt: apps.publishedAt,
       })
       .from(apps)
