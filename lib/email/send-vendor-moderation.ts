@@ -5,6 +5,8 @@ import { fromAddress } from "./from";
 import { VendorSuspendedEmail } from "./templates/vendor-suspended";
 import { VendorUnsuspendedEmail } from "./templates/vendor-unsuspended";
 import { VendorDeletedEmail } from "./templates/vendor-deleted";
+import { ProductFlaggedEmail } from "./templates/product-flagged";
+import { ProductUnflaggedEmail } from "./templates/product-unflagged";
 import { env } from "@/lib/env";
 
 /**
@@ -91,6 +93,80 @@ export async function sendVendorUnsuspendedEmail(input: {
  * + name into closure variables BEFORE the delete transaction, since
  * the row is gone by the time after() fires this.
  */
+/**
+ * Product-level flag notification (A.4 PR 3). Mirrors the
+ * vendor-suspend flow but scoped to a single product — only the
+ * flagged listing is hidden, the rest of the vendor stays public.
+ * Best-effort delivery; DB state is the source of truth.
+ */
+export async function sendProductFlaggedEmail(input: {
+  to: string;
+  firstName: string;
+  vendorName: string;
+  productName: string;
+  reason?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const resend = getResend();
+    const html = await render(
+      ProductFlaggedEmail({
+        firstName: input.firstName,
+        vendorName: input.vendorName,
+        productName: input.productName,
+        reason: input.reason,
+        supportEmail: env.resend().EMAIL_CONTACT_INBOX,
+      }),
+    );
+    await resend.emails.send({
+      from: fromAddress(),
+      to: input.to,
+      subject: `Your AllInfratech listing for ${input.productName} has been flagged`,
+      html,
+    });
+    return { ok: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(
+      `[send-vendor-moderation] product-flagged email failed for ${input.to}: ${message}`,
+    );
+    return { ok: false, error: message };
+  }
+}
+
+export async function sendProductUnflaggedEmail(input: {
+  to: string;
+  firstName: string;
+  vendorName: string;
+  productName: string;
+  productSlug: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const resend = getResend();
+    const productUrl = `${env.SITE_URL}/apps/${input.productSlug}`;
+    const html = await render(
+      ProductUnflaggedEmail({
+        firstName: input.firstName,
+        vendorName: input.vendorName,
+        productName: input.productName,
+        productUrl,
+      }),
+    );
+    await resend.emails.send({
+      from: fromAddress(),
+      to: input.to,
+      subject: `Your AllInfratech listing for ${input.productName} is back online`,
+      html,
+    });
+    return { ok: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(
+      `[send-vendor-moderation] product-unflagged email failed for ${input.to}: ${message}`,
+    );
+    return { ok: false, error: message };
+  }
+}
+
 export async function sendVendorDeletedEmail(input: {
   to: string;
   firstName: string;

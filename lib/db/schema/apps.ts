@@ -81,6 +81,14 @@ export const apps = pgTable(
     integrations: text("integrations").array().notNull().default(sql`'{}'::text[]`),
     geographicAvailability: text("geographic_availability"),
     status: appStatus("status").notNull().default("draft"),
+    /**
+     * Admin-imposed moderation overlay (A.4 PR 3). Independent of
+     * `status` — a flagged product stays at `status = "published"`
+     * but every public query AND condition gates on flagged = false.
+     * Migration 0021 adds the column + a partial index on flagged =
+     * true. Reversible — admin can unflag at /admin/directory/[id].
+     */
+    flagged: boolean("flagged").notNull().default(false),
     featured: boolean("featured").notNull().default(false),
     editorNote: text("editor_note"),
     /**

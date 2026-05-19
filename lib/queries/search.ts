@@ -161,12 +161,24 @@ export async function searchApps(
       .select({ total: sql<number>`count(*)::int` })
       .from(apps)
       .innerJoin(vendors, eq(vendors.id, apps.vendorId))
-      .where(and(eq(vendors.suspended, false), ...conditions)),
+      .where(
+        and(
+          eq(vendors.suspended, false),
+          eq(apps.flagged, false),
+          ...conditions,
+        ),
+      ),
     db
       .select({ id: apps.id })
       .from(apps)
       .innerJoin(vendors, eq(vendors.id, apps.vendorId))
-      .where(and(eq(vendors.suspended, false), ...conditions))
+      .where(
+        and(
+          eq(vendors.suspended, false),
+          eq(apps.flagged, false),
+          ...conditions,
+        ),
+      )
       .orderBy(asc(apps.name))
       .limit(pageSize)
       .offset((page - 1) * pageSize),
