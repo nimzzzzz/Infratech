@@ -4,6 +4,7 @@ import { getResend } from "./client";
 import { fromAddress } from "./from";
 import { VendorSuspendedEmail } from "./templates/vendor-suspended";
 import { VendorUnsuspendedEmail } from "./templates/vendor-unsuspended";
+import { VendorDeletedEmail } from "./templates/vendor-deleted";
 import { env } from "@/lib/env";
 
 /**
@@ -78,6 +79,45 @@ export async function sendVendorUnsuspendedEmail(input: {
     const message = err instanceof Error ? err.message : String(err);
     console.error(
       `[send-vendor-moderation] unsuspended email failed for ${input.to}: ${message}`,
+    );
+    return { ok: false, error: message };
+  }
+}
+
+/**
+ * Permanent-deletion notification (A.4 PR 2). Final-toned — no CTA,
+ * no suggestion of restoration. Vendor can still reach the support
+ * email for questions. Caller must capture the vendor's contactEmail
+ * + name into closure variables BEFORE the delete transaction, since
+ * the row is gone by the time after() fires this.
+ */
+export async function sendVendorDeletedEmail(input: {
+  to: string;
+  firstName: string;
+  vendorName: string;
+  reason?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const resend = getResend();
+    const html = await render(
+      VendorDeletedEmail({
+        firstName: input.firstName,
+        vendorName: input.vendorName,
+        reason: input.reason,
+        supportEmail: env.resend().EMAIL_CONTACT_INBOX,
+      }),
+    );
+    await resend.emails.send({
+      from: fromAddress(),
+      to: input.to,
+      subject: `Your AllInfratech listing for ${input.vendorName} has been removed`,
+      html,
+    });
+    return { ok: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(
+      `[send-vendor-moderation] deleted email failed for ${input.to}: ${message}`,
     );
     return { ok: false, error: message };
   }

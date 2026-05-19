@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowCounterClockwise, XCircle } from "@phosphor-icons/react";
+import Link from "next/link";
+import {
+  ArrowCounterClockwise,
+  ArrowRight,
+  Trash,
+  XCircle,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { SuspendModal } from "./suspend-modal";
 
@@ -111,10 +117,34 @@ export function ModerationActions({
         )}
       </div>
 
-      {/* TODO(A.4 PR 2): Delete company action. Render below the
-          Suspend control with a clear visual separation and a
-          confirmation-page workflow (NOT a modal — destructive,
-          irreversible). */}
+      {/* Permanent deletion — separate visual section, separate
+          confirmation page (NOT a modal). The link is a regular
+          navigation, not a destructive POST; the destructive action
+          fires only after typed-name confirmation on the next
+          page. */}
+      <div className="mt-6 border-t border-rose-200 pt-5">
+        <p className="text-[13px] uppercase tracking-[0.22em] text-rose-700">
+          Permanent deletion
+        </p>
+        <p className="mt-2 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)]">
+          Removes the company and all of its products, submissions, and
+          inquiries forever. Members are orphaned (optionally blocked from
+          re-onboarding). Not reversible.
+        </p>
+        <Link
+          href={`/admin/directory/${vendorId}/delete`}
+          prefetch
+          className="group mt-3 inline-flex h-10 items-center gap-2 border border-rose-600 px-4 text-[14px] uppercase tracking-[0.18em] text-rose-700 transition-colors hover:bg-rose-600 hover:text-white"
+        >
+          <Trash size={13} weight="regular" />
+          Delete company…
+          <ArrowRight
+            size={11}
+            weight="bold"
+            className="transition-transform duration-300 group-hover:translate-x-0.5"
+          />
+        </Link>
+      </div>
       {/* TODO(A.4 PR 3): per-product Flag action lives on the products
           list above, not here. */}
 
