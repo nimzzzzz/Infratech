@@ -162,3 +162,102 @@ export async function getCompanyDetailForAdmin(
 
   return { vendor: vendorRow, products, members };
 }
+
+export type CompanyDeletionImpact = {
+  vendor: {
+    id: number;
+    slug: string;
+    name: string;
+    contactEmail: string | null;
+    websiteUrl: string | null;
+    description: string | null;
+    foundedYear: number | null;
+    hqCountry: string | null;
+    suspended: boolean;
+    createdAt: Date;
+  };
+  productCount: number;
+  productNames: string[];
+  submissionCount: number;
+  inquiryCount: number;
+  members: Array<{
+    id: number;
+    name: string;
+    primaryEmail: string;
+    isAdmin: boolean;
+  }>;
+};
+
+/**
+ * Pre-deletion scale snapshot for the /admin/directory/[id]/delete
+ * confirmation page. Loads the full set of counts the admin needs to
+ * see before confirming, plus the members list (so the admin can see
+ * exactly which humans they're orphaning / blocking).
+ *
+ * Fired BEFORE the delete transaction — the values land in the audit
+ * row's `before` block. Off-by-one drift between this snapshot and
+ * the actual rows the transaction removes is acceptable (audit log
+ * is descriptive, not legally exact — see PR 2 plan Q1).
+ */
+export async function getCompanyDeletionImpact(
+  vendorId: number,
+): Promise<CompanyDeletionImpact | null> {
+  const [vendorRow] = await db
+    .select({
+      id: vendors.id,
+      slug: vendors.slug,
+      name: vendors.name,
+      contactEmail: vendors.contactEmail,
+      websiteUrl: vendors.websiteUrl,
+      description: vendors.description,
+      foundedYear: vendors.foundedYear,
+      hqCountry: vendors.hqCountry,
+      suspended: vendors.suspended,
+      createdAt: vendors.createdAt,
+    })
+    .from(vendors)
+    .where(eq(vendors.id, vendorId))
+    .limit(1);
+  if (!vendorRow) return null;
+
+  const [productRows, countsRow, memberRows] = await Promise.all([
+    db
+      .select({ id: apps.id, name: apps.name })
+      .from(apps)
+      .where(eq(apps.vendorId, vendorId))
+      .orderBy(desc(apps.createdAt)),
+    db
+      .select({
+        submissionCount: sql<number>`(
+          SELECT COUNT(*)::int FROM submissions
+          WHERE submissions.submitter_vendor_id = ${vendorId}
+        )`,
+        inquiryCount: sql<number>`(
+          SELECT COUNT(*)::int FROM contact_messages
+          WHERE contact_messages.vendor_id = ${vendorId}
+        )`,
+      })
+      .from(vendors)
+      .where(eq(vendors.id, vendorId))
+      .limit(1),
+    db
+      .select({
+        id: vendorMembers.id,
+        name: vendorMembers.name,
+        primaryEmail: vendorMembers.primaryEmail,
+        isAdmin: vendorMembers.isAdmin,
+      })
+      .from(vendorMembers)
+      .where(eq(vendorMembers.vendorId, vendorId))
+      .orderBy(desc(vendorMembers.createdAt)),
+  ]);
+
+  return {
+    vendor: vendorRow,
+    productCount: productRows.length,
+    productNames: productRows.map((p) => p.name),
+    submissionCount: countsRow[0]?.submissionCount ?? 0,
+    inquiryCount: countsRow[0]?.inquiryCount ?? 0,
+    members: memberRows,
+  };
+}
