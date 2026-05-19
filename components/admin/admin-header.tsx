@@ -150,7 +150,7 @@ export function AdminHeader({
           <form action={enterVendorView}>
             <button
               type="submit"
-              className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4"
+              className="group inline-flex h-9 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
               title="Open /dashboard as if you were a vendor (for QA)"
             >
               <Eye size={13} weight="regular" />
@@ -160,7 +160,7 @@ export function AdminHeader({
           <button
             type="button"
             onClick={onSignOut}
-            className="group inline-flex h-9 items-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4"
+            className="group inline-flex h-9 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
           >
             <SignOut size={13} weight="regular" />
             <span className="hidden sm:inline">Sign out</span>
