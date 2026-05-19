@@ -74,7 +74,7 @@ export function AdminHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-6 md:h-18 md:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-6 md:h-18 md:px-8">
         {/* brand + admin badge */}
         <div className="flex items-center gap-4">
           <Link href="/admin" prefetch className="group flex items-center gap-2.5">
@@ -130,13 +130,13 @@ export function AdminHeader({
 
         {/* user pill + sign-out */}
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2.5 sm:flex">
+          <div className="hidden min-w-0 items-center gap-2.5 sm:flex">
             <UserAvatar avatarUrl={avatarUrl} name={name} size={32} />
-            <div className="flex flex-col leading-tight">
-              <span className="text-[15px] text-[var(--color-ink)]">
+            <div className="flex min-w-0 flex-col leading-tight">
+              <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[15px] text-[var(--color-ink)]">
                 {name}
               </span>
-              <span className="text-[13px] text-[var(--color-ink-3)]">
+              <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] text-[var(--color-ink-3)]">
                 {email}
               </span>
             </div>
@@ -147,10 +147,10 @@ export function AdminHeader({
               fill) but ahead of it in the row so the higher-impact
               Sign Out is the rightmost element (matches public-site
               button ordering convention). */}
-          <form action={enterVendorView} className="ml-auto">
+          <form action={enterVendorView} className="ml-auto shrink-0">
             <button
               type="submit"
-              className="group inline-flex h-9 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
+              className="group inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
               title="Open /dashboard as if you were a vendor (for QA)"
             >
               <Eye size={13} weight="regular" />
@@ -160,7 +160,7 @@ export function AdminHeader({
           <button
             type="button"
             onClick={onSignOut}
-            className="group inline-flex h-9 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
+            className="shrink-0 group inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
           >
             <SignOut size={13} weight="regular" />
             <span className="hidden sm:inline">Sign out</span>
@@ -173,7 +173,7 @@ export function AdminHeader({
         aria-label="Admin sections"
         className="border-t border-[var(--color-line)] bg-[var(--color-canvas)]/85 md:hidden"
       >
-        <ul className="mx-auto flex w-full max-w-6xl items-center gap-0 overflow-x-auto px-5 sm:px-6">
+        <ul className="mx-auto flex w-full max-w-7xl items-center gap-0 overflow-x-auto px-5 sm:px-6">
           {nav.map((item, idx) => {
             const active = item.match(pathname);
             return (
