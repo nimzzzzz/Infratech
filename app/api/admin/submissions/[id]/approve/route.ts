@@ -24,6 +24,8 @@ import {
   sendSubmissionPublishedEmail,
   sendSubmissionEditPublishedEmail,
 } from "@/lib/email/send-submission-status";
+import { revalidateApp, revalidateVendor } from "@/lib/cache/revalidate";
+import { revalidatePath } from "next/cache";
 import { env } from "@/lib/env";
 import { approveBodySchema } from "./schema";
 
@@ -231,6 +233,23 @@ export async function POST(
     console.error("[admin.approve] tx failed", err);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
+
+  // Cache invalidation — see lib/cache/revalidate.ts header. Public
+  // surfaces only need busting when an app or vendor row actually
+  // changed (new submission publish, product_edit publish, company_
+  // edit publish). The admin's /admin/submissions list is fine here
+  // because the admin client also router.refresh()es after the POST.
+  if (submission.type === "company_edit") {
+    // Updates the vendors row + region joins → vendor profile + every
+    // page that lists vendor name/logo. Coarse is the right hammer.
+    revalidatePath("/", "layout");
+    revalidateVendor(vendor.slug);
+  } else if (result.slug !== null) {
+    // "new" or "product_edit" — the app row changed. revalidateApp
+    // covers /, /apps/<slug>, /sitemap.xml.
+    revalidateApp(result.slug);
+  }
+  revalidatePath("/dashboard", "layout");
 
   // Fire the email after the response — Resend latency must not
   // gate the API response. Per-type dispatch: edit types use the

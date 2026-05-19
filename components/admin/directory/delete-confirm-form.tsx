@@ -116,7 +116,12 @@ export function DeleteConfirmForm({
         <div className="mt-6 flex justify-end border-t border-emerald-200 pt-5">
           <button
             type="button"
-            onClick={() => router.push("/admin/directory")}
+            onClick={() => {
+              // Push then refresh — never refresh-then-push. See
+              // lib/cache/revalidate.ts header for the rule.
+              router.push("/admin/directory");
+              router.refresh();
+            }}
             className="group inline-flex h-10 items-center gap-2 bg-[var(--color-ink)] px-4 text-[14px] uppercase tracking-[0.18em] text-[var(--color-canvas)]"
           >
             Back to directory

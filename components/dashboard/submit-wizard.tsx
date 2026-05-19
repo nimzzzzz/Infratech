@@ -610,8 +610,14 @@ export function SubmitWizard({
       // stale redirect and bounces the user back into the onboarding
       // flow. Same pattern the legal-acceptance modal uses after it
       // flips vendor_members.onboarded.
-      router.refresh();
+      //
+      // Order matters: push then refresh, NEVER refresh-then-push.
+      // router.refresh() invalidates the current segment's Router
+      // Cache — if we push first, "current" is the destination
+      // (which is what we want fresh). See lib/cache/revalidate.ts
+      // header.
       router.push(json.redirectUrl ?? "/dashboard");
+      router.refresh();
     } catch (err) {
       console.error("[submit-wizard] submit failed", err);
       setSubmitError("Network error. Please try again.");
