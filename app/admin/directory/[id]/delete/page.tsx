@@ -70,11 +70,6 @@ export default async function AdminDirectoryDeletePage({
       <h1 className="mt-3 font-heading text-[36px] leading-[1.04] tracking-tight md:text-[44px]">
         {impact.vendor.name}
       </h1>
-      <p className="mt-2 text-[14px] text-[var(--color-ink-3)]">
-        <span className="font-mono text-[var(--color-coral)]">
-          /vendors/{impact.vendor.slug}
-        </span>
-      </p>
 
       <section className="mt-10 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-5 md:p-6">
         <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)]">
