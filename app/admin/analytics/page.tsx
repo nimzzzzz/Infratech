@@ -326,6 +326,31 @@ function buildTimeToPublishBars(rows: { bucket: string; n: number }[]): Bar[] {
   }));
 }
 
+/**
+ * Action → color mapping for the admin-activity stacked chart.
+ * Restrained palette: coral carries the dominant "approve" action;
+ * darker coral marks "reject"; greys + near-black carry the
+ * moderation verbs in proportion to their severity. `app.flag`
+ * and `vendor.unsuspend` both use ink-3 — they almost never
+ * co-occur in the same daily stack, and the legend's text labels
+ * disambiguate when they do.
+ */
+const ADMIN_ACTIVITY_PALETTE: Record<string, string> = {
+  "submission.approve": "var(--color-coral)",
+  "submission.reject": "var(--color-coral-deep)",
+  "submission.edit": "var(--color-bloom-soft)",
+  "app.flag": "var(--color-ink-3)",
+  "app.unflag": "var(--color-line-strong)",
+  "vendor.suspend": "var(--color-ink-2)",
+  "vendor.unsuspend": "var(--color-ink-3)",
+  "vendor.delete": "var(--color-ink)",
+};
+
+/** Fallback for any action not in the explicit map (e.g. future
+ *  action keys, or vendor-authored submission lifecycle events that
+ *  currently leak into the admin-activity metric — see BACKLOG). */
+const ADMIN_ACTIVITY_FALLBACK_COLOR = "var(--color-ink-3)";
+
 function buildAdminActivityBars(
   rows: { day: string; action: string; n: number }[],
 ): Bar[] {
@@ -340,9 +365,10 @@ function buildAdminActivityBars(
     actionsSeen.add(row.action);
   }
 
-  // Stable action order — first time we see an action gets the
-  // earliest palette slot. Sort actions by total descending so the
-  // legend's top entry is the most common action.
+  // Sort actions by total volume descending so the legend's top
+  // entry is the most common action. Color assignment is by action
+  // key now (not by volume rank), so a low-volume rebrand doesn't
+  // shuffle colors run-over-run.
   const totals = new Map<string, number>();
   for (const action of actionsSeen) {
     let t = 0;
@@ -353,8 +379,11 @@ function buildAdminActivityBars(
     (a, b) => (totals.get(b) ?? 0) - (totals.get(a) ?? 0),
   );
   const actionColor = new Map<string, string>();
-  orderedActions.forEach((action, idx) => {
-    actionColor.set(action, STACKED_PALETTE[idx % STACKED_PALETTE.length]);
+  orderedActions.forEach((action) => {
+    actionColor.set(
+      action,
+      ADMIN_ACTIVITY_PALETTE[action] ?? ADMIN_ACTIVITY_FALLBACK_COLOR,
+    );
   });
 
   const days = Array.from(byDay.keys()).sort();

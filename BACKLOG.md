@@ -104,6 +104,11 @@ Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
 - **The fix:** lift those primitives + the company field set into a shared component (e.g. `components/dashboard/company-fields.tsx`) that both the wizard step and the edit form render. Wizard wraps it in its multi-step shell; edit form wraps it in the pending/rejected/success banner shell. One source of truth, no drift possible.
 - **Trigger:** before the next feature touches either surface, OR before PR 1 of vendor product editing lands (the product wizard/edit story will replay the exact same drift unless this is solved first).
 
+### "Admin activity" analytics metric leaks vendor-authored actions
+- **Context (2026-05-20, surfaced by `fix/analytics-bar-chart-polish`):** the `/admin/analytics` Admin activity card filters `audit_log` rows with `actor_vendor_member_id IS NOT NULL` — that includes BOTH admin-authored actions (`submission.approve`, `vendor.suspend`, etc.) AND vendor-authored ones (`submission.vendor_approve`, `submission.vendor_request_changes`, `submission.resubmit`). The card title says "Admin activity" but the data is "human activity." The current restrained palette folds vendor-authored actions into the fallback ink-3 colour, so they read as a quiet undifferentiated stripe — visually OK but semantically muddy.
+- **The fix:** decide one of (a) rename the metric to "Human activity" / "Audit-log activity" so the chart matches its data; or (b) tighten the query to filter for admin-authored actions only by joining `vendor_members` and asserting `is_admin = true`, OR by hard-coding an action-key allowlist (`action LIKE 'submission.%' AND action NOT LIKE '%vendor_%' OR action LIKE 'app.%' OR action LIKE 'vendor.%'`). Option (b) needs care because vendor-side actions ARE moderation-adjacent and might want their own card.
+- **Trigger:** when admin team uses the metric for actual moderation-load triage and notices the numbers don't match their workload. Out of scope for `fix/analytics-bar-chart-polish` — that PR ships the palette restraint only.
+
 ## 🟢 Notes / decisions that future-self might forget
 
 ### Why we use Vercel
