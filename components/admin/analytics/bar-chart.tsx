@@ -139,7 +139,7 @@ export function BarChart({
                   x={x}
                   y={y}
                   width={barW}
-                  height={Math.max(0, h)}
+                  height={Math.max(1, h)}
                   style={{ fill: seg.color ?? DEFAULT_FILL }}
                 >
                   <title>{`${tooltip} — ${seg.key}: ${seg.value}`}</title>
