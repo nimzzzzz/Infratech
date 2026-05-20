@@ -48,13 +48,14 @@ export function DashboardHeader({
 
   const onSignOut = async () => {
     try {
-      // Phase A.1.1 — clear the view_as_vendor cookie before
+      // Phase A.1.1 — clear the preview_vendor cookie before
       // Clerk's signOut redirects away. Without this, a different
       // admin signing in on the same browser within the 4-hour
-      // cookie window would inherit vendor view. Best-effort; if
-      // the fetch fails the cookie still expires on its own.
+      // cookie window would inherit the vendor-flow preview.
+      // Best-effort; if the fetch fails the cookie still expires
+      // on its own.
       try {
-        await fetch("/api/admin/exit-vendor-view", { method: "POST" });
+        await fetch("/api/admin/exit-preview-vendor", { method: "POST" });
       } catch {
         // Network blip is fine — Max-Age cleans up.
       }

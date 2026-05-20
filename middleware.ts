@@ -52,8 +52,8 @@ export default clerkMiddleware(async (auth, req) => {
   const has2FA =
     (sessionClaims as { twoFactorEnabled?: boolean } | undefined)
       ?.twoFactorEnabled === true;
-  // Phase A.1.1 — admin's "View as vendor" toggle.
-  const viewAsVendor = req.cookies.get("view_as_vendor")?.value === "true";
+  // Phase A.1.1 — admin's "Preview vendor flow" toggle.
+  const previewVendor = req.cookies.get("preview_vendor")?.value === "true";
 
   const decision = await decideRoute({
     pathname: req.nextUrl.pathname,
@@ -61,7 +61,7 @@ export default clerkMiddleware(async (auth, req) => {
     isAdminClaim,
     has2FA,
     isAdminInDb: () => (userId ? isAdminInDb(userId) : Promise.resolve(false)),
-    viewAsVendor,
+    previewVendor,
     demoMode,
   });
 

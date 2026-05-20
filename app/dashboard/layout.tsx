@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DashboardHeaderSkeleton } from "@/components/dashboard/dashboard-header-skeleton";
 import { LegalAcceptanceModal } from "@/components/onboarding/legal-acceptance-modal";
-import { ViewAsVendorBanner } from "@/components/dashboard/view-as-vendor-banner";
+import { PreviewVendorBanner } from "@/components/dashboard/preview-vendor-banner";
 import { getVendorSession } from "@/lib/auth/session";
 import { needsReacceptance } from "@/lib/legal/check-acceptance";
 import { countUnreadForVendor } from "@/lib/queries/messages";
@@ -56,9 +56,9 @@ export default function DashboardLayout({
 
 /**
  * Header section — async server component. Fetches the session,
- * unread count, and view-as-vendor cookie in parallel. Returns the
+ * unread count, and preview-vendor cookie in parallel. Returns the
  * real `<DashboardHeader>` along with the optional
- * `<ViewAsVendorBanner>` (rendered above the header when an admin
+ * `<PreviewVendorBanner>` (rendered above the header when an admin
  * has the cookie set).
  *
  * Open shape — `vendor` may be null for brand-new sign-ins.
@@ -72,20 +72,20 @@ async function DashboardHeaderShell() {
     cookies(),
   ]);
 
-  // Phase A.1.1 — view-as-vendor banner. Renders for admins who
+  // Phase A.1.1 — preview-vendor banner. Renders for admins who
   // have the cookie set; non-admins never see it (middleware
   // ensures admins are the only ones who can have a valid
   // matching session AND a cookie, but we double-check is_admin
   // here so a stale cookie inherited by a non-admin signing in
   // on the same browser doesn't render a confusing banner).
-  const viewAsVendorCookie =
-    cookieStore.get("view_as_vendor")?.value === "true";
-  const showVendorViewBanner =
-    viewAsVendorCookie && session.vendorMember.isAdmin;
+  const previewVendorCookie =
+    cookieStore.get("preview_vendor")?.value === "true";
+  const showPreviewVendorBanner =
+    previewVendorCookie && session.vendorMember.isAdmin;
 
   return (
     <>
-      {showVendorViewBanner ? <ViewAsVendorBanner /> : null}
+      {showPreviewVendorBanner ? <PreviewVendorBanner /> : null}
       <DashboardHeader
         companyName={session.vendor?.name ?? "—"}
         userName={session.vendorMember.name}
