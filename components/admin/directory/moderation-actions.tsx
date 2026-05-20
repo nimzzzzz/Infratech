@@ -20,9 +20,6 @@ import { SuspendModal } from "./suspend-modal";
  *   suspended → "Reinstate company" button (small inline confirm via
  *               window.confirm — lighter UX since the action is
  *               reversal of a deliberate action; no reason needed)
- *
- * Delete action is INTENTIONALLY not built here — A.4 PR 2.
- * Product-level Flag is INTENTIONALLY not built — A.4 PR 3.
  */
 export function ModerationActions({
   vendorId,
@@ -145,8 +142,6 @@ export function ModerationActions({
           />
         </Link>
       </div>
-      {/* TODO(A.4 PR 3): per-product Flag action lives on the products
-          list above, not here. */}
 
       {modalOpen ? (
         <SuspendModal
