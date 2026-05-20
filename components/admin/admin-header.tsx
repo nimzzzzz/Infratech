@@ -45,12 +45,6 @@ const nav = [
     placeholder: false,
     match: (p: string) => p.startsWith("/admin/analytics"),
   },
-  {
-    href: "/admin/audit-log",
-    label: "Audit log",
-    placeholder: false,
-    match: (p: string) => p.startsWith("/admin/audit-log"),
-  },
   { href: "/admin", label: "Settings", placeholder: true, match: () => false },
 ];
 
