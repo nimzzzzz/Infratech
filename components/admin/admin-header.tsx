@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
 import { SignOut, ShieldCheck, Eye } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
-import { enterVendorView } from "@/lib/admin/view-as-vendor";
+import { enterVendorPreview } from "@/lib/admin/preview-vendor";
 import { UserAvatar } from "@/components/shared/user-avatar";
 
 export type AdminHeaderProps = {
@@ -54,13 +54,13 @@ export function AdminHeader({
 
   const onSignOut = async () => {
     try {
-      // Phase A.1.1 — clear view_as_vendor cookie in case it was
-      // set (admin currently in vendor view shouldn't see this
-      // header, but signing out from either header should leave
-      // no stale impersonation cookie behind for the next user
-      // on the same browser).
+      // Phase A.1.1 — clear preview_vendor cookie in case it was
+      // set (admin currently previewing the vendor flow shouldn't
+      // see this header, but signing out from either header should
+      // leave no stale preview cookie behind for the next user on
+      // the same browser).
       try {
-        await fetch("/api/admin/exit-vendor-view", { method: "POST" });
+        await fetch("/api/admin/exit-preview-vendor", { method: "POST" });
       } catch {
         // Network blip is fine — Max-Age cleans up.
       }
@@ -141,20 +141,23 @@ export function AdminHeader({
               </span>
             </div>
           </div>
-          {/* Phase A.1.1 — View-as-vendor toggle. Form-action wires
-              the server action without client JS state. Sits visually
-              below Sign Out in hierarchy (same border treatment, no
-              fill) but ahead of it in the row so the higher-impact
-              Sign Out is the rightmost element (matches public-site
+          {/* Phase A.1.1 — Preview-vendor-flow toggle. Form-action
+              wires the server action without client JS state. NOT
+              impersonation — admin stays themselves, cookie just
+              loosens the admin→/admin redirect so they can walk
+              through the vendor flow for QA. Sits visually below
+              Sign Out in hierarchy (same border treatment, no fill)
+              but ahead of it in the row so the higher-impact Sign
+              Out is the rightmost element (matches public-site
               button ordering convention). */}
-          <form action={enterVendorView} className="ml-auto shrink-0">
+          <form action={enterVendorPreview} className="ml-auto shrink-0">
             <button
               type="submit"
               className="group inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
-              title="Open /dashboard as if you were a vendor (for QA)"
+              title="Walk through the vendor dashboard as yourself for QA — no impersonation"
             >
               <Eye size={13} weight="regular" />
-              <span className="hidden sm:inline">View as vendor</span>
+              <span className="hidden sm:inline">Preview vendor flow</span>
             </button>
           </form>
           <button

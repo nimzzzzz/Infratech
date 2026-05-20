@@ -25,13 +25,13 @@
  *
  *   • /dashboard/** :
  *       – no userId → redirect to /login
- *       – isAdmin AND !viewAsVendor (claim then DB fallback) →
+ *       – isAdmin AND !previewVendor (claim then DB fallback) →
  *         redirect to /admin (admins should never see the vendor
  *         UI; covers bookmarked /dashboard URLs and stale tabs)
- *       – isAdmin AND viewAsVendor → next (admin has opted into
- *         vendor view via the toggle in the admin header; cookie
- *         loosens the redirect rule for QA purposes — Phase
- *         A.1.1)
+ *       – isAdmin AND previewVendor → next (admin has opted into
+ *         the vendor-flow preview via the toggle in the admin
+ *         header; cookie loosens the redirect rule for QA
+ *         purposes — Phase A.1.1)
  *       – otherwise → next
  *
  *   • /post-signin :
@@ -63,12 +63,13 @@ export type DecideRouteInput = {
   /** Called only when `isAdminClaim` is undefined and the path
    *  needs the answer (admin or dashboard route). */
   isAdminInDb: () => Promise<boolean>;
-  /** Phase A.1.1 — the `view_as_vendor=true` cookie set by the
-   *  admin's "View as vendor" button. When true AND the actor is
-   *  an admin, /dashboard/** requests pass through instead of
+  /** Phase A.1.1 — the `preview_vendor=true` cookie set by the
+   *  admin's "Preview vendor flow" button. When true AND the actor
+   *  is an admin, /dashboard/** requests pass through instead of
    *  redirecting to /admin. Cookie alone doesn't grant access —
-   *  is_admin is still required. */
-  viewAsVendor: boolean;
+   *  is_admin is still required. NOT impersonation: the admin
+   *  stays themselves, this cookie only suppresses the redirect. */
+  previewVendor: boolean;
   demoMode: boolean;
 };
 
@@ -120,11 +121,13 @@ export async function decideRoute(opts: DecideRouteInput): Promise<Decision> {
       isAdmin = await opts.isAdminInDb();
     }
     if (isAdmin) {
-      // Phase A.1.1: the view_as_vendor cookie loosens the
+      // Phase A.1.1: the preview_vendor cookie loosens the
       // admin→/admin redirect rule so admins can QA the vendor
-      // flow. The cookie alone doesn't grant access (is_admin is
-      // still required) — it just gates this specific redirect.
-      if (opts.viewAsVendor) {
+      // flow as themselves. The cookie alone doesn't grant access
+      // (is_admin is still required) — it just gates this specific
+      // redirect. Not impersonation; the admin doesn't become any
+      // particular vendor.
+      if (opts.previewVendor) {
         return { kind: "next" };
       }
       return { kind: "redirect", to: "/admin" };

@@ -24,7 +24,7 @@ describe("decideRoute — unauthenticated", () => {
       isAdminClaim: undefined,
       has2FA: false,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "redirect", to: "/login" });
@@ -37,7 +37,7 @@ describe("decideRoute — unauthenticated", () => {
       isAdminClaim: undefined,
       has2FA: false,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "redirect", to: "/admin/login" });
@@ -50,7 +50,7 @@ describe("decideRoute — unauthenticated", () => {
       isAdminClaim: undefined,
       has2FA: false,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
@@ -63,7 +63,7 @@ describe("decideRoute — unauthenticated", () => {
       isAdminClaim: undefined,
       has2FA: false,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "redirect", to: "/login" });
@@ -78,7 +78,7 @@ describe("decideRoute — /admin/** (authenticated)", () => {
       isAdminClaim: false,
       has2FA: false,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "redirect", to: "/dashboard" });
@@ -92,7 +92,7 @@ describe("decideRoute — /admin/** (authenticated)", () => {
       isAdminClaim: true,
       has2FA: true,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
@@ -113,7 +113,7 @@ describe("decideRoute — /admin/** (authenticated)", () => {
         isAdminClaim: true,
         has2FA: false,
         isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
         demoMode: false,
       });
       expect(d).toEqual({ kind: "next" });
@@ -132,7 +132,7 @@ describe("decideRoute — /admin/** (authenticated)", () => {
         isAdminClaim: true,
         has2FA: false,
         isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
         demoMode: false,
       });
       expect(d).toEqual({ kind: "redirect", to: "/admin/2fa-setup" });
@@ -149,7 +149,7 @@ describe("decideRoute — /admin/** (authenticated)", () => {
       isAdminClaim: undefined,
       has2FA: true,
       isAdminInDb: adminDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
@@ -163,7 +163,7 @@ describe("decideRoute — /admin/** (authenticated)", () => {
       isAdminClaim: undefined,
       has2FA: false,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
@@ -176,7 +176,7 @@ describe("decideRoute — /admin/** (authenticated)", () => {
       isAdminClaim: false,
       has2FA: false,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
@@ -191,7 +191,7 @@ describe("decideRoute — /dashboard/** (authenticated)", () => {
       isAdminClaim: false,
       has2FA: false,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
@@ -205,7 +205,7 @@ describe("decideRoute — /dashboard/** (authenticated)", () => {
       isAdminClaim: true,
       has2FA: true,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "redirect", to: "/admin" });
@@ -219,7 +219,7 @@ describe("decideRoute — /dashboard/** (authenticated)", () => {
       isAdminClaim: undefined,
       has2FA: false,
       isAdminInDb: lookup,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "redirect", to: "/admin" });
@@ -235,7 +235,7 @@ describe("decideRoute — /post-signin (authenticated)", () => {
       isAdminClaim: false,
       has2FA: false,
       isAdminInDb: noopDb,
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: false,
     });
     expect(d).toEqual({ kind: "next" });
@@ -250,7 +250,7 @@ describe("decideRoute — DEMO_MODE", () => {
       isAdminClaim: undefined,
       has2FA: false,
       isAdminInDb: vi.fn().mockResolvedValue(false),
-      viewAsVendor: false,
+      previewVendor: false,
       demoMode: true,
     });
     expect(d).toEqual({ kind: "next" });

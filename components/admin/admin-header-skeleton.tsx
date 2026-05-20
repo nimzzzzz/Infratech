@@ -28,7 +28,7 @@ export function AdminHeaderSkeleton() {
         <div className="flex animate-pulse items-center gap-3">
           {/* user pill avatar circle, sm:flex */}
           <div className="hidden h-8 w-8 rounded-full bg-[var(--color-line-strong)]/30 sm:block" />
-          {/* view-as-vendor + sign-out button placeholders */}
+          {/* preview-vendor + sign-out button placeholders */}
           <div className="h-9 w-24 bg-[var(--color-line-strong)]/20" />
           <div className="h-9 w-20 bg-[var(--color-line-strong)]/30" />
         </div>
