@@ -44,11 +44,19 @@ export type ResolvedRange = {
 
 /**
  * Resolve a Range to start/end day + timestamp pair anchored to UTC
- * now(). `endDate` is today (inclusive); `startDate` is `now - Nd`
- * for the bucketed ranges, or `2000-01-01` for "all".
+ * now(). `endDate` is today; `startDate` is `now - Nd` for the
+ * bucketed ranges, or `2000-01-01` for "all".
  *
  * Returning both date-grain and timestamp-grain values up-front so
  * callers don't repeat the math.
+ *
+ * Note: queries use only the START bound. The END bound is implicit
+ * "as of NOW()" server-side. The upper-bound fields are retained in
+ * the type for documentation but no production query consults them
+ * — earlier drafts included `created_at <= endDateTime` filters
+ * which silently excluded rows whose timestamps landed a few ms
+ * after the JS-captured upper bound (clock skew between Postgres
+ * NOW() and the moment resolveRange() ran).
  */
 export function resolveRange(range: Range): ResolvedRange {
   const now = new Date();
@@ -102,7 +110,7 @@ export async function getDailyPageViews(
   const rows = await db.execute<{ day: string; views: number }>(sql`
     SELECT day::text AS day, SUM(count)::int AS views
     FROM app_views
-    WHERE day >= ${r.startDate}::date AND day <= ${r.endDate}::date
+    WHERE day >= ${r.startDate}::date
     GROUP BY day
     ORDER BY day
   `);
@@ -125,7 +133,6 @@ export async function getInquiriesSeries(
            COUNT(*)::int AS inquiries
     FROM contact_messages
     WHERE created_at >= ${r.startDateTime}::timestamptz
-      AND created_at <= ${r.endDateTime}::timestamptz
     GROUP BY day
     ORDER BY day
   `);
@@ -138,8 +145,220 @@ export async function getInquiriesTotal(r: ResolvedRange): Promise<number> {
     SELECT COUNT(*)::int AS n
     FROM contact_messages
     WHERE created_at >= ${r.startDateTime}::timestamptz
-      AND created_at <= ${r.endDateTime}::timestamptz
   `);
   const [row] = rows as unknown as { n: number }[];
   return row?.n ?? 0;
+}
+
+// ── Metric 5: Submissions throughput by status (weekly) ─────────────
+
+export type SubmissionStatusKey =
+  | "pending_review"
+  | "in_review"
+  | "changes_requested"
+  | "published"
+  | "edited_awaiting_vendor_approval"
+  | "rejected";
+
+export type SubmissionsThroughputRow = {
+  week: string;
+  status: SubmissionStatusKey;
+  n: number;
+};
+
+export async function getSubmissionsThroughput(
+  r: ResolvedRange,
+): Promise<SubmissionsThroughputRow[]> {
+  const rows = await db.execute<SubmissionsThroughputRow>(sql`
+    SELECT DATE_TRUNC('week', submitted_at)::date::text AS week,
+           status, COUNT(*)::int AS n
+    FROM submissions
+    WHERE submitted_at >= ${r.startDateTime}::timestamptz
+    GROUP BY week, status
+    ORDER BY week, status
+  `);
+  return rows as unknown as SubmissionsThroughputRow[];
+}
+
+// ── Metric 6: Time-to-publish histogram ─────────────────────────────
+
+export type TimeToPublishBucket =
+  | "<1h"
+  | "1h-1d"
+  | "1-3d"
+  | "3-7d"
+  | "7-30d"
+  | ">30d";
+
+export const TIME_TO_PUBLISH_BUCKET_ORDER: ReadonlyArray<TimeToPublishBucket> =
+  ["<1h", "1h-1d", "1-3d", "3-7d", "7-30d", ">30d"];
+
+export type TimeToPublishRow = { bucket: TimeToPublishBucket; n: number };
+
+/**
+ * Time-to-publish (published_at - submitted_at) bucketed into a fixed
+ * histogram. Includes ONLY submissions submitted within the selected
+ * range AND eventually published; un-published submissions don't
+ * contribute. Bucket ordering applied client-side via
+ * TIME_TO_PUBLISH_BUCKET_ORDER (CASE-based ordering in SQL is brittle
+ * across enums + costly).
+ */
+export async function getTimeToPublishHistogram(
+  r: ResolvedRange,
+): Promise<TimeToPublishRow[]> {
+  const rows = await db.execute<TimeToPublishRow>(sql`
+    SELECT
+      CASE
+        WHEN published_at - submitted_at < INTERVAL '1 hour' THEN '<1h'
+        WHEN published_at - submitted_at < INTERVAL '1 day' THEN '1h-1d'
+        WHEN published_at - submitted_at < INTERVAL '3 days' THEN '1-3d'
+        WHEN published_at - submitted_at < INTERVAL '7 days' THEN '3-7d'
+        WHEN published_at - submitted_at < INTERVAL '30 days' THEN '7-30d'
+        ELSE '>30d'
+      END AS bucket,
+      COUNT(*)::int AS n
+    FROM submissions
+    WHERE status = 'published'
+      AND published_at IS NOT NULL
+      AND submitted_at >= ${r.startDateTime}::timestamptz
+    GROUP BY bucket
+  `);
+  return rows as unknown as TimeToPublishRow[];
+}
+
+// ── Metric 2: Top 10 most-viewed apps ───────────────────────────────
+
+export type TopAppRow = {
+  id: number;
+  slug: string;
+  name: string;
+  logoUrl: string | null;
+  vendorName: string;
+  views: number;
+};
+
+export async function getTopViewedApps(
+  r: ResolvedRange,
+): Promise<TopAppRow[]> {
+  const rows = await db.execute<TopAppRow>(sql`
+    SELECT a.id, a.slug, a.name, a.logo_url AS "logoUrl",
+           v.name AS "vendorName", SUM(av.count)::int AS views
+    FROM app_views av
+    JOIN apps a ON a.id = av.app_id
+    JOIN vendors v ON v.id = a.vendor_id
+    WHERE av.day >= ${r.startDate}::date
+    GROUP BY a.id, a.slug, a.name, a.logo_url, v.name
+    ORDER BY views DESC
+    LIMIT 10
+  `);
+  return rows as unknown as TopAppRow[];
+}
+
+// ── Metric 3: Outbound click-through rate per app ───────────────────
+
+export type CtrRow = {
+  id: number;
+  slug: string;
+  name: string;
+  vendorName: string;
+  views: number;
+  clicks: number;
+  ctrPercent: number;
+};
+
+/**
+ * Per-app outbound CTR. Includes only published apps with at least
+ * one view OR click in the window (otherwise the list is mostly
+ * 0/0 noise). Ordered by CTR%, then by views as a tiebreaker.
+ * Limited to 20 rows.
+ */
+export async function getOutboundCtrPerApp(
+  r: ResolvedRange,
+): Promise<CtrRow[]> {
+  const rows = await db.execute<CtrRow>(sql`
+    WITH views_agg AS (
+      SELECT app_id, SUM(count)::int AS views
+      FROM app_views
+      WHERE day >= ${r.startDate}::date
+      GROUP BY app_id
+    ),
+    clicks_agg AS (
+      SELECT app_id, COUNT(*)::int AS clicks
+      FROM outbound_clicks
+      WHERE clicked_at >= ${r.startDateTime}::timestamptz
+      GROUP BY app_id
+    )
+    SELECT a.id, a.slug, a.name, v.name AS "vendorName",
+           COALESCE(va.views, 0) AS views,
+           COALESCE(ca.clicks, 0) AS clicks,
+           CASE WHEN COALESCE(va.views, 0) = 0 THEN 0
+                ELSE ROUND(
+                  COALESCE(ca.clicks, 0)::numeric / va.views::numeric * 100,
+                  2
+                )::float
+           END AS "ctrPercent"
+    FROM apps a
+    JOIN vendors v ON v.id = a.vendor_id
+    LEFT JOIN views_agg va ON va.app_id = a.id
+    LEFT JOIN clicks_agg ca ON ca.app_id = a.id
+    WHERE a.status = 'published'
+      AND (COALESCE(va.views, 0) > 0 OR COALESCE(ca.clicks, 0) > 0)
+    ORDER BY "ctrPercent" DESC, views DESC
+    LIMIT 20
+  `);
+  return rows as unknown as CtrRow[];
+}
+
+// ── Metric 7: Vendor signup funnel (state snapshot, no range) ───────
+
+export type SignupFunnel = {
+  signedUp: number;
+  onboarded: number;
+  companyCreated: number;
+  hasPublishedApp: number;
+};
+
+/**
+ * State-snapshot funnel — current counts at each stage across all
+ * time, not a per-period count. Locked decision per the A.6 PR 1
+ * scope.
+ */
+export async function getSignupFunnel(): Promise<SignupFunnel> {
+  const rows = await db.execute<SignupFunnel>(sql`
+    SELECT
+      (SELECT COUNT(*)::int FROM vendor_members) AS "signedUp",
+      (SELECT COUNT(*)::int FROM vendor_members WHERE onboarded = true) AS "onboarded",
+      (SELECT COUNT(*)::int FROM vendors) AS "companyCreated",
+      (SELECT COUNT(*)::int FROM vendors v
+        WHERE EXISTS (
+          SELECT 1 FROM apps WHERE apps.vendor_id = v.id AND apps.status = 'published'
+        )
+      ) AS "hasPublishedApp"
+  `);
+  const [row] = rows as unknown as SignupFunnel[];
+  return (
+    row ?? { signedUp: 0, onboarded: 0, companyCreated: 0, hasPublishedApp: 0 }
+  );
+}
+
+// ── Metric 8: Admin activity (last 14 days, ignores range param) ────
+
+export type AdminActivityRow = { day: string; action: string; n: number };
+
+/**
+ * Daily admin activity over the last 14 days. Excludes system rows
+ * (actor_vendor_member_id IS NULL — GDPR webhooks, metadata-sync
+ * failures) so the metric reflects human moderation load only.
+ */
+export async function getAdminActivity(): Promise<AdminActivityRow[]> {
+  const rows = await db.execute<AdminActivityRow>(sql`
+    SELECT DATE_TRUNC('day', created_at)::date::text AS day,
+           action, COUNT(*)::int AS n
+    FROM audit_log
+    WHERE created_at >= NOW() - INTERVAL '14 days'
+      AND actor_vendor_member_id IS NOT NULL
+    GROUP BY day, action
+    ORDER BY day, action
+  `);
+  return rows as unknown as AdminActivityRow[];
 }
