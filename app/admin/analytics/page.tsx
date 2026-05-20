@@ -30,6 +30,13 @@ import { RangePicker } from "@/components/admin/analytics/range-picker";
 import { TopAppsList } from "@/components/admin/analytics/top-apps-list";
 import { CtrTable } from "@/components/admin/analytics/ctr-table";
 import { FunnelList } from "@/components/admin/analytics/funnel-list";
+import { actionColor } from "@/lib/admin/action-palette";
+import {
+  listAuditEntries,
+  resolveTargets,
+} from "@/lib/queries/audit-log";
+import { AuditEntryRow } from "@/components/admin/audit-log/audit-entry-row";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Admin · Analytics",
@@ -57,6 +64,16 @@ export default async function AdminAnalyticsPage({
   const range = parseRange(sp.range);
   const resolved = resolveRange(range);
 
+  // Recent activity section. Two independent toggles, both URL-driven:
+  //   ?activity=all       → 100 rows (default 30)
+  //   ?systemEvents=show  → include actor_vendor_member_id IS NULL rows
+  //                         (webhook events, GDPR deletes). Default
+  //                         excludes them — the feed reads as
+  //                         "humans doing things" by default.
+  const activityShowAll = parseActivityShowAll(sp.activity);
+  const activityIncludeSystem = parseSystemEvents(sp.systemEvents);
+  const activityLimit = activityShowAll ? 100 : 30;
+
   const [
     ,
     dailyViews,
@@ -68,6 +85,7 @@ export default async function AdminAnalyticsPage({
     ctrRows,
     funnel,
     adminActivity,
+    activityRows,
   ] = await Promise.all([
     getAdminSession(),
     getDailyPageViews(resolved),
@@ -79,7 +97,12 @@ export default async function AdminAnalyticsPage({
     getOutboundCtrPerApp(resolved),
     getSignupFunnel(),
     getAdminActivity(),
+    listAuditEntries({
+      limit: activityLimit,
+      includeSystem: activityIncludeSystem,
+    }),
   ]);
+  const activityTargets = await resolveTargets(activityRows);
 
   // ── Build chart data ────────────────────────────────────────────
   const throughputBars = buildThroughputBars(throughput);
@@ -235,8 +258,106 @@ export default async function AdminAnalyticsPage({
           <BarChartLegend items={adminActivityLegend} />
         </MetricCard>
       </div>
+
+      {/* Row 6 — Recent activity (audit-log feed, full-width).
+          Shows the 30 most-recent audit_log rows by default; ?activity=all
+          expands to 100. No filters — this is a "look at this when
+          something seems off" surface, not a precision tool. Anyone
+          needing more uses Neon directly. */}
+      <section className="mt-12 border-t border-[var(--color-line)] pt-12">
+        <p className="text-[13px] uppercase tracking-[0.22em] text-[var(--color-coral)]">
+          Activity
+        </p>
+        <h2 className="mt-3 font-heading text-[26px] leading-tight tracking-tight text-[var(--color-ink)] md:text-[30px]">
+          Recent activity
+        </h2>
+        <p className="mt-2 max-w-[60ch] text-[14px] leading-relaxed text-[var(--color-ink-2)] md:text-[15px]">
+          Last {activityShowAll ? "100" : "30"} admin actions across the
+          platform.
+        </p>
+
+        {activityRows.length === 0 ? (
+          <p className="mt-8 text-[15px] text-[var(--color-ink-3)]">
+            Nothing in the audit log yet.
+          </p>
+        ) : (
+          <ul className="mt-6 divide-y divide-[var(--color-line)] border-y border-[var(--color-line)]">
+            {activityRows.map((row) => (
+              <AuditEntryRow
+                key={row.id}
+                row={row}
+                target={activityTargets.get(`${row.targetType}:${row.targetId}`)}
+              />
+            ))}
+          </ul>
+        )}
+
+        <p className="mt-4 text-[13px] text-[var(--color-ink-3)]">
+          Showing {activityShowAll ? "last 100" : "30 most recent"} admin
+          actions
+          {activityIncludeSystem ? " including system events" : ""}
+          {" · "}
+          <Link
+            href={buildActivityHref(sp, {
+              activityShowAll: !activityShowAll,
+              includeSystem: activityIncludeSystem,
+            })}
+            className="text-[var(--color-ink-2)] underline-offset-4 hover:underline"
+          >
+            {activityShowAll ? "Show 30" : "Show last 100"}
+          </Link>
+          {" · "}
+          <Link
+            href={buildActivityHref(sp, {
+              activityShowAll,
+              includeSystem: !activityIncludeSystem,
+            })}
+            className="text-[var(--color-ink-2)] underline-offset-4 hover:underline"
+          >
+            {activityIncludeSystem
+              ? "Hide system events"
+              : "Show system events"}
+          </Link>
+        </p>
+      </section>
     </Container>
   );
+}
+
+function parseActivityShowAll(raw: string | string[] | undefined): boolean {
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  return v === "all";
+}
+
+function parseSystemEvents(raw: string | string[] | undefined): boolean {
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  return v === "show";
+}
+
+/**
+ * Build a Recent-activity toggle href preserving every other
+ * searchParam (range, etc.). The `activity` and `systemEvents`
+ * keys are overwritten according to the requested state — both
+ * toggles can be flipped independently from any starting state.
+ */
+function buildActivityHref(
+  sp: Record<string, string | string[] | undefined>,
+  next: { activityShowAll: boolean; includeSystem: boolean },
+): string {
+  const params = new URLSearchParams();
+  for (const [k, v] of Object.entries(sp)) {
+    if (k === "activity" || k === "systemEvents") continue;
+    if (v === undefined) continue;
+    if (Array.isArray(v)) {
+      if (v[0] !== undefined) params.set(k, v[0]);
+    } else {
+      params.set(k, v);
+    }
+  }
+  if (next.activityShowAll) params.set("activity", "all");
+  if (next.includeSystem) params.set("systemEvents", "show");
+  const q = params.toString();
+  return q ? `/admin/analytics?${q}` : "/admin/analytics";
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -326,31 +447,6 @@ function buildTimeToPublishBars(rows: { bucket: string; n: number }[]): Bar[] {
   }));
 }
 
-/**
- * Action → color mapping for the admin-activity stacked chart.
- * Restrained palette: coral carries the dominant "approve" action;
- * darker coral marks "reject"; greys + near-black carry the
- * moderation verbs in proportion to their severity. `app.flag`
- * and `vendor.unsuspend` both use ink-3 — they almost never
- * co-occur in the same daily stack, and the legend's text labels
- * disambiguate when they do.
- */
-const ADMIN_ACTIVITY_PALETTE: Record<string, string> = {
-  "submission.approve": "var(--color-coral)",
-  "submission.reject": "var(--color-coral-deep)",
-  "submission.edit": "var(--color-bloom-soft)",
-  "app.flag": "var(--color-ink-3)",
-  "app.unflag": "var(--color-line-strong)",
-  "vendor.suspend": "var(--color-ink-2)",
-  "vendor.unsuspend": "var(--color-ink-3)",
-  "vendor.delete": "var(--color-ink)",
-};
-
-/** Fallback for any action not in the explicit map (e.g. future
- *  action keys, or vendor-authored submission lifecycle events that
- *  currently leak into the admin-activity metric — see BACKLOG). */
-const ADMIN_ACTIVITY_FALLBACK_COLOR = "var(--color-ink-3)";
-
 function buildAdminActivityBars(
   rows: { day: string; action: string; n: number }[],
 ): Bar[] {
@@ -378,12 +474,9 @@ function buildAdminActivityBars(
   const orderedActions = Array.from(actionsSeen).sort(
     (a, b) => (totals.get(b) ?? 0) - (totals.get(a) ?? 0),
   );
-  const actionColor = new Map<string, string>();
+  const actionColorMap = new Map<string, string>();
   orderedActions.forEach((action) => {
-    actionColor.set(
-      action,
-      ADMIN_ACTIVITY_PALETTE[action] ?? ADMIN_ACTIVITY_FALLBACK_COLOR,
-    );
+    actionColorMap.set(action, actionColor(action));
   });
 
   const days = Array.from(byDay.keys()).sort();
@@ -397,7 +490,7 @@ function buildAdminActivityBars(
         {
           key: action,
           value: v,
-          color: actionColor.get(action) ?? "var(--color-coral)",
+          color: actionColorMap.get(action) ?? "var(--color-coral)",
         },
       ];
     });
