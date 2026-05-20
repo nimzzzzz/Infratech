@@ -8,8 +8,8 @@
  *
  *   • DEMO_MODE → always "next"
  *
- *   • /admin/login, /admin/2fa-setup → next
- *     (exempt routes admins use *before* they have a session)
+ *   • /admin/login → next
+ *     (exempt route admins use *before* they have a session)
  *
  *   • /admin/** :
  *       – no userId → redirect to /admin/login
@@ -17,10 +17,6 @@
  *         (NOT /?error=forbidden — keeping non-admins inside the
  *         authenticated area is friendlier than dumping to the public
  *         site; the dashboard layout then handles them)
- *       – !has2FA → redirect to /admin/2fa-setup
- *         (DISABLED by default until /admin/2fa-setup ships in
- *          Phase A.1.2 — see BACKLOG. Re-enable by setting
- *          ENFORCE_ADMIN_2FA=true on Vercel; no code change needed.)
  *       – otherwise → next
  *
  *   • /dashboard/** :
@@ -59,7 +55,6 @@ export type DecideRouteInput = {
   userId: string | null;
   /** publicMetadata.is_admin from the JWT, if present. */
   isAdminClaim: boolean | undefined;
-  has2FA: boolean;
   /** Called only when `isAdminClaim` is undefined and the path
    *  needs the answer (admin or dashboard route). */
   isAdminInDb: () => Promise<boolean>;
@@ -76,9 +71,7 @@ export type DecideRouteInput = {
 export async function decideRoute(opts: DecideRouteInput): Promise<Decision> {
   if (opts.demoMode) return { kind: "next" };
 
-  const isAdminAuthRoute =
-    opts.pathname === "/admin/login" ||
-    opts.pathname === "/admin/2fa-setup";
+  const isAdminAuthRoute = opts.pathname === "/admin/login";
   const isAdminRoute = opts.pathname.startsWith("/admin");
   const isDashboardRoute = opts.pathname.startsWith("/dashboard");
   const isPostSignin = opts.pathname === "/post-signin";
@@ -98,13 +91,6 @@ export async function decideRoute(opts: DecideRouteInput): Promise<Decision> {
       // users land on their own dashboard rather than the public
       // homepage with an error param.
       return { kind: "redirect", to: "/dashboard" };
-    }
-    // TODO(A.1.2): re-enable 2FA enforcement when /admin/2fa-setup
-    // page is built. Tracked in BACKLOG.md. Wrapped in an env flag
-    // so production can flip it back on with a single Vercel env
-    // toggle once the page lands — no code change required.
-    if (process.env.ENFORCE_ADMIN_2FA === "true" && !opts.has2FA) {
-      return { kind: "redirect", to: "/admin/2fa-setup" };
     }
     return { kind: "next" };
   }
