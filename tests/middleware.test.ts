@@ -22,7 +22,6 @@ describe("decideRoute — unauthenticated", () => {
       pathname: "/dashboard",
       userId: null,
       isAdminClaim: undefined,
-      has2FA: false,
       isAdminInDb: noopDb,
       previewVendor: false,
       demoMode: false,
@@ -35,7 +34,6 @@ describe("decideRoute — unauthenticated", () => {
       pathname: "/admin",
       userId: null,
       isAdminClaim: undefined,
-      has2FA: false,
       isAdminInDb: noopDb,
       previewVendor: false,
       demoMode: false,
@@ -48,7 +46,6 @@ describe("decideRoute — unauthenticated", () => {
       pathname: "/",
       userId: null,
       isAdminClaim: undefined,
-      has2FA: false,
       isAdminInDb: noopDb,
       previewVendor: false,
       demoMode: false,
@@ -61,7 +58,6 @@ describe("decideRoute — unauthenticated", () => {
       pathname: "/post-signin",
       userId: null,
       isAdminClaim: undefined,
-      has2FA: false,
       isAdminInDb: noopDb,
       previewVendor: false,
       demoMode: false,
@@ -76,7 +72,6 @@ describe("decideRoute — /admin/** (authenticated)", () => {
       pathname: "/admin",
       userId: "user_v",
       isAdminClaim: false,
-      has2FA: false,
       isAdminInDb: noopDb,
       previewVendor: false,
       demoMode: false,
@@ -85,12 +80,11 @@ describe("decideRoute — /admin/** (authenticated)", () => {
     expect(noopDb).not.toHaveBeenCalled();
   });
 
-  it("admin with 2FA on /admin → next", async () => {
+  it("admin on /admin → next", async () => {
     const d = await decideRoute({
       pathname: "/admin",
       userId: "user_a",
       isAdminClaim: true,
-      has2FA: true,
       isAdminInDb: noopDb,
       previewVendor: false,
       demoMode: false,
@@ -98,56 +92,11 @@ describe("decideRoute — /admin/** (authenticated)", () => {
     expect(d).toEqual({ kind: "next" });
   });
 
-  it("admin WITHOUT 2FA on /admin → next (enforcement bypassed by default)", async () => {
-    // Phase A.1.2 (see BACKLOG): 2FA enforcement is gated behind the
-    // ENFORCE_ADMIN_2FA env flag, default off, because the
-    // /admin/2fa-setup page isn't built yet. Admins currently get
-    // through without a second factor. Re-enable by setting the flag
-    // on Vercel — no code change required.
-    const original = process.env.ENFORCE_ADMIN_2FA;
-    delete process.env.ENFORCE_ADMIN_2FA;
-    try {
-      const d = await decideRoute({
-        pathname: "/admin/queue",
-        userId: "user_a",
-        isAdminClaim: true,
-        has2FA: false,
-        isAdminInDb: noopDb,
-      previewVendor: false,
-        demoMode: false,
-      });
-      expect(d).toEqual({ kind: "next" });
-    } finally {
-      if (original !== undefined) process.env.ENFORCE_ADMIN_2FA = original;
-    }
-  });
-
-  it("admin WITHOUT 2FA on /admin → /admin/2fa-setup when ENFORCE_ADMIN_2FA=true", async () => {
-    const original = process.env.ENFORCE_ADMIN_2FA;
-    process.env.ENFORCE_ADMIN_2FA = "true";
-    try {
-      const d = await decideRoute({
-        pathname: "/admin/queue",
-        userId: "user_a",
-        isAdminClaim: true,
-        has2FA: false,
-        isAdminInDb: noopDb,
-      previewVendor: false,
-        demoMode: false,
-      });
-      expect(d).toEqual({ kind: "redirect", to: "/admin/2fa-setup" });
-    } finally {
-      if (original === undefined) delete process.env.ENFORCE_ADMIN_2FA;
-      else process.env.ENFORCE_ADMIN_2FA = original;
-    }
-  });
-
   it("DB fallback fires when claim is undefined", async () => {
     const d = await decideRoute({
       pathname: "/admin",
       userId: "user_unknown",
       isAdminClaim: undefined,
-      has2FA: true,
       isAdminInDb: adminDb,
       previewVendor: false,
       demoMode: false,
@@ -161,20 +110,6 @@ describe("decideRoute — /admin/** (authenticated)", () => {
       pathname: "/admin/login",
       userId: null,
       isAdminClaim: undefined,
-      has2FA: false,
-      isAdminInDb: noopDb,
-      previewVendor: false,
-      demoMode: false,
-    });
-    expect(d).toEqual({ kind: "next" });
-  });
-
-  it("/admin/2fa-setup is exempt", async () => {
-    const d = await decideRoute({
-      pathname: "/admin/2fa-setup",
-      userId: "user_a",
-      isAdminClaim: false,
-      has2FA: false,
       isAdminInDb: noopDb,
       previewVendor: false,
       demoMode: false,
@@ -189,7 +124,6 @@ describe("decideRoute — /dashboard/** (authenticated)", () => {
       pathname: "/dashboard",
       userId: "user_v",
       isAdminClaim: false,
-      has2FA: false,
       isAdminInDb: noopDb,
       previewVendor: false,
       demoMode: false,
@@ -203,7 +137,6 @@ describe("decideRoute — /dashboard/** (authenticated)", () => {
       pathname: "/dashboard/messages",
       userId: "user_a",
       isAdminClaim: true,
-      has2FA: true,
       isAdminInDb: noopDb,
       previewVendor: false,
       demoMode: false,
@@ -217,7 +150,6 @@ describe("decideRoute — /dashboard/** (authenticated)", () => {
       pathname: "/dashboard",
       userId: "user_unknown",
       isAdminClaim: undefined,
-      has2FA: false,
       isAdminInDb: lookup,
       previewVendor: false,
       demoMode: false,
@@ -233,7 +165,6 @@ describe("decideRoute — /post-signin (authenticated)", () => {
       pathname: "/post-signin",
       userId: "user_v",
       isAdminClaim: false,
-      has2FA: false,
       isAdminInDb: noopDb,
       previewVendor: false,
       demoMode: false,
@@ -248,7 +179,6 @@ describe("decideRoute — DEMO_MODE", () => {
       pathname: "/admin",
       userId: null,
       isAdminClaim: undefined,
-      has2FA: false,
       isAdminInDb: vi.fn().mockResolvedValue(false),
       previewVendor: false,
       demoMode: true,

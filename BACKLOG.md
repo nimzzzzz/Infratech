@@ -35,17 +35,6 @@ The current placeholder favicons (10 of 14 vendors) stay in `public/logos/vendor
 
 Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
 
-### Phase A.1.2 — 2FA setup page for admins
-- **Status (2026-05-12):** middleware 2FA enforcement is **temporarily bypassed** behind `ENFORCE_ADMIN_2FA` env flag (default off). The check at `lib/auth/middleware-decision.ts` lives in code, just gated. Admins currently sign in with LinkedIn only, no second factor. This is acceptable for the pilot admin cohort (3 operators, all internal) but **not for public launch**.
-- **Scope when picked up:**
-  - Build a real `/admin/2fa-setup` page using Clerk's TOTP flow. Admins enroll on first sign-in if no second factor is registered; subsequent sign-ins require the TOTP code at Clerk's hosted prompt.
-  - Wire Clerk's `useReverification` / `userHasTwoFactor` (or equivalent in `@clerk/nextjs/legacy`) to read the factor state into the JWT claim `publicMetadata.twoFactorEnabled` so the middleware check works.
-  - Smoke test that a brand-new admin (Mehdi / Renbo / equivalent) can land on `/admin/2fa-setup` on first sign-in, enroll TOTP, and proceed to `/admin`.
-  - Flip `ENFORCE_ADMIN_2FA=true` on Vercel (Production scope). No code change required — the gate is already wired.
-  - Remove the `TODO(A.1.2)` comments + the env-flag wrapper once enforcement is permanent (or leave the flag for future incident bypass — operator's call at landing time).
-- **Trigger:** before opening admin signups beyond the pilot cohort, OR before any non-Resolute-employee gets admin access.
-- Discussed: 2026-05-12.
-
 ## 🟡 Future ideas — explore later
 
 ### Cold-start warming for dashboard / admin Vercel functions
@@ -110,6 +99,11 @@ Discussed: 2026-05-09. Trigger: Phase 4-C kickoff.
 - **Trigger:** when admin team uses the metric for actual moderation-load triage and notices the numbers don't match their workload. Out of scope for `fix/analytics-bar-chart-polish` — that PR ships the palette restraint only.
 
 ## 🟢 Notes / decisions that future-self might forget
+
+### Admin 2FA — deferred indefinitely (2026-05-21)
+- Was tracked as Phase A.1.2. Closed out in `chore/defer-admin-2fa`. Clerk gates multi-factor authentication behind their paid tier; the existing LinkedIn OAuth + `CLERK_ADMIN_EMAILS` allowlist is considered adequate for 2–3 trusted internal admins.
+- Full rationale + revisit triggers documented in [CLAUDE.md §14 — TODO / Tech Debt](CLAUDE.md). The previous shell (env gate + redirect target + `has2FA` claim read) was removed because the gate had no functional purpose at the free tier.
+- If revisited: re-add from scratch against current Clerk capabilities; don't try to resurrect the old shell.
 
 ### Why we use Vercel
 - CLAUDE.md §2 spec'd it. Free tier covers expected directory traffic comfortably. Paid tier ($20/mo) only needed when hitting scale or hosting-region constraints (CLAUDE.md §8 specifies EU/UAE region for compliance — Vercel can deploy to `fra1`/`dub1`/`cdg1` for EU when we go live for real).
