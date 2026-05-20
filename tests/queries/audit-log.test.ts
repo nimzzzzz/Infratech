@@ -41,13 +41,13 @@ describe("listAuditEntries — sort + default system-row exclusion", () => {
     // Insert two rows with explicit timestamps, older first.
     await db.execute(sql`
       INSERT INTO audit_log
-        (admin_id, actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
-      VALUES (NULL, ${actorId}, 'test.older', 'vendor', '1', NULL, NULL, NOW() - INTERVAL '2 minutes')
+        (actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
+      VALUES (${actorId}, 'test.older', 'vendor', '1', NULL, NULL, NOW() - INTERVAL '2 minutes')
     `);
     await db.execute(sql`
       INSERT INTO audit_log
-        (admin_id, actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
-      VALUES (NULL, ${actorId}, 'test.newer', 'vendor', '2', NULL, NULL, NOW() - INTERVAL '1 minute')
+        (actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
+      VALUES (${actorId}, 'test.newer', 'vendor', '2', NULL, NULL, NOW() - INTERVAL '1 minute')
     `);
 
     const rows = await listAuditEntries({ limit: 100 });
@@ -73,8 +73,8 @@ describe("listAuditEntries — sort + default system-row exclusion", () => {
   it("excludes system rows (actor_vendor_member_id IS NULL) by default", async () => {
     await db.execute(sql`
       INSERT INTO audit_log
-        (admin_id, actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
-      VALUES (NULL, NULL, 'test.system_marker', 'vendor', '99', NULL, NULL, NOW())
+        (actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
+      VALUES (NULL, 'test.system_marker', 'vendor', '99', NULL, NULL, NOW())
     `);
     const rows = await listAuditEntries({ limit: 100 });
     const system = rows.find((r) => r.action === "test.system_marker");
@@ -84,8 +84,8 @@ describe("listAuditEntries — sort + default system-row exclusion", () => {
   it("includes system rows when includeSystem: true is passed", async () => {
     await db.execute(sql`
       INSERT INTO audit_log
-        (admin_id, actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
-      VALUES (NULL, NULL, 'test.system_marker_2', 'vendor', '99', NULL, NULL, NOW())
+        (actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
+      VALUES (NULL, 'test.system_marker_2', 'vendor', '99', NULL, NULL, NOW())
     `);
     const rows = await listAuditEntries({ limit: 100, includeSystem: true });
     const system = rows.find((r) => r.action === "test.system_marker_2");
@@ -103,9 +103,9 @@ describe("listAuditEntries — GDPR redaction (load-bearing)", () => {
     // The query layer must scrub both.
     await db.execute(sql`
       INSERT INTO audit_log
-        (admin_id, actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
+        (actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
       VALUES (
-        NULL, NULL, 'vendor_member.gdpr_delete', 'vendor_member', '12345',
+        NULL, 'vendor_member.gdpr_delete', 'vendor_member', '12345',
         ${sql.raw(
           `'${JSON.stringify({
             name: "Jane Doe",
@@ -144,9 +144,9 @@ describe("listAuditEntries — GDPR redaction (load-bearing)", () => {
     const after = { suspended: true, reason: "Spam content" };
     await db.execute(sql`
       INSERT INTO audit_log
-        (admin_id, actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
+        (actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
       VALUES (
-        NULL, ${actorId}, 'vendor.suspend', 'vendor', '777',
+        ${actorId}, 'vendor.suspend', 'vendor', '777',
         ${sql.raw(`'${JSON.stringify(before)}'::jsonb`)},
         ${sql.raw(`'${JSON.stringify(after)}'::jsonb`)},
         NOW()

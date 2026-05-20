@@ -311,13 +311,13 @@ describe("getAdminActivity", () => {
     `);
     await db.execute(sql`
       INSERT INTO audit_log
-        (admin_id, actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
-      VALUES (NULL, ${member.id}, 'test.action', 'vendor', '1', NULL, NULL, NOW())
+        (actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
+      VALUES (${member.id}, 'test.action', 'vendor', '1', NULL, NULL, NOW())
     `);
     await db.execute(sql`
       INSERT INTO audit_log
-        (admin_id, actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
-      VALUES (NULL, NULL, 'system.gdpr_delete', 'vendor', '2', NULL, NULL, NOW())
+        (actor_vendor_member_id, action, target_type, target_id, before, after, created_at)
+      VALUES (NULL, 'system.gdpr_delete', 'vendor', '2', NULL, NULL, NOW())
     `);
     const rows = await getAdminActivity();
     const human = rows.find((r) => r.action === "test.action");
