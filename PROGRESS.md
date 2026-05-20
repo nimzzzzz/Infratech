@@ -144,11 +144,11 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 - [x] `ReviewLogo` (File-based) deleted; replaced by `ReviewImage` / `ReviewGalleryStrip` (URL-based) in the review screen
 - [x] Tests: 3 new admin-submissions cases (media write on first publish, gallery wipe-and-reinsert on re-publish, no-op on returning-vendor publish), 4 new submissions schema cases (bad video URL, bad blob URL on product logo + gallery item, full happy path payload roundtrip), 4 wizard render cases (real widgets + video preview)
 
-**PR 3 — Admin side ⬜ next**
-- Admin submission detail renders uploaded media
-- Admin edit mode includes media widgets
-- Diff view handles URL field changes
-- Admin upload route auth path (`vendorId` in body)
+**PR 3 — Admin side ✅ done**
+- [x] Admin submission detail renders uploaded media (composed in `app/admin/submissions/[id]/page.tsx` → `components/admin/submissions/submission-detail.tsx`)
+- [x] Admin edit mode includes media widgets
+- [x] Diff view handles URL field changes — logo, video, screenshots all diffed in `components/admin/submissions/product-edit-diff-view.tsx`; company logo in `company-edit-diff-view.tsx`
+- [x] Admin upload route auth path (`vendorId` in body)
 
 ### Phase D — submission wizard wired to DB ⬜ later
 - [ ] `POST /api/submissions` with validation + honeypot + rate limit
@@ -210,16 +210,16 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 - [x] Wizard extended with `initialValues` + `submitUrl` props for the resubmit branch at `/dashboard/onboarding/submit?resubmit=<id>`
 - [x] Tests: 7 unit cases on `diffPayload`, 4 component cases on `SubmissionDiffView`, 11 integration cases across the three vendor endpoints (happy + ownership + state + version_mismatch + rate-limit)
 
-### Phase A.3 — Vendor management ⬜ later
-- [ ] `/admin/vendors` list + detail; suspend / unsuspend; edit company fields
+### Phase A.3 — Vendor management 🟡 mostly done
+- [x] `/admin/directory` list + detail; suspend / unsuspend; permanent delete; per-product flag (PR #70 suspend, PR #71 directory counts, PR #72 company delete, PR #74 product flag)
 - [ ] Member management (suspend a vendor_member without touching the vendor row)
 
 ### Phase A.4 — Taxonomy management ⬜ later
 - [ ] Stage / capability / industry / pricing CRUD (chips admin sees vs canonical taxonomy)
 - [ ] Promotion of proposed taxonomy values from `submissions.payload`
 
-### Phase A.5 — Inquiry inbox + analytics ⬜ later
-- [ ] `/admin/inquiries` — read-only view of `contact_messages` across all vendors
+### Phase A.5 — Inquiry inbox + analytics 🟡 inquiries done, analytics not
+- [x] `/admin/inquiries` — read-only view of `contact_messages` across all vendors (PR #69; `app/admin/inquiries/page.tsx` + `[id]/page.tsx` + admin overview "Inquiries · 7d" tile)
 - [ ] `/admin/analytics` — `app_views` + `outbound_clicks` rollups
 
 ### Phase A.6 — Polish ⬜ later
