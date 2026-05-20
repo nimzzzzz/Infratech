@@ -34,7 +34,6 @@ export async function recordAdminAudit(
   },
 ): Promise<void> {
   await tx.insert(auditLog).values({
-    adminId: null,
     actorVendorMemberId: opts.actorVendorMemberId,
     action: opts.action,
     targetType: opts.targetType,

@@ -10,7 +10,6 @@ import {
 } from "drizzle-orm/pg-core";
 import { vendors, vendorMembers } from "./vendors";
 import { apps } from "./apps";
-import { admins } from "./audit";
 
 /**
  * Submissions are the moderation queue.
@@ -72,15 +71,11 @@ export const submissions = pgTable(
       .references(() => vendors.id, { onDelete: "cascade" }),
     /** Set on first publish; subsequent publishes update the same row. */
     appId: integer("app_id").references(() => apps.id, { onDelete: "set null" }),
-    /** Legacy FK at admins.id; kept for back-compat. New writers
-     *  populate reviewedBy (vendor_members.id) instead. */
-    reviewerAdminId: integer("reviewer_admin_id").references(() => admins.id, {
-      onDelete: "set null",
-    }),
     /**
-     * Phase A.2: the vendor_member who took the last state-changing
-     * action (admin approve/edit/reject, or vendor approve/request-
-     * changes/resubmit). Replaces reviewerAdminId for new writes.
+     * The vendor_member who took the last state-changing action
+     * (admin approve/edit/reject, or vendor approve/request-changes/
+     * resubmit). The legacy `reviewer_admin_id` column + FK at
+     * `admins.id` were dropped in A.6 PR 3.
      */
     reviewedBy: integer("reviewed_by").references(() => vendorMembers.id, {
       onDelete: "set null",

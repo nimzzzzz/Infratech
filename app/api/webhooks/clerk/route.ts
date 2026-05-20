@@ -35,16 +35,17 @@ import { isAdminEmail } from "@/lib/auth/admin-allowlist";
  *       3. Best-effort: push role back to Clerk publicMetadata if it
  *          differs from canonical. Failure logs + breadcrumbs, doesn't
  *          throw.
- *   • user.updated — sync name/email on the existing vendor_members or
- *     admins row; reconcile role drift the same way. If no DB row
- *     exists, fall through to handleUserCreated.
+ *   • user.updated — sync name/email on the existing vendor_members
+ *     row; reconcile role drift the same way. If no DB row exists,
+ *     fall through to handleUserCreated.
  *   • user.deleted — vendor_members PII anonymised + clerk_user_id
  *     cleared + suspended=true; if the member was the only one
  *     pointing at their vendor, the vendor row is suspended too;
- *     their published apps move to "unpublished". Admins hard-
- *     deleted. Either path writes an audit_log row with admin_id=NULL.
- *     The vendor row itself is never deleted — the company exists
- *     independently of the human's link to it.
+ *     their published apps move to "unpublished". Admins (vendor_
+ *     members rows with is_admin=true) take the same path. Writes
+ *     an audit_log row with actor_vendor_member_id=NULL (system
+ *     event). The vendor row itself is never deleted — the company
+ *     exists independently of the human's link to it.
  */
 
 type ClerkUser = {
@@ -153,7 +154,6 @@ async function syncAdminFlagToClerk(
     );
     try {
       await db.insert(auditLog).values({
-        adminId: null,
         action: "clerk.metadata_sync_failed",
         targetType: isAdmin ? "admin" : "vendor",
         targetId: userId,
@@ -326,7 +326,6 @@ async function handleUserDeleted(user: ClerkDeletedUser): Promise<void> {
 
   await db.transaction(async (tx) => {
     await tx.insert(auditLog).values({
-      adminId: null,
       action: "vendor_member.gdpr_delete",
       targetType: "vendor_member",
       targetId: String(memberRow.id),

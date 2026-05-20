@@ -88,7 +88,6 @@ async function main() {
         app_capabilities, app_stages,
         apps, vendor_regions,
         vendor_member_legal_acceptances, vendor_members, vendors,
-        admins,
         stages, capabilities, industries, pricing_models, regions
       RESTART IDENTITY CASCADE
     `);
@@ -260,8 +259,8 @@ async function main() {
 
     // 6. Seed demo admin so /admin renders in DEMO_MODE.
     // Phase A.1 single-human-table model: admin is a vendor_members
-    // row with is_admin=true. The legacy admins table is dormant —
-    // no seed row required there anymore.
+    // row with is_admin=true. The legacy admins table was removed
+    // in A.6 PR 3.
     await tx
       .insert(schema.vendorMembers)
       .values({
