@@ -12,7 +12,7 @@
 
 The site is **a directory, not a Resolute product page**. It should feel like an independent, curated resource — the kind of thing a consultancy quietly maintains because they care about the space.
 
-- **Brand split (locked 2026-05-08):** Public name **AllInfratech**, domain `allinfratech.com`. Tagline *"A repository of infrastructure technology products and companies."* Resolute appears as: (a) the footer R-logo + one-line attribution linking to `https://resolutemanagementconsultancy.com/`, (b) the About page Contact section. That's it.
+- **Brand split (locked 2026-05-08):** Public name **AllInfratech**, domain `allinfratech.com`. Tagline *"A repository of infrastructure-related technology products and companies."* Resolute appears as: (a) the footer R-logo + one-line attribution linking to `https://resolutemanagementconsultancy.com/`, (b) the About page Contact section. That's it.
 - **No hard sell:** No Resolute service pitches, contact-us-for-consulting CTAs, or public lead-capture forms (the per-vendor "Contact this vendor" form at `/apps/[slug]/contact` is the only public form that sends mail; it forwards inquiries to the vendor and BCCs the internal Resolute inbox).
 - **Tone:** Neutral, reference-style — like G2 or Capterra, not like a marketing site.
 

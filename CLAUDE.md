@@ -8,7 +8,7 @@ A **curated public directory** of project management & infrastructure tools, org
 
 **Public name:** AllInfratech. **Domain:** `allinfratech.com` (registered through Bluehost; nameservers migrated to Cloudflare for the UAE-accessibility fix).
 
-**Tagline (locked):** *"A repository of infrastructure technology products and companies."*
+**Tagline (locked):** *"A repository of infrastructure-related technology products and companies."*
 
 **Critical positioning:** This is a **directory, not a Resolute marketing site**. It must read like an independent reference (G2/Capterra tone), not a consultancy product page. Resolute appears only in the footer attribution line and the About page. **No service pitches, no consulting CTAs.**
 
@@ -152,7 +152,7 @@ Decisions previously open that are now committed. Don't relitigate.
 
 - **Scope narrowed — directory is invitation-only (2026-05-06).** Removed: public suggest-an-app form (`/suggest`), generic contact form (`/contact`, but per-vendor `/apps/[slug]/contact` stays), vendor claim-an-existing-listing flow. The `submission_type` enum keeps `'claim'` for historical rows but no production writer emits it; `suggestions` table similarly retained but unused.
 
-- **Brand identity (2026-05-06 → revised 2026-05-08).** Public name `AllInfratech` (final). Tagline "A repository of infrastructure technology products and companies." Wordmark in italic Alike. Black masthead bar retired in favour of inline tagline under the wordmark in the header. Pink/orange (`--color-magenta` `--color-coral`) on dark canvas as accent palette; light canvas as primary.
+- **Brand identity (2026-05-06 → revised 2026-05-08).** Public name `AllInfratech` (final). Tagline "A repository of infrastructure-related technology products and companies." Wordmark in italic Alike. Black masthead bar retired in favour of inline tagline under the wordmark in the header. Pink/orange (`--color-magenta` `--color-coral`) on dark canvas as accent palette; light canvas as primary.
 
 - **Footer (2026-05-08).** Three-column structure (Vendors / Legal / About) plus a single bottom bar with the Resolute "R" logo + one-line attribution. Resolute Management Consultancy links to `https://resolutemanagementconsultancy.com/`. No `/suggest` link, no v0.1 marker.
 
@@ -334,7 +334,7 @@ resolute-directory/
 
 ## 12. Design Contract
 
-- **Brand locked.** AllInfratech wordmark in italic Alike. Tagline "A repository of infrastructure technology products and companies" inline under the wordmark. Pink/orange accents on dark canvas; light canvas (`--color-canvas`) as primary surface.
+- **Brand locked.** AllInfratech wordmark in italic Alike. Tagline "A repository of infrastructure-related technology products and companies" inline under the wordmark. Pink/orange accents on dark canvas; light canvas (`--color-canvas`) as primary surface.
 - **Mobile-first responsive.** Filter sidebar on desktop, drawer on mobile. Touch targets ≥ 44px.
 - **Always alphabetical sort** on the home / search results — sort tabs retired Stage 2.5. Don't reintroduce.
 - **WCAG 2.1 AA target.** Semantic HTML, alt text on all images, keyboard nav, sufficient contrast.

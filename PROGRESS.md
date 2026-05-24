@@ -10,7 +10,7 @@ Public site shipped through Stage 3 (vendor inquiry email pipeline). Stage 4 und
 
 - [x] **Public name:** AllInfratech (final, locked 2026-05-08)
 - [x] **Domain:** `allinfratech.com` (registered through Bluehost, DNS migrating to Cloudflare)
-- [x] **Tagline:** "A repository of infrastructure technology products and companies"
+- [x] **Tagline:** "A repository of infrastructure-related technology products and companies"
 - [x] **Visual direction:** italic Alike (heading) + Pavanam (body), pink/orange (`--color-magenta` / `--color-coral`) accents on light canvas; dark night surface for footer; hero image as full-bleed background
 - [x] **Footer:** three-column (Vendors / Legal / About) + Resolute "R" logo + one-line attribution at the bottom
 - [x] **Resolute attribution wording:** "A community service of the Digital & AI Practice of Resolute Management Consultancy. © {year}. All product and company names belong to their respective owners." Linked to `https://resolutemanagementconsultancy.com/`.

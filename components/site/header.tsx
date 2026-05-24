@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { useUser } from "@clerk/nextjs";
+import { AllInfratechWordmark } from "@/components/shared/allinfratech-wordmark";
 
 export function Header() {
   // Clerk v7 retired the <SignedIn> / <SignedOut> control
@@ -16,28 +17,26 @@ export function Header() {
   const showSignedIn = isLoaded && isSignedIn;
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--color-canvas)]/65">
-      <div className="mx-auto flex h-auto w-full max-w-7xl items-center justify-between px-5 py-3 sm:px-6 md:px-8 md:py-4">
+      <div className="mx-auto flex h-auto w-full max-w-7xl flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 md:px-8 md:py-4">
         <Link
           href="/"
           aria-label="AllInfratech home"
-          className="group flex flex-col leading-none"
+          className="group flex items-center gap-4 leading-none"
         >
-          <span className="font-heading text-[20px] italic leading-none tracking-tight text-[var(--color-ink)] md:text-[22px]">
-            allinfratech
-          </span>
-          <span className="mt-1.5 text-[14px] leading-snug text-[var(--color-ink-3)] md:text-[15px]">
-            A repository of infrastructure technology products and companies
+          <AllInfratechWordmark />
+          <span className="max-w-[340px] border-l border-[var(--color-line-strong)] pl-4 text-[14px] leading-snug text-[var(--color-ink-3)] md:text-[15px]">
+            A repository of infrastructure-related technology products and companies
           </span>
         </Link>
 
-        <div className="flex items-center gap-2 sm:gap-2.5">
+        <div className="flex items-center justify-end gap-2 sm:gap-2.5">
           {showSignedIn ? (
             // Same dimensions / styling as the bloom CTA below so the
             // header doesn't shift when auth state flips.
             <Link
               href="/dashboard"
               prefetch
-              className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[13px] uppercase tracking-[0.18em] text-white transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
+              className="group bloom inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap px-3 text-[13px] uppercase tracking-[0.18em] text-white transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
             >
               <span>Dashboard</span>
               <ArrowUpRight
@@ -51,14 +50,14 @@ export function Header() {
               <Link
                 href="/login"
                 prefetch
-                className="inline-flex h-9 items-center justify-center border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] sm:h-10 sm:px-4 sm:text-[13px]"
+                className="inline-flex h-9 items-center justify-center whitespace-nowrap border border-[var(--color-line-strong)] bg-transparent px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)] sm:h-10 sm:px-4 sm:text-[13px]"
               >
                 Login
               </Link>
               <Link
                 href="/login?intent=submit"
                 prefetch
-                className="group bloom inline-flex h-9 items-center justify-center gap-1.5 px-3 text-[13px] uppercase tracking-[0.18em] text-white transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
+                className="group bloom inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap px-3 text-[13px] uppercase tracking-[0.18em] text-white transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] sm:h-10 sm:px-4 sm:text-[13px]"
               >
                 <span>List your product</span>
                 <ArrowUpRight

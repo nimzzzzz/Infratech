@@ -55,3 +55,6 @@ desktop.ini
 # Logs
 logs
 *.log
+
+# clerk configuration (can include secrets)
+/.clerk/

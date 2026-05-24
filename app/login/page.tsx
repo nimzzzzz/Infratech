@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { LinkedInSignInButton } from "@/components/auth/linkedin-sign-in-button";
 import { LoginErrorBanner } from "@/components/auth/login-error-banner";
+import { AllInfratechWordmark } from "@/components/shared/allinfratech-wordmark";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -115,16 +116,14 @@ export default async function LoginPage({
           aria-label="allinfratech home"
           className="group absolute left-10 top-10 inline-flex items-center gap-2.5 lg:left-14 lg:top-14"
         >
-          <span className="font-heading text-[22px] italic leading-none tracking-tight text-white lg:text-[24px]">
-            allinfratech
-          </span>
+          <AllInfratechWordmark className="text-[19px] text-white lg:text-[21px]" />
         </Link>
 
         {/* Editorial caption — defines what AllInfratech is. The
             right column defines what the vendor does here. Two
             distinct voices on one page. Locked tagline per CLAUDE.md. */}
         <p className="absolute bottom-10 left-10 right-10 max-w-md font-heading text-[26px] leading-tight tracking-tight text-white md:text-[30px] lg:bottom-14 lg:left-14 lg:right-14 lg:text-[36px]">
-          A repository of infrastructure technology products and companies.
+          A repository of infrastructure-related technology products and companies.
         </p>
       </aside>
 
@@ -140,9 +139,7 @@ export default async function LoginPage({
             aria-label="allinfratech home"
             className="inline-flex items-center gap-2"
           >
-            <span className="font-heading text-[22px] italic leading-none tracking-tight text-white">
-              allinfratech
-            </span>
+            <AllInfratechWordmark className="text-[19px] text-white" />
           </Link>
         </div>
 

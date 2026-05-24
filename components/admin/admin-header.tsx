@@ -7,6 +7,7 @@ import { SignOut, ShieldCheck, Eye } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { enterVendorPreview } from "@/lib/admin/preview-vendor";
 import { UserAvatar } from "@/components/shared/user-avatar";
+import { AllInfratechWordmark } from "@/components/shared/allinfratech-wordmark";
 
 export type AdminHeaderProps = {
   name: string;
@@ -83,9 +84,7 @@ export function AdminHeader({
         {/* brand + admin badge */}
         <div className="flex items-center gap-4">
           <Link href="/admin" prefetch className="group flex items-center gap-2.5">
-            <span className="font-heading text-[20px] italic leading-none tracking-tight text-[var(--color-ink)]">
-              allinfratech
-            </span>
+            <AllInfratechWordmark className="text-[17px]" />
             <span className="ml-1 inline-flex items-center gap-1 border border-[var(--color-magenta)]/40 bg-[var(--color-canvas-warm)] px-1.5 py-0.5 text-[13px] uppercase tracking-[0.22em] text-[var(--color-magenta)]">
               <ShieldCheck size={10} weight="fill" />
               Admin
