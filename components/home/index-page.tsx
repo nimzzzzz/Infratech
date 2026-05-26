@@ -2,7 +2,7 @@ import { Container } from "@/components/site/container";
 import { SearchBar } from "@/components/browse/search-bar";
 import { FilterSidebar } from "@/components/browse/filter-sidebar";
 import { FilterDrawer } from "@/components/browse/filter-drawer";
-import { StageQuickFilter } from "@/components/browse/stage-quick-filter";
+import { IndustryQuickFilter } from "@/components/browse/industry-quick-filter";
 import { ActiveFilters } from "@/components/browse/active-filters";
 import { AppCard } from "@/components/browse/app-card";
 import { searchApps } from "@/lib/queries/search";
@@ -40,14 +40,14 @@ export async function HomeIndex({
 
   return (
     <article className="bg-[var(--color-canvas)]">
-      {/* SEARCH + STAGE QUICK FILTER */}
+      {/* SEARCH + INDUSTRY QUICK FILTER */}
       <section className="relative bg-[var(--color-canvas)]">
         <Container className="pt-8 pb-6 md:pt-10 md:pb-8">
           <div className="max-w-3xl">
             <SearchBar />
           </div>
           <div className="mt-6 md:mt-8">
-            <StageQuickFilter />
+            <IndustryQuickFilter />
           </div>
         </Container>
       </section>

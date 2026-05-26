@@ -8,25 +8,23 @@ import {
   parseFilters,
   toggleInArray,
 } from "@/lib/browse/filters";
-import { stages } from "@/lib/data/stages";
-import { formatStageLabel } from "@/lib/stages/format";
+import { industries } from "@/lib/data/taxonomy";
 import { cn } from "@/lib/utils";
 
 /**
- * Promotes the Stage filter (the directory's primary axis per CLAUDE.md §4)
- * out of the sidebar / drawer into a horizontal chip row below the search
+ * Promotes the Industry filter into a horizontal chip row below the search
  * bar. URL-state driven — same toggle logic as FilterSection, just a
- * different visual treatment.
+ * different visual treatment from the sidebar.
  *
  * Mobile-only scroll indicator: a thin track + animated thumb beneath the
  * chips signals "swipe for more options" when the row overflows.
  */
-export function StageQuickFilter() {
+export function IndustryQuickFilter() {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
   const state = parseFilters(Object.fromEntries(search.entries()));
-  const selected = state.stage;
+  const selected = state.industry;
 
   const scrollRef = useRef<HTMLUListElement>(null);
   const [scrollState, setScrollState] = useState({
@@ -64,7 +62,7 @@ export function StageQuickFilter() {
   const toggle = (slug: string) =>
     router.push(
       buildHref(pathname, state, {
-        stage: toggleInArray(selected, slug),
+        industry: toggleInArray(selected, slug),
       }),
       { scroll: false },
     );
@@ -72,7 +70,7 @@ export function StageQuickFilter() {
   return (
     <div className="-mx-6 sm:-mx-6 md:mx-0">
       <p className="mb-3 px-6 text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)] md:px-0">
-        Filter by stage
+        Filter by industry
       </p>
 
       {/* chips — horizontal scroll on mobile, wrap on desktop */}
@@ -82,13 +80,13 @@ export function StageQuickFilter() {
           className="flex snap-x gap-2 overflow-x-auto px-6 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-visible md:px-0 md:pb-0"
           role="list"
         >
-          {stages.map((stage) => {
-            const checked = selected.includes(stage.slug);
+          {industries.map((industry) => {
+            const checked = selected.includes(industry.slug);
             return (
-              <li key={stage.slug} className="snap-start shrink-0">
+              <li key={industry.slug} className="snap-start shrink-0">
                 <button
                   type="button"
-                  onClick={() => toggle(stage.slug)}
+                  onClick={() => toggle(industry.slug)}
                   aria-pressed={checked}
                   className={cn(
                     "inline-flex h-10 items-center gap-1.5 border px-3 text-[15px] transition-colors",
@@ -98,7 +96,7 @@ export function StageQuickFilter() {
                   )}
                 >
                   {checked ? <Check size={11} weight="bold" /> : null}
-                  <span>{formatStageLabel(stage.slug)}</span>
+                  <span>{industry.name}</span>
                 </button>
               </li>
             );
