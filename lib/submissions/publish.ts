@@ -43,6 +43,8 @@ export type PublishPayload = {
   capabilities?: string[];
   industries?: string[];
   pricingModels?: string[];
+  appleAppStoreUrl?: string | null;
+  googlePlayUrl?: string | null;
   // Phase C — product-level media. Carried on every submission.
   // Empty / null values are treated as "no logo" / "no video"
   // (the public detail page falls back to LetterAvatar / no
@@ -113,6 +115,8 @@ export async function publishSubmissionInTx(
     websiteUrl: p.url,
     tagline: p.tagline ?? null,
     description: p.description ?? null,
+    appleAppStoreUrl: p.appleAppStoreUrl ?? null,
+    googlePlayUrl: p.googlePlayUrl ?? null,
     // Phase C — product-level media writes. Always set (NULL
     // overwrite is intentional — a vendor / admin clearing the
     // field on an edit should clear the published row too).

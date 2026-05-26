@@ -8,6 +8,8 @@ export type App = {
   blurb: string;
   description: string;
   websiteUrl: string;
+  appleAppStoreUrl?: string;
+  googlePlayUrl?: string;
   stages: string[];
   capabilities: string[];
   industries: string[];
@@ -146,6 +148,9 @@ export const apps: App[] = [
     description:
       "Procore is the market-leading construction management platform in North America and increasingly elsewhere. It covers drawings, RFIs, submittals, daily logs, photos, change orders, and field execution from one record — the operational system the project superintendent works in every day, and the audit trail the owner reviews at handover.\n\nSold as a per-project licence priced by construction value, with an extensive third-party ecosystem (estimating, scheduling, financials) integrated through their App Marketplace.",
     websiteUrl: "https://www.procore.com",
+    appleAppStoreUrl: "https://apps.apple.com/us/app/procore/id374930542",
+    googlePlayUrl:
+      "https://play.google.com/store/apps/details?id=com.procore.activities",
     stages: ["delivery"],
     capabilities: ["document-control", "field-management", "quality"],
     industries: ["construction"],
@@ -240,6 +245,10 @@ export const apps: App[] = [
     description:
       "Aconex is a cross-organisation document control and project collaboration platform built around the reality of large capital programmes — owner, multiple consultants, multiple contractors, all needing to share controlled documents, RFIs, and design submissions across organisational boundaries. The neutral-ground architecture (every party owns their content; no single party owns the platform) is what made it the default at this end of the market.\n\nMost commonly deployed on infrastructure mega-projects and the larger end of commercial construction.",
     websiteUrl: "https://www.oracle.com/construction-engineering/aconex/",
+    appleAppStoreUrl:
+      "https://apps.apple.com/us/app/oracle-aconex/id1450647306",
+    googlePlayUrl:
+      "https://play.google.com/store/apps/details?id=com.oracle.aconex",
     stages: ["definition", "delivery"],
     capabilities: ["document-control", "design-review", "contract-management"],
     industries: ["construction", "infrastructure", "energy"],

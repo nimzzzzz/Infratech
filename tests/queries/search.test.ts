@@ -245,5 +245,7 @@ describe("searchApps — result shape", () => {
     expect(Array.isArray(a.stages)).toBe(true);
     expect(Array.isArray(a.capabilitySlugs)).toBe(true);
     expect(Array.isArray(a.industrySlugs)).toBe(true);
+    expect(a).toHaveProperty("appleAppStoreUrl");
+    expect(a).toHaveProperty("googlePlayUrl");
   });
 });

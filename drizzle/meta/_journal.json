@@ -155,6 +155,20 @@
       "when": 1747612800000,
       "tag": "0021_add_apps_flagged",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1779696000000,
+      "tag": "0022_drop_legacy_admins_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1779811200000,
+      "tag": "0023_add_mobile_app_store_urls",
+      "breakpoints": true
     }
   ]
 }

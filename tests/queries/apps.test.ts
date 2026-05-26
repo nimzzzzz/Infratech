@@ -34,6 +34,27 @@ describe("app queries", () => {
     const aconex = apps.find((a) => a.slug === "aconex");
     expect(aconex?.vendor.name).toBe("Oracle");
     expect(Array.isArray(aconex?.capabilitySlugs)).toBe(true);
+    expect(aconex).toHaveProperty(
+      "appleAppStoreUrl",
+      "https://apps.apple.com/us/app/oracle-aconex/id1450647306",
+    );
+    expect(aconex).toHaveProperty(
+      "googlePlayUrl",
+      "https://play.google.com/store/apps/details?id=com.oracle.aconex",
+    );
+  });
+
+  it("getAppBySlug returns mobile store URLs for product detail", async () => {
+    const app = await getAppBySlug("procore");
+    expect(app).not.toBeNull();
+    expect(app).toHaveProperty(
+      "appleAppStoreUrl",
+      "https://apps.apple.com/us/app/procore/id374930542",
+    );
+    expect(app).toHaveProperty(
+      "googlePlayUrl",
+      "https://play.google.com/store/apps/details?id=com.procore.activities",
+    );
   });
 
   it("listAppsByStage filters by stage slug", async () => {

@@ -68,6 +68,8 @@ function liveAppToPayloadShape(app: AppDetail): Record<string, unknown> {
     name: app.name,
     slug: app.slug,
     url: app.websiteUrl,
+    appleAppStoreUrl: app.appleAppStoreUrl ?? "",
+    googlePlayUrl: app.googlePlayUrl ?? "",
     tagline: app.tagline ?? "",
     description: app.description ?? "",
     stages: app.stages.map((s) => s.slug),

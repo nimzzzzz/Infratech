@@ -67,6 +67,8 @@ export const apps = pgTable(
     tagline: text("tagline"),
     description: text("description"),
     websiteUrl: text("website_url").notNull(),
+    appleAppStoreUrl: text("apple_app_store_url"),
+    googlePlayUrl: text("google_play_url"),
     logoUrl: text("logo_url"),
     /**
      * Phase C — vendor-supplied YouTube / Vimeo URL for the product

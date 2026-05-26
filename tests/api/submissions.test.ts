@@ -189,6 +189,44 @@ describe("POST /api/submissions — happy paths", () => {
     expect(subRow.submitterVendorId).toBe(vendorId);
     void member; // satisfy noUnusedLocals
   });
+
+  it("stores optional mobile app store links in the submission payload", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    const vendorId = await seedVendor("mobile-links-vendor");
+    await seedMember({
+      clerkUserId: "user_mobile_links",
+      vendorId,
+    });
+    authMock.userId = "user_mobile_links";
+
+    const res = await POST(
+      makeRequest({
+        ...validCompany(),
+        ...validProduct({
+          appleAppStoreUrl: "apps.apple.com/us/app/northstrand/id123456789",
+          googlePlayUrl:
+            "https://play.google.com/store/apps/details?id=com.northstrand.field",
+        }),
+      }),
+    );
+    expect(res.status).toBe(200);
+    const json = await res.json();
+
+    const [subRow] = await db
+      .select()
+      .from(submissions)
+      .where(eq(submissions.id, json.submissionId));
+    const payload = subRow.payload as {
+      appleAppStoreUrl?: string | null;
+      googlePlayUrl?: string | null;
+    };
+    expect(payload.appleAppStoreUrl).toBe(
+      "https://apps.apple.com/us/app/northstrand/id123456789",
+    );
+    expect(payload.googlePlayUrl).toBe(
+      "https://play.google.com/store/apps/details?id=com.northstrand.field",
+    );
+  });
 });
 
 describe("POST /api/submissions — validation & lookup", () => {

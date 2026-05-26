@@ -80,6 +80,8 @@ const FIELD_LABELS: Record<string, string> = {
   companyLogoAlt: "Company logo alt text",
   name: "Product name",
   url: "Product website",
+  appleAppStoreUrl: "Apple App Store URL",
+  googlePlayUrl: "Google Play URL",
   tagline: "Tagline",
   description: "Product description",
   stages: "Infrastructure Stages",
@@ -194,6 +196,8 @@ export type FormState = {
   // ── Tool-level ──
   name: string;
   url: string;
+  appleAppStoreUrl: string;
+  googlePlayUrl: string;
   productLogoUrl: string | null;
   logoAlt: string;
   tagline: string;
@@ -221,6 +225,8 @@ const initialState = (companyName: string, domain: string): FormState => ({
 
   name: "",
   url: "",
+  appleAppStoreUrl: "",
+  googlePlayUrl: "",
   productLogoUrl: null,
   logoAlt: "",
   tagline: "",
@@ -410,6 +416,8 @@ export function SubmitWizard({
     return {
       name: data.name,
       url: data.url,
+      appleAppStoreUrl: data.appleAppStoreUrl,
+      googlePlayUrl: data.googlePlayUrl,
       tagline: data.tagline,
       description: data.description,
       stages: data.stages,
@@ -510,6 +518,8 @@ export function SubmitWizard({
       // Product block
       name: data.name,
       url: data.url,
+      appleAppStoreUrl: data.appleAppStoreUrl,
+      googlePlayUrl: data.googlePlayUrl,
       tagline: data.tagline,
       description: data.description,
       stages: data.stages,
@@ -927,6 +937,12 @@ function FullReviewView({
       >
         <ReviewRow label="Product" value={data.name} />
         <ReviewRow label="Website" value={data.url} />
+        {data.appleAppStoreUrl ? (
+          <ReviewRow label="Apple App Store" value={data.appleAppStoreUrl} />
+        ) : null}
+        {data.googlePlayUrl ? (
+          <ReviewRow label="Google Play" value={data.googlePlayUrl} />
+        ) : null}
         {data.productLogoUrl ? (
           <ReviewImage
             label="Product logo"
@@ -1095,6 +1111,12 @@ function SinglePageSubmit({
           >
             <ReviewRow label="Product" value={data.name} />
             <ReviewRow label="Website" value={data.url} />
+            {data.appleAppStoreUrl ? (
+              <ReviewRow label="Apple App Store" value={data.appleAppStoreUrl} />
+            ) : null}
+            {data.googlePlayUrl ? (
+              <ReviewRow label="Google Play" value={data.googlePlayUrl} />
+            ) : null}
             {data.productLogoUrl ? (
               <ReviewImage
                 label="Product logo"
@@ -1666,6 +1688,51 @@ function ToolBasicsStep({
             placeholder="example.com"
             className={inputClsWithError(err(errors, "url"))}
             aria-invalid={!!err(errors, "url")}
+          />
+        </Field>
+      </div>
+      <div
+        id="step2-mobileStoreUrls"
+        className="grid gap-6 md:col-span-2 md:grid-cols-2"
+      >
+        <Field
+          label="Apple App Store URL"
+          htmlFor="step2-appleAppStoreUrl"
+          error={err(errors, "appleAppStoreUrl")}
+          hint="Optional. Leave blank if there is no iOS app."
+        >
+          <input
+            id="step2-appleAppStoreUrl"
+            type="text"
+            value={data.appleAppStoreUrl}
+            onChange={(e) => {
+              update("appleAppStoreUrl", e.target.value);
+              clearError("appleAppStoreUrl");
+            }}
+            placeholder="apps.apple.com/..."
+            maxLength={500}
+            className={inputClsWithError(err(errors, "appleAppStoreUrl"))}
+            aria-invalid={!!err(errors, "appleAppStoreUrl")}
+          />
+        </Field>
+        <Field
+          label="Google Play URL"
+          htmlFor="step2-googlePlayUrl"
+          error={err(errors, "googlePlayUrl")}
+          hint="Optional. Leave blank if there is no Android app."
+        >
+          <input
+            id="step2-googlePlayUrl"
+            type="text"
+            value={data.googlePlayUrl}
+            onChange={(e) => {
+              update("googlePlayUrl", e.target.value);
+              clearError("googlePlayUrl");
+            }}
+            placeholder="play.google.com/store/apps/details?id=..."
+            maxLength={500}
+            className={inputClsWithError(err(errors, "googlePlayUrl"))}
+            aria-invalid={!!err(errors, "googlePlayUrl")}
           />
         </Field>
       </div>

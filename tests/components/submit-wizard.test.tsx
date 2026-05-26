@@ -40,9 +40,9 @@ describe("SubmitWizard", () => {
     // Company name input rendered.
     expect(screen.getByLabelText(/company name/i)).toBeInTheDocument();
     // Phase C — real upload widgets land (no more "coming soon"
-    // placeholder). Gallery section + logo section both render.
+    // placeholder). Product media sections are mounted even while hidden.
     expect(
-      screen.getByText(/^Company gallery$/i, { selector: "p" }),
+      screen.getByText(/^Screenshots$/i, { selector: "p" }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/^Company logo$/i, { selector: "p" }),
@@ -70,6 +70,9 @@ describe("SubmitWizard", () => {
     ).toBeInTheDocument();
     // Phase C — video URL field renders too.
     expect(screen.getByLabelText(/Product video/i)).toBeInTheDocument();
+    // Optional mobile store links are captured alongside the product URL.
+    expect(screen.getByLabelText(/Apple App Store URL/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Google Play URL/i)).toBeInTheDocument();
   });
 
   // Phase C PR 2 — video preview renders inline when the user types

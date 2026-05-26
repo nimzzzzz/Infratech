@@ -171,6 +171,8 @@ async function main() {
             tagline: a.blurb,
             description: a.description,
             websiteUrl: a.websiteUrl,
+            appleAppStoreUrl: a.appleAppStoreUrl ?? null,
+            googlePlayUrl: a.googlePlayUrl ?? null,
             foundedYear: a.founded,
             vendorId: vid,
             status: "published" as const,

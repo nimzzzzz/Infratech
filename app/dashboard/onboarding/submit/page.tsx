@@ -38,6 +38,8 @@ function domainFrom(url: string | null): string {
 type WizardPrefillValues = {
   name?: string;
   url?: string;
+  appleAppStoreUrl?: string;
+  googlePlayUrl?: string;
   tagline?: string;
   description?: string;
   stages?: string[];
@@ -62,6 +64,8 @@ function payloadToWizardValues(
   return {
     name: str("name"),
     url: str("url"),
+    appleAppStoreUrl: str("appleAppStoreUrl"),
+    googlePlayUrl: str("googlePlayUrl"),
     tagline: str("tagline"),
     description: str("description"),
     stages: arr("stages"),

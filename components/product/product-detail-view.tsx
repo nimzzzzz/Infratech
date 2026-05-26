@@ -1,10 +1,12 @@
 import Link from "next/link";
 import {
   ArrowUpRight,
+  AppStoreLogo,
   ChatCircleText,
   Buildings,
   Calendar,
   Globe,
+  GooglePlayLogo,
   MapPin,
 } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
@@ -150,6 +152,40 @@ export function ProductDetailView({
                   <span>Contact vendor</span>
                 </Link>
               </div>
+              {app.appleAppStoreUrl || app.googlePlayUrl ? (
+                <div className="mb-8 mt-4 flex flex-wrap gap-2">
+                  {app.appleAppStoreUrl ? (
+                    <a
+                      href={`/api/clicks/${app.id}?to=${encodeURIComponent(app.appleAppStoreUrl)}`}
+                      target="_blank"
+                      rel="nofollow noopener"
+                      className="inline-flex h-10 items-center gap-2 border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)]"
+                    >
+                      <AppStoreLogo
+                        size={16}
+                        weight="regular"
+                        aria-hidden="true"
+                      />
+                      App Store
+                    </a>
+                  ) : null}
+                  {app.googlePlayUrl ? (
+                    <a
+                      href={`/api/clicks/${app.id}?to=${encodeURIComponent(app.googlePlayUrl)}`}
+                      target="_blank"
+                      rel="nofollow noopener"
+                      className="inline-flex h-10 items-center gap-2 border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)]"
+                    >
+                      <GooglePlayLogo
+                        size={16}
+                        weight="regular"
+                        aria-hidden="true"
+                      />
+                      Google Play
+                    </a>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
             <aside className="border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 md:p-8">

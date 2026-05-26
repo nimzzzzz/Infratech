@@ -315,6 +315,11 @@ function ReadView({
       <Row label="Name" value={asString(v("name"))} />
       <Row label="Slug" value={asString(v("slug"))} />
       <Row label="URL" value={asString(v("url"))} />
+      <Row
+        label="Apple App Store"
+        value={asString(v("appleAppStoreUrl"))}
+      />
+      <Row label="Google Play" value={asString(v("googlePlayUrl"))} />
       <Row label="Tagline" value={asString(v("tagline"))} />
       <Row label="Description" value={asString(v("description"))} multiline />
       <Row label="Stages" value={asArray(v("stages")).join(", ")} />

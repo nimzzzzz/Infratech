@@ -25,6 +25,8 @@ export function appToFormState(app: AppDetail): Partial<FormState> {
   return {
     name: app.name,
     url: app.websiteUrl,
+    appleAppStoreUrl: app.appleAppStoreUrl ?? "",
+    googlePlayUrl: app.googlePlayUrl ?? "",
     productLogoUrl: app.logoUrl,
     logoAlt: "",
     tagline: app.tagline ?? "",

@@ -265,6 +265,8 @@ export async function POST(req: Request) {
             customCapabilities: body.customCapabilities ?? [],
             customIndustries: body.customIndustries ?? [],
             customPricing: body.customPricing ?? null,
+            appleAppStoreUrl: body.appleAppStoreUrl || null,
+            googlePlayUrl: body.googlePlayUrl || null,
             termsVersionAtSubmit: TERMS_VERSION,
             // Phase C — product-level media. Always carried; the
             // publish helper writes apps.logo_url / apps.video_url

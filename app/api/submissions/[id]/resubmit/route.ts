@@ -144,6 +144,8 @@ export async function POST(
     customCapabilities: body.customCapabilities ?? [],
     customIndustries: body.customIndustries ?? [],
     customPricing: body.pricingModels.includes("__custom__") ? body.customPricing : null,
+    appleAppStoreUrl: body.appleAppStoreUrl || null,
+    googlePlayUrl: body.googlePlayUrl || null,
     termsVersionAtSubmit: TERMS_VERSION,
   };
 

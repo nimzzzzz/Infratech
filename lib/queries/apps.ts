@@ -30,6 +30,8 @@ export type AppCard = {
   name: string;
   tagline: string | null;
   logoUrl: string | null;
+  appleAppStoreUrl: string | null;
+  googlePlayUrl: string | null;
   vendor: { slug: string; name: string };
   pricingSlugs: string[];
   stages: { slug: string; name: string }[];
@@ -73,6 +75,8 @@ async function fetchCards(appIds: number[]): Promise<AppCard[]> {
         name: apps.name,
         tagline: apps.tagline,
         logoUrl: apps.logoUrl,
+        appleAppStoreUrl: apps.appleAppStoreUrl,
+        googlePlayUrl: apps.googlePlayUrl,
         publishedAt: apps.publishedAt,
         vendorSlug: vendors.slug,
         vendorName: vendors.name,
@@ -138,6 +142,8 @@ async function fetchCards(appIds: number[]): Promise<AppCard[]> {
       name: b.name,
       tagline: b.tagline,
       logoUrl: b.logoUrl,
+      appleAppStoreUrl: b.appleAppStoreUrl,
+      googlePlayUrl: b.googlePlayUrl,
       vendor: { slug: b.vendorSlug, name: b.vendorName },
       pricingSlugs: pricingByApp.get(b.id) ?? [],
       stages: stagesByApp.get(b.id) ?? [],

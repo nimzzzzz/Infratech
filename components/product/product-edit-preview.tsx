@@ -55,6 +55,8 @@ export function ProductEditPreview({
     description: form.description || liveApp.description,
     logoUrl: form.productLogoUrl,
     websiteUrl: form.url || liveApp.websiteUrl,
+    appleAppStoreUrl: form.appleAppStoreUrl || null,
+    googlePlayUrl: form.googlePlayUrl || null,
     videoUrl: form.videoUrl || null,
     stages: form.stages.map((slug) => ({
       slug,

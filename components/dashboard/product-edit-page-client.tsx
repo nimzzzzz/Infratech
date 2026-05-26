@@ -198,6 +198,8 @@ function mergeFormState(partial: Partial<FormState>): FormState {
 
     name: "",
     url: "",
+    appleAppStoreUrl: "",
+    googlePlayUrl: "",
     productLogoUrl: null,
     logoAlt: "",
     tagline: "",
@@ -239,6 +241,8 @@ function payloadToFormState(payload: Record<string, unknown>): Partial<FormState
   return {
     name: str("name"),
     url: str("url"),
+    appleAppStoreUrl: str("appleAppStoreUrl"),
+    googlePlayUrl: str("googlePlayUrl"),
     tagline: str("tagline"),
     description: str("description"),
     productLogoUrl:

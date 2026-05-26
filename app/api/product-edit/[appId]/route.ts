@@ -185,6 +185,8 @@ export async function POST(
           customCapabilities: body.customCapabilities ?? [],
           customIndustries: body.customIndustries ?? [],
           customPricing: body.customPricing ?? null,
+          appleAppStoreUrl: body.appleAppStoreUrl || null,
+          googlePlayUrl: body.googlePlayUrl || null,
           productLogoUrl: body.productLogoUrl || null,
           productLogoAlt: body.productLogoAlt || null,
           videoUrl: body.videoUrl || null,

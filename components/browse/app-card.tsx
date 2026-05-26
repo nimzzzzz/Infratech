@@ -1,16 +1,17 @@
 import Link from "next/link";
+import {
+  AppStoreLogo,
+  GooglePlayLogo,
+} from "@phosphor-icons/react/dist/ssr";
 import type { AppCard as AppCardData } from "@/lib/queries/apps";
-import { lookups } from "@/lib/data/taxonomy";
 import { formatStageLabel } from "@/lib/stages/format";
 import { LetterAvatar } from "./letter-avatar";
 
 export function AppCard({ app }: { app: AppCardData }) {
-  const pricingLabel =
-    app.pricingSlugs.length > 0
-      ? app.pricingSlugs
-          .map((s) => lookups.pricing.get(s) ?? s)
-          .join(", ")
-      : "—";
+  const hasMobileStoreLinks = Boolean(
+    app.appleAppStoreUrl || app.googlePlayUrl,
+  );
+
   return (
     <Link
       href={`/apps/${app.slug}`}
@@ -60,9 +61,32 @@ export function AppCard({ app }: { app: AppCardData }) {
               </li>
             ))}
           </ul>
-          <p className="mt-3 border-t border-[var(--color-line)] pt-3 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]">
-            {pricingLabel}
-          </p>
+          {hasMobileStoreLinks ? (
+            <div className="mt-3 border-t border-[var(--color-line)] pt-3">
+              <div className="flex flex-wrap gap-2">
+                {app.appleAppStoreUrl ? (
+                  <span className="inline-flex h-8 items-center gap-1.5 border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-2.5 text-[11px] uppercase tracking-[0.14em] text-[var(--color-ink-2)]">
+                    <AppStoreLogo
+                      size={14}
+                      weight="regular"
+                      aria-hidden="true"
+                    />
+                    App Store
+                  </span>
+                ) : null}
+                {app.googlePlayUrl ? (
+                  <span className="inline-flex h-8 items-center gap-1.5 border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-2.5 text-[11px] uppercase tracking-[0.14em] text-[var(--color-ink-2)]">
+                    <GooglePlayLogo
+                      size={14}
+                      weight="regular"
+                      aria-hidden="true"
+                    />
+                    Google Play
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </Link>

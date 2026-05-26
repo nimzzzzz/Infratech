@@ -210,6 +210,8 @@ export const productStepSchema = z
     // Phase C — all optional. App detail page falls back to the
     // LetterAvatar / no-video / no-gallery treatment if these
     // aren't set.
+    appleAppStoreUrl: optionalUrl(500),
+    googlePlayUrl: optionalUrl(500),
     productLogoUrl: optionalBlobUrl,
     productLogoAlt: optionalPlainText(200),
     videoUrl: videoUrl,
@@ -292,6 +294,8 @@ export const submissionBodySchema = z.object({
   // Phase C — product-level media. Stashed in submissions.payload
   // and written to apps.logo_url / apps.video_url / app_screenshots
   // on publish. Carried on every submission (one gallery per product).
+  appleAppStoreUrl: optionalUrl(500),
+  googlePlayUrl: optionalUrl(500),
   productLogoUrl: optionalBlobUrl,
   productLogoAlt: optionalPlainText(200),
   videoUrl: videoUrl,
