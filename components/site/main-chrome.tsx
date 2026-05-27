@@ -12,7 +12,13 @@ import { Footer } from "./footer";
  * loading state; including it here would place the public footer at the
  * bottom of an otherwise-empty body (visible during cold-start sign-ins).
  */
-export function MainChrome({ children }: { children: React.ReactNode }) {
+export function MainChrome({
+  children,
+  isSignedIn = false,
+}: {
+  children: React.ReactNode;
+  isSignedIn?: boolean;
+}) {
   const pathname = usePathname();
   const isAuth =
     pathname.startsWith("/login") ||
@@ -26,7 +32,7 @@ export function MainChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Header />
+      <Header isSignedIn={isSignedIn} />
       <main id="main">{children}</main>
       <Footer />
     </>

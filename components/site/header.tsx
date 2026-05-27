@@ -5,16 +5,10 @@ import { ArrowUpRight } from "@phosphor-icons/react";
 import { useUser } from "@clerk/nextjs";
 import { AllInfratechWordmark } from "@/components/shared/allinfratech-wordmark";
 
-export function Header() {
-  // Clerk v7 retired the <SignedIn> / <SignedOut> control
-  // components from the named exports — the supported surface now
-  // is the useUser() hook. While the SDK hydrates (isLoaded=false)
-  // we render the signed-OUT shape: the visitor experience is the
-  // larger surface, so the brief flash on a refresh-while-signed-in
-  // is preferable to a brief flash of "Dashboard" for an actual
-  // visitor.
-  const { isLoaded, isSignedIn } = useUser();
-  const showSignedIn = isLoaded && isSignedIn;
+export function Header({ isSignedIn: serverIsSignedIn = false }: { isSignedIn?: boolean }) {
+  const { isLoaded, isSignedIn: clientIsSignedIn } = useUser();
+  const showSignedIn = isLoaded ? !!clientIsSignedIn : serverIsSignedIn;
+
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/85 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--color-canvas)]/65">
       <div className="mx-auto flex h-auto w-full max-w-7xl flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 md:px-8 md:py-4">
@@ -31,8 +25,6 @@ export function Header() {
 
         <div className="flex items-center justify-end gap-2 sm:gap-2.5">
           {showSignedIn ? (
-            // Same dimensions / styling as the bloom CTA below so the
-            // header doesn't shift when auth state flips.
             <Link
               href="/dashboard"
               prefetch
