@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Alike, Pavanam } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { MainChrome } from "@/components/site/main-chrome";
 import "./globals.css";
 
@@ -48,7 +49,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { userId } = await auth();
+
   return (
     <ClerkProvider>
       <html lang="en" className={`${alike.variable} ${pavanam.variable}`}>
@@ -59,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             Skip to content
           </a>
-          <MainChrome>{children}</MainChrome>
+          <MainChrome isSignedIn={!!userId}>{children}</MainChrome>
         </body>
       </html>
     </ClerkProvider>
