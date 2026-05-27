@@ -155,17 +155,9 @@ export function LegalAcceptanceModal({
         </p>
 
         <form onSubmit={onSubmit} className="mt-7 space-y-5">
-          <label className="flex items-start gap-3 text-[16px] leading-relaxed text-[var(--color-ink)]">
-            <input
-              type="checkbox"
-              checked={accepted}
-              onChange={(e) => setAccepted(e.target.checked)}
-              disabled={submitting}
-              className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-coral)]"
-              required
-            />
-            <span>
-              I have read and accept the{" "}
+          <div className="space-y-4 text-[15px] leading-relaxed text-[var(--color-ink-2)]">
+            <p>
+              I agree to the{" "}
               <a
                 href="/legal/terms"
                 target="_blank"
@@ -201,9 +193,66 @@ export function LegalAcceptanceModal({
               >
                 Cookie Policy
               </a>
-              . I confirm I am authorised to act on behalf of the company I
-              will be listing.
-            </span>
+              , and confirm the declarations below.
+            </p>
+            <ol className="list-decimal space-y-2 pl-5 text-[14px]">
+              <li>
+                I am authorised to represent the company and product/service I am
+                submitting;
+              </li>
+              <li>
+                the information I provide is accurate, current and not misleading
+                to the best of my knowledge;
+              </li>
+              <li>
+                I have the necessary rights and permissions to upload and submit
+                any logos, screenshots, images, documents, trademarks, text or
+                other content provided;
+              </li>
+              <li>
+                I grant AllInfratech and Resolute Management Consultancy
+                permission to use, display, edit, format and publish the
+                submitted content for the purposes of operating and promoting the
+                directory;
+              </li>
+              <li>
+                I understand that AllInfratech is operated by Resolute Management
+                Consultancy as an editorial directory, and that submission of a
+                listing does not guarantee publication, approval, endorsement or
+                continued inclusion;
+              </li>
+              <li>
+                I understand that listings may be edited, declined, suspended or
+                removed at the discretion of AllInfratech / Resolute Management
+                Consultancy;
+              </li>
+              <li>
+                I understand that visitor enquiries submitted through the
+                directory&rsquo;s contact forms may be forwarded to the
+                registered email address I provide;
+              </li>
+              <li>
+                I accept responsibility for keeping the submitted information
+                accurate and up to date;
+              </li>
+              <li>
+                I understand that AllInfratech does not independently verify all
+                submitted information and does not endorse or guarantee any
+                listed company, product or service.
+              </li>
+            </ol>
+          </div>
+
+          <label className="flex items-start gap-3 text-[16px] leading-relaxed text-[var(--color-ink)]">
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={(e) => setAccepted(e.target.checked)}
+              disabled={submitting}
+              className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-coral)]"
+              required
+            />
+            <span>I agree and confirm the above.</span>
           </label>
 
           {/* Honeypot — visually hidden, not seen by real users. Bots
