@@ -7,10 +7,7 @@
 import { useSignIn } from "@clerk/nextjs/legacy";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import {
-  LinkedinLogo,
-  ArrowRight,
-} from "@phosphor-icons/react";
+import { ArrowRight } from "@phosphor-icons/react";
 
 /**
  * Custom-styled LinkedIn OAuth trigger. Replaces the placeholder
@@ -68,7 +65,12 @@ export function LinkedInSignInButton({
       disabled={!isLoaded}
       className="group inline-flex h-12 w-full items-center justify-center gap-2.5 bg-[#0A66C2] px-5 text-[16px] text-white transition-colors hover:bg-[#0959AB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px] disabled:cursor-wait disabled:opacity-90 sm:h-14 sm:text-[17px]"
     >
-      <LinkedinLogo size={20} weight="fill" />
+      <img
+        src="/logos/linkedin/inbug-white.png"
+        alt=""
+        aria-hidden="true"
+        className="h-5 w-auto"
+      />
       <span>{label}</span>
       <ArrowRight
         size={14}

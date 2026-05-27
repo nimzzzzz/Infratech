@@ -154,8 +154,8 @@ export default async function LoginPage({
               <span className="italic">allinfratech</span>.
             </h1>
             <p className="mt-6 max-w-[44ch] text-[18px] leading-relaxed text-[var(--color-ink-2)] md:text-[19px]">
-              Reach project-management and infrastructure-technology buyers
-              across the region. Sign in with LinkedIn to get started.
+              Reach infrastructure and related companies. Sign in with
+              LinkedIn to get started.
             </p>
 
             <div className="mt-10">
