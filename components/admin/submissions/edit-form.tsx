@@ -132,8 +132,8 @@ export function EditForm({
       <FieldTextarea label="Description" htmlFor="ed-desc" value={form.description ?? ""} onChange={(v) => set("description", v)} rows={6} />
       <FieldText label="Stages (comma-separated slugs)" htmlFor="ed-stages" value={form.stages ?? ""} onChange={(v) => set("stages", v)} hint="e.g. delivery, operations" />
       <FieldText label="Capabilities (comma-separated slugs)" htmlFor="ed-caps" value={form.capabilities ?? ""} onChange={(v) => set("capabilities", v)} />
-      <FieldText label="Industries (comma-separated slugs)" htmlFor="ed-inds" value={form.industries ?? ""} onChange={(v) => set("industries", v)} />
-      <FieldText label="Pricing model (slug)" htmlFor="ed-pricing" value={form.pricing ?? ""} onChange={(v) => set("pricing", v)} />
+      <FieldText label="Markets (comma-separated slugs)" htmlFor="ed-inds" value={form.industries ?? ""} onChange={(v) => set("industries", v)} />
+      <FieldText label="Pricing basis (slug)" htmlFor="ed-pricing" value={form.pricing ?? ""} onChange={(v) => set("pricing", v)} />
 
       {error ? (
         <p

@@ -2,28 +2,32 @@ import { describe, it, expect } from "vitest";
 import { formatStageLabel } from "@/lib/stages/format";
 
 describe("formatStageLabel", () => {
-  it("returns 'General' verbatim (no number prefix)", () => {
-    expect(formatStageLabel("general")).toBe("General");
+  it("returns 'Cross-Lifecycle' verbatim (no number prefix)", () => {
+    expect(formatStageLabel("general")).toBe("Cross-Lifecycle");
   });
 
-  it("prefixes feasibility with '1.'", () => {
-    expect(formatStageLabel("feasibility")).toBe("1. Feasibility");
+  it("prefixes strategy and feasibility with '1.'", () => {
+    expect(formatStageLabel("feasibility")).toBe("1. Strategy & Feasibility");
   });
 
-  it("prefixes definition with '2.'", () => {
-    expect(formatStageLabel("definition")).toBe("2. Definition");
+  it("prefixes development and design with '2.'", () => {
+    expect(formatStageLabel("definition")).toBe("2. Development & Design");
   });
 
-  it("prefixes delivery with '3.'", () => {
-    expect(formatStageLabel("delivery")).toBe("3. Delivery");
+  it("prefixes procurement and delivery with '3.'", () => {
+    expect(formatStageLabel("delivery")).toBe("3. Procure & Deliver");
   });
 
-  it("prefixes operations with '4.'", () => {
-    expect(formatStageLabel("operations")).toBe("4. Operations");
+  it("prefixes handover and closeout with '4.'", () => {
+    expect(formatStageLabel("post-delivery")).toBe("4. Handover & Closeout");
   });
 
-  it("prefixes post-delivery with '5.' and preserves the hyphen", () => {
-    expect(formatStageLabel("post-delivery")).toBe("5. Post-Delivery");
+  it("prefixes operate and maintain with '5.'", () => {
+    expect(formatStageLabel("operations")).toBe("5. Operate & Maintain");
+  });
+
+  it("prefixes renewal and exit with '6.'", () => {
+    expect(formatStageLabel("renewal-exit")).toBe("6. Renewal & Exit");
   });
 
   it("passes unknown slugs through verbatim", () => {

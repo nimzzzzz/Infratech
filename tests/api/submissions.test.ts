@@ -71,7 +71,7 @@ const validProduct = (overrides: Record<string, unknown> = {}) => ({
   stages: ["delivery"],
   capabilities: ["risk-management"],
   industries: ["construction"],
-  pricing: "user-subscription-freemium",
+  pricing: "per-seat",
   ...overrides,
 });
 

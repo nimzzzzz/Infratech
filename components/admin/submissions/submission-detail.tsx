@@ -324,7 +324,7 @@ function ReadView({
       <Row label="Description" value={asString(v("description"))} multiline />
       <Row label="Stages" value={asArray(v("stages")).join(", ")} />
       <Row label="Capabilities" value={asArray(v("capabilities")).join(", ")} />
-      <Row label="Industries" value={asArray(v("industries")).join(", ")} />
+      <Row label="Markets" value={asArray(v("industries")).join(", ")} />
       <Row label="Pricing" value={asArray(v("pricingModels")).join(", ")} />
     </section>
   );

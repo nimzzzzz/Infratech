@@ -71,10 +71,10 @@ describe("app queries", () => {
   });
 
   it("listAppsByCapability filters by capability", async () => {
-    const apps = await listAppsByCapability("scheduling");
+    const apps = await listAppsByCapability("scheduling-planning");
     expect(apps.length).toBeGreaterThan(0);
     for (const a of apps) {
-      expect(a.capabilitySlugs).toContain("scheduling");
+      expect(a.capabilitySlugs).toContain("scheduling-planning");
     }
   });
 

@@ -96,10 +96,10 @@ describe("searchApps — filters", () => {
   });
 
   it("filters by capability (single)", async () => {
-    const { results } = await searchApps({ capability: ["scheduling"] });
+    const { results } = await searchApps({ capability: ["scheduling-planning"] });
     expect(results.length).toBeGreaterThan(0);
     for (const r of results) {
-      expect(r.capabilitySlugs).toContain("scheduling");
+      expect(r.capabilitySlugs).toContain("scheduling-planning");
     }
   });
 
@@ -120,25 +120,25 @@ describe("searchApps — filters", () => {
     }
   });
 
-  it("AND across categories — stage=delivery AND capability=scheduling narrows further", async () => {
+  it("AND across categories — stage=delivery AND capability=scheduling-planning narrows further", async () => {
     const { total: stageOnly } = await searchApps({ stage: ["delivery"] });
     const { results, total } = await searchApps({
       stage: ["delivery"],
-      capability: ["scheduling"],
+      capability: ["scheduling-planning"],
     });
     expect(total).toBeLessThanOrEqual(stageOnly);
     for (const r of results) {
       expect(r.stages.map((s) => s.slug)).toContain("delivery");
-      expect(r.capabilitySlugs).toContain("scheduling");
+      expect(r.capabilitySlugs).toContain("scheduling-planning");
     }
   });
 
   it("all four filter categories together don't error (smoke)", async () => {
     const { results, total, page, pageSize, totalPages } = await searchApps({
       stage: ["delivery"],
-      capability: ["scheduling"],
+      capability: ["scheduling-planning"],
       industry: ["construction"],
-      pricing: ["user-subscription-freemium"],
+      pricing: ["per-seat"],
     });
     expect(Array.isArray(results)).toBe(true);
     expect(typeof total).toBe("number");
@@ -150,12 +150,12 @@ describe("searchApps — filters", () => {
   it("q + filters compose (q AND filter predicates)", async () => {
     const { results } = await searchApps({
       q: "ora",
-      capability: ["document-control"],
+      capability: ["documents-cde"],
     });
-    // Aconex matches both q=ora (via Oracle vendor) and capability=document-control
+    // Aconex matches both q=ora (via Oracle vendor) and capability=documents-cde
     expect(results.map((r) => r.slug)).toContain("aconex");
     for (const r of results) {
-      expect(r.capabilitySlugs).toContain("document-control");
+      expect(r.capabilitySlugs).toContain("documents-cde");
     }
   });
 });

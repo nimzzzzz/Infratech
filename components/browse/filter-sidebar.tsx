@@ -9,7 +9,7 @@ import { FilterSection } from "./filter-section";
  * The sidebar is now a pure render — all counting happens server-side
  * via getFilterFacets(filters) on the page.
  *
- * Industry is promoted to a horizontal quick-filter row above the
+ * Market is promoted to a horizontal quick-filter row above the
  * index, so the sidebar holds lifecycle plus the secondary axes.
  */
 export function FilterSidebar({

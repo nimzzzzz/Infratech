@@ -9,7 +9,7 @@ import {
 
 /**
  * Taxonomy tables — the controlled vocabularies an app gets tagged with.
- * Industries / pricing / regions are fixed lists — vendors can propose
+ * Markets / pricing / regions are fixed lists — vendors can propose
  * additions but those land in the submission payload jsonb, not as new
  * rows here.
  */

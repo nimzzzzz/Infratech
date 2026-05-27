@@ -12,7 +12,7 @@ import { industries } from "@/lib/data/taxonomy";
 import { cn } from "@/lib/utils";
 
 /**
- * Promotes the Industry filter into a horizontal chip row below the search
+ * Promotes the market filter into a horizontal chip row below the search
  * bar. URL-state driven — same toggle logic as FilterSection, just a
  * different visual treatment from the sidebar.
  *
@@ -70,7 +70,7 @@ export function IndustryQuickFilter() {
   return (
     <div className="-mx-6 sm:-mx-6 md:mx-0">
       <p className="mb-3 px-6 text-[13px] uppercase tracking-[0.22em] text-[var(--color-ink-3)] md:px-0">
-        Filter by industry
+        Filter by market
       </p>
 
       {/* chips — horizontal scroll on mobile, wrap on desktop */}

@@ -205,7 +205,7 @@ export const productStepSchema = z
     customCapabilities: z.array(plainText(80)).max(10).optional(),
     industries: slugArray.max(20),
     customIndustries: z.array(plainText(80)).max(10).optional(),
-    pricingModels: slugArray.min(1, "Pick at least one pricing model"),
+    pricingModels: slugArray.min(1, "Pick at least one pricing basis"),
     customPricing: optionalPlainText(80),
     // Phase C — all optional. App detail page falls back to the
     // LetterAvatar / no-video / no-gallery treatment if these
@@ -229,7 +229,7 @@ export const productStepSchema = z
         message: "Pick at least one capability or propose one",
       });
     }
-    // At least one industry — canonical OR proposed.
+    // At least one market — canonical OR proposed.
     if (
       d.industries.length === 0 &&
       (d.customIndustries?.length ?? 0) === 0
@@ -237,7 +237,7 @@ export const productStepSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["industries"],
-        message: "Pick at least one industry or propose one",
+        message: "Pick at least one market or propose one",
       });
     }
     // "Other" pricing requires the free-text describer.
@@ -248,7 +248,7 @@ export const productStepSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["customPricing"],
-        message: "Describe the pricing model",
+        message: "Describe the pricing basis",
       });
     }
   });

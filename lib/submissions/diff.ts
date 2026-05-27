@@ -157,7 +157,7 @@ export const DIFF_FIELD_LABELS: Record<string, string> = {
   description: "Description",
   stages: "Stages",
   capabilities: "Capabilities",
-  industries: "Industries",
+  industries: "Markets",
   pricingModels: "Pricing",
   companyName: "Company name",
   companyWebsite: "Company website",

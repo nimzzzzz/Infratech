@@ -75,7 +75,7 @@ describe("getFilterFacets — single filter applied", () => {
 
   it("with capability filter, the CAPABILITY facet isn't filtered", async () => {
     const baseline = await getFilterFacets({});
-    const filtered = await getFilterFacets({ capability: ["scheduling"] });
+    const filtered = await getFilterFacets({ capability: ["scheduling-planning"] });
     for (const c of capList) {
       expect(filtered.capability[c.slug]).toBe(baseline.capability[c.slug]);
     }
@@ -83,7 +83,7 @@ describe("getFilterFacets — single filter applied", () => {
 
   it("with capability filter, stage counts reflect that capability", async () => {
     const baseline = await getFilterFacets({});
-    const filtered = await getFilterFacets({ capability: ["scheduling"] });
+    const filtered = await getFilterFacets({ capability: ["scheduling-planning"] });
     let sawNarrowing = false;
     for (const s of stageList) {
       const b = baseline.stage[s.slug] ?? 0;
@@ -102,7 +102,7 @@ describe("getFilterFacets — empty result set", () => {
     // with any stage produces an empty universe — but every facet key
     // must still be present.
     const f = await getFilterFacets({
-      pricing: ["licensed-by-company-portfolio"],
+      pricing: ["portfolio-enterprise-agreement"],
       stage: ["feasibility"],
     });
     for (const s of stageList) {

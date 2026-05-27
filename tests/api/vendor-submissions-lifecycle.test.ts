@@ -107,7 +107,7 @@ async function seedSubmission(opts: {
         stages: ["delivery"],
         capabilities: [],
         industries: [],
-        pricing: "user-subscription-freemium",
+        pricing: "per-seat",
       },
       adminEdits: opts.adminEdits ?? null,
       rejectionReason: opts.rejectionReason ?? null,
@@ -148,7 +148,7 @@ describe("POST /api/submissions/:id/vendor-approve", () => {
         stages: ["delivery"],
         capabilities: [],
         industries: [],
-        pricing: "user-subscription-freemium",
+        pricing: "per-seat",
       },
       adminEdits: {
         slug: `va-happy-edited-${Date.now()}`,
@@ -159,7 +159,7 @@ describe("POST /api/submissions/:id/vendor-approve", () => {
         stages: ["delivery"],
         capabilities: [],
         industries: [],
-        pricing: "user-subscription-freemium",
+        pricing: "per-seat",
       },
     });
 
@@ -356,7 +356,7 @@ describe("POST /api/submissions/:id/resubmit", () => {
       stages: ["delivery"],
       capabilities: ["risk-management"],
       industries: ["construction"],
-      pricing: "user-subscription-freemium",
+      pricing: "per-seat",
       ...overrides,
     };
   }

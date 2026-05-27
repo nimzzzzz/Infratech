@@ -88,16 +88,16 @@ export function FilterSection({
                 onClick={() => toggle(opt.slug)}
                 disabled={disabled}
                 className={cn(
-                  "group flex w-full items-center justify-between gap-3 px-1 py-1.5 text-left transition-colors",
+                  "group flex w-full items-start justify-between gap-3 px-1 py-1.5 text-left transition-colors",
                   disabled && "cursor-not-allowed opacity-40",
                   !disabled && "hover:text-[var(--color-ink)]",
                 )}
               >
-                <span className="flex min-w-0 items-center gap-2.5">
+                <span className="flex min-w-0 items-start gap-2.5">
                   <span
                     aria-hidden
                     className={cn(
-                      "grid h-4 w-4 shrink-0 place-items-center border transition-colors",
+                      "mt-1 grid h-4 w-4 shrink-0 place-items-center border transition-colors",
                       checked
                         ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-white"
                         : "border-[var(--color-line-strong)] bg-transparent group-hover:border-[var(--color-ink)]",
@@ -107,7 +107,7 @@ export function FilterSection({
                   </span>
                   <span
                     className={cn(
-                      "truncate text-[16px]",
+                      "text-[16px] leading-snug",
                       checked
                         ? "text-[var(--color-ink)]"
                         : "text-[var(--color-ink-2)]",

@@ -75,7 +75,7 @@ const sections: DocumentSection[] = [
         <p>
           Through the vendor dashboard you may submit and update: product name,
           tagline, description, logo, screenshots, website URL, founded year,
-          headquarters, applicable project stages, capabilities, pricing model,
+          headquarters, applicable project stages, capabilities, pricing basis,
           and other fields offered by the dashboard.
         </p>
         <p>

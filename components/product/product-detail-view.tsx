@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Pure presentational render of a product detail page — hero, body
- * sections (description, video, lifecycle, capabilities, industries,
+ * sections (description, video, lifecycle, capabilities, markets,
  * pricing, editor note), screenshots, related products. No data
  * fetching, no server-only APIs, no client-only APIs — usable from
  * both the real /apps/[slug] server page and the (future) product
@@ -314,7 +314,7 @@ export function ProductDetailView({
           </Section>
 
           {app.industries.length > 0 ? (
-            <Section eyebrow="Industries">
+            <Section eyebrow="Markets">
               <ul className="flex flex-wrap gap-2">
                 {app.industries.map((i) => (
                   <li key={i.slug}>

@@ -169,6 +169,20 @@
       "when": 1779811200000,
       "tag": "0023_add_mobile_app_store_urls",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1779897600000,
+      "tag": "0024_update_filter_taxonomy",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1779897600001,
+      "tag": "0025_backfill_pricing_basis_tags",
+      "breakpoints": true
     }
   ]
 }

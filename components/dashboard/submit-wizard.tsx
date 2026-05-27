@@ -86,8 +86,8 @@ const FIELD_LABELS: Record<string, string> = {
   description: "Product description",
   stages: "Infrastructure Stages",
   capabilities: "Capabilities",
-  industries: "Industries",
-  pricingModels: "Pricing model",
+  industries: "Markets",
+  pricingModels: "Pricing basis",
   customPricing: "Custom pricing description",
   productLogoUrl: "Product logo",
   productLogoAlt: "Product logo alt text",
@@ -723,7 +723,7 @@ export function SubmitWizard({
               </Section>
             </div>
             <div id="section-industries" className="scroll-mt-24">
-              <Section title="Industries & pricing">
+              <Section title="Markets & pricing">
                 <IndustryPricingStep
                   data={data}
                   toggle={toggle}
@@ -991,11 +991,11 @@ function FullReviewView({
       </ReviewBlock>
 
       <ReviewBlock
-        title="Industries & pricing"
+        title="Markets & pricing"
         onEdit={() => onEditSection("section-industries")}
       >
         <ReviewTaxonomyRow
-          label="Industries"
+          label="Markets"
           canonical={data.industries.map(
             (i) => industries.find((x) => x.slug === i)?.name ?? i,
           )}
@@ -1172,11 +1172,11 @@ function SinglePageSubmit({
           </ReviewBlock>
 
           <ReviewBlock
-            title="Industries & pricing"
+            title="Markets & pricing"
             onEdit={() => editAt("section-industries")}
           >
             <ReviewTaxonomyRow
-              label="Industries"
+              label="Markets"
               canonical={data.industries.map(
                 (i) => industries.find((x) => x.slug === i)?.name ?? i,
               )}
@@ -1312,7 +1312,7 @@ function SinglePageSubmit({
           </Section>
         </div>
         <div id="section-industries" className="scroll-mt-24">
-          <Section title="Industries & pricing">
+          <Section title="Markets & pricing">
             <IndustryPricingStep
               data={data}
               toggle={toggle}
@@ -1971,7 +1971,7 @@ function TaxonomyStep({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// STEP 5 — Industries & Pricing
+// STEP 5 — Markets & Pricing
 // ──────────────────────────────────────────────────────────────────────
 
 function IndustryPricingStep({
@@ -1999,9 +1999,9 @@ function IndustryPricingStep({
     <div className="flex flex-col gap-10">
       <div id="step2-industries" className="scroll-mt-24">
         <ChipGroup
-          label="Industries"
+          label="Markets"
           required
-          hint="Don't see your industry? Suggest one — admins review before it joins the canonical list."
+          hint="Don't see your market? Suggest one — admins review before it joins the canonical list."
           options={industries}
           selected={data.industries}
           onToggle={(slug) => {
@@ -2020,10 +2020,10 @@ function IndustryPricingStep({
 
       <div id="step2-pricing" className="scroll-mt-24">
         <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ink)]">
-          Pricing model <span className="text-[var(--color-magenta)]">*</span>
+          Pricing basis <span className="text-[var(--color-magenta)]">*</span>
         </p>
         <p className="mt-1 text-[16px] text-[var(--color-ink-3)]">
-          Pick all models that apply. We don&rsquo;t display actual prices.
+          Pick every pricing basis that applies. We don&rsquo;t display actual prices.
           Choose &ldquo;Other&rdquo; if none of these fit.
         </p>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -2066,7 +2066,7 @@ function IndustryPricingStep({
               htmlFor="step2-customPricing-input"
               className="text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-3)]"
             >
-              Describe the pricing model
+              Describe the pricing basis
             </label>
             <input
               id="step2-customPricing-input"

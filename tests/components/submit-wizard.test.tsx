@@ -189,8 +189,8 @@ describe("SubmitWizard", () => {
       />,
     );
     const tooltips = screen.getAllByRole("tooltip");
-    // Six stages, each with a tooltip.
-    expect(tooltips.length).toBeGreaterThanOrEqual(6);
+    // Seven stages, each with a tooltip.
+    expect(tooltips.length).toBeGreaterThanOrEqual(7);
     // Spot-check a couple of the tightened descriptions.
     expect(
       screen.getByText(
@@ -199,17 +199,17 @@ describe("SubmitWizard", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Construction or implementation — site management, scheduling, quality control, safety\./i,
+        /Buying and delivering the work — procurement, construction or implementation, scheduling, controls, quality, and safety\./i,
       ),
     ).toBeInTheDocument();
     // Each stage chip's button references its tooltip via
     // aria-describedby. Query by attribute to disambiguate from
-    // the Industries chip with the same "General" label.
+    // the Markets chip with the same Cross-* style label.
     const stageGeneralBtn = document.querySelector(
       'button[aria-describedby="chip-tip-general"]',
     );
     expect(stageGeneralBtn).not.toBeNull();
-    expect(stageGeneralBtn?.textContent).toMatch(/General/i);
+    expect(stageGeneralBtn?.textContent).toMatch(/Cross-Lifecycle/i);
   });
 
   // Phase 3 perf — wizard step trees are kept mounted with the

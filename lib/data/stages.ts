@@ -12,13 +12,13 @@ export type Stage = {
   index: string;
 };
 
-// Display order chosen for the public chip row. General leads as a
-// "doesn't fit a stage" catch-all; the rest follow the project lifecycle.
+// Display order chosen for the public chip row. Cross-Lifecycle leads as a
+// "applies across stages" catch-all; the rest follow the asset lifecycle.
 // Slugs and DB ids are unchanged — only the visual order moved.
 export const stages: Stage[] = [
   {
     slug: "general",
-    name: "General",
+    name: "Cross-Lifecycle",
     short: "Cross-stage platforms and products.",
     description:
       "Tools used across multiple project phases — not tied to a specific stage.",
@@ -26,42 +26,50 @@ export const stages: Stage[] = [
   },
   {
     slug: "feasibility",
-    name: "Feasibility",
-    short: "Studies, business cases, options analysis.",
+    name: "Strategy & Feasibility",
+    short: "Strategies, business cases, options analysis.",
     description:
-      "Evaluating project viability — site studies, cost-benefit analysis, initial planning.",
+      "Evaluating asset or project viability — market intelligence, site studies, business cases, and options analysis.",
     index: "02",
   },
   {
     slug: "definition",
-    name: "Definition",
-    short: "Scope, planning, design, contracting.",
+    name: "Development & Design",
+    short: "Scope, planning, development, design.",
     description:
-      "Detailed design and engineering — drawings, specifications, BIM models, procurement planning.",
+      "Shaping the project — development planning, scope definition, design, engineering, drawings, and BIM models.",
     index: "03",
   },
   {
     slug: "delivery",
-    name: "Delivery",
-    short: "Execution, scheduling, controls, risk.",
+    name: "Procure & Deliver",
+    short: "Procurement, execution, controls, risk.",
     description:
-      "Construction or implementation — site management, scheduling, quality control, safety.",
+      "Buying and delivering the work — procurement, construction or implementation, scheduling, controls, quality, and safety.",
     index: "04",
   },
   {
-    slug: "operations",
-    name: "Operations",
-    short: "Asset management, monitoring, maintenance.",
+    slug: "post-delivery",
+    name: "Handover & Closeout",
+    short: "Commissioning, turnover, closeout.",
     description:
-      "Post-handover use of the asset — maintenance, monitoring, facility management.",
+      "Turning work into an operable asset — commissioning, punch lists, handover data, O&M manuals, warranties, and closeout.",
     index: "05",
   },
   {
-    slug: "post-delivery",
-    name: "Post-Delivery",
-    short: "Closeout, lessons, decommissioning.",
+    slug: "operations",
+    name: "Operate & Maintain",
+    short: "Asset management, monitoring, maintenance.",
     description:
-      "Closeout, audit, lessons learned, decommissioning or repurposing.",
+      "Running the asset after handover — maintenance, monitoring, facility management, reliability, and service delivery.",
     index: "06",
+  },
+  {
+    slug: "renewal-exit",
+    name: "Renewal & Exit",
+    short: "Renewal, repositioning, divestment.",
+    description:
+      "Changing the asset's future — renewal, retrofit, repositioning, decommissioning, disposal, or divestment.",
+    index: "07",
   },
 ];

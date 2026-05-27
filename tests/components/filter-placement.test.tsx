@@ -27,15 +27,18 @@ const facets: FacetCounts = {
     feasibility: 2,
     definition: 10,
     delivery: 11,
-    operations: 5,
     "post-delivery": 3,
+    operations: 5,
+    "renewal-exit": 0,
   },
   industry: {
     construction: 12,
+    manufacturing: 2,
+    "natural-resources": 0,
+    "public-civic-assets": 0,
+    "real-estate": 1,
     infrastructure: 9,
     energy: 5,
-    "real-estate": 1,
-    manufacturing: 2,
     general: 2,
   },
   capability: {},
@@ -56,32 +59,36 @@ describe("home filter placement", () => {
     expect(
       screen.getByRole("heading", { name: "Infrastructure lifecycle" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("General")).toBeInTheDocument();
-    expect(screen.getByText("1. Feasibility")).toBeInTheDocument();
-    expect(screen.getByText("2. Definition")).toBeInTheDocument();
-    expect(screen.getByText("3. Delivery")).toBeInTheDocument();
-    expect(screen.getByText("4. Operations")).toBeInTheDocument();
-    expect(screen.getByText("5. Post-Delivery")).toBeInTheDocument();
+    expect(screen.getByText("Cross-Lifecycle")).toBeInTheDocument();
+    expect(screen.getByText("1. Strategy & Feasibility")).toBeInTheDocument();
+    expect(screen.getByText("2. Development & Design")).toBeInTheDocument();
+    expect(screen.getByText("3. Procure & Deliver")).toBeInTheDocument();
+    expect(screen.getByText("4. Handover & Closeout")).toBeInTheDocument();
+    expect(screen.getByText("5. Operate & Maintain")).toBeInTheDocument();
+    expect(screen.getByText("6. Renewal & Exit")).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: "Industry" }),
     ).not.toBeInTheDocument();
   });
 
-  it("uses the horizontal quick filter for industries", () => {
+  it("uses the horizontal quick filter for markets", () => {
     render(<IndustryQuickFilter />);
 
-    expect(screen.getByText("Filter by industry")).toBeInTheDocument();
+    expect(screen.getByText("Filter by market")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Construction" }),
+      screen.getByRole("button", { name: "Construction & Capital Projects" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Infrastructure" }),
+      screen.getByRole("button", { name: "Industrial & Manufacturing" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Manufacturing" }),
+      screen.getByRole("button", { name: "Real Estate & Facilities" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "1. Feasibility" }),
+      screen.getByRole("button", { name: "Cross-Market" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "1. Strategy & Feasibility" }),
     ).not.toBeInTheDocument();
   });
 });

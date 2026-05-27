@@ -101,7 +101,7 @@ async function seedSubmission(opts: {
         stages: ["delivery"],
         capabilities: [],
         industries: [],
-        pricing: "user-subscription-freemium",
+        pricing: "per-seat",
       },
     })
     .returning({ id: submissions.id });
@@ -135,7 +135,7 @@ describe("POST /api/admin/submissions/:id/approve", () => {
         stages: [],
         capabilities: [],
         industries: [],
-        pricing: "user-subscription-freemium",
+        pricing: "per-seat",
       },
     });
 
@@ -238,7 +238,7 @@ describe("POST /api/admin/submissions/:id/approve", () => {
         stages: [],
         capabilities: [],
         industries: [],
-        pricing: "user-subscription-freemium",
+        pricing: "per-seat",
         productLogoUrl: "https://x.public.blob.vercel-storage.com/app_logo/42/p.png",
         productLogoAlt: "Logo",
         videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
@@ -346,7 +346,7 @@ describe("POST /api/admin/submissions/:id/approve", () => {
           stages: [],
           capabilities: [],
           industries: [],
-          pricing: "user-subscription-freemium",
+          pricing: "per-seat",
           productGallery: [
             {
               url: "https://x.public.blob.vercel-storage.com/app_gallery/0/new1.jpg",
@@ -416,7 +416,7 @@ describe("POST /api/admin/submissions/:id/approve", () => {
         stages: [],
         capabilities: [],
         industries: [],
-        pricing: "user-subscription-freemium",
+        pricing: "per-seat",
         productGallery: [
           {
             url: "https://x.public.blob.vercel-storage.com/app_gallery/0/second1.jpg",
@@ -472,7 +472,7 @@ describe("POST /api/admin/submissions/:id/edit", () => {
         stages: ["delivery"],
         capabilities: [],
         industries: [],
-        pricing: "user-subscription-freemium",
+        pricing: "per-seat",
       },
     });
 
