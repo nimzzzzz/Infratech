@@ -20,26 +20,32 @@ const pavanam = Pavanam({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME ?? "AllInfratech";
+const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME ?? "Allinfratech";
+const SITE_TITLE =
+  "Allinfratech - repository of infrastructure-related technology products and companies";
+const SITE_DESCRIPTION =
+  "A repository of infrastructure-related technology products and companies.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — project management software, mapped`,
+    default: SITE_TITLE,
     template: `%s · ${SITE_NAME}`,
   },
-  description:
-    "An independent reference of project management and infrastructure software, organised by stage and capability. Browse the products running feasibility, delivery, and operations.",
+  description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
     url: SITE_URL,
-    title: `${SITE_NAME} — project management software, mapped`,
-    description:
-      "An independent reference of project management and infrastructure software, organised by stage and capability.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
-  twitter: { card: "summary_large_image" },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
   robots: { index: true, follow: true },
 };
 

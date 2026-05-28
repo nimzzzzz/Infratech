@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { HomeIndex } from "@/components/home/index-page";
 
 export const metadata: Metadata = {
-  title: "AllInfratech — the index of project products",
+  title:
+    "Allinfratech - repository of infrastructure-related technology products and companies",
   description:
-    "An independent reference of project management and infrastructure software, organised by stage, capability, and market.",
+    "A repository of infrastructure-related technology products and companies.",
   alternates: { canonical: "/" },
 };
 
