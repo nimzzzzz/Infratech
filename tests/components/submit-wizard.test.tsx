@@ -37,6 +37,12 @@ describe("SubmitWizard", () => {
     expect(
       screen.getByRole("heading", { name: /^your company\.$/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^previous$/i }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /^back$/i }),
+    ).not.toBeInTheDocument();
     // Company name input rendered.
     expect(screen.getByLabelText(/company name/i)).toBeInTheDocument();
     // Phase C — real upload widgets land (no more "coming soon"
@@ -214,7 +220,7 @@ describe("SubmitWizard", () => {
 
   // Phase 3 perf — wizard step trees are kept mounted with the
   // `hidden` attribute toggling, so state is preserved across step
-  // changes (Back button no longer flashes blank). The structural
+  // changes (Previous button no longer flashes blank). The structural
   // check: from the initial step-1 view, the step-2 trees are
   // already in the DOM (just hidden). queryByText / queryByLabelText
   // find elements regardless of `hidden`, so we can prove all three

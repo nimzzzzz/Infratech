@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { ArrowRight, Plus, Stack } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
+import { PendingDashboardLink } from "@/components/dashboard/pending-dashboard-link";
 import { relativeDays } from "@/lib/browse/dates";
 import { cn } from "@/lib/utils";
 
@@ -103,9 +103,10 @@ export function DashboardEmptyState({
           </ul>
 
           <div className="mt-10 border-t border-[var(--color-line)] pt-6">
-            <Link
+            <PendingDashboardLink
               href="/dashboard/onboarding/submit?as=returning"
               prefetch
+              pendingLabel="Loading submit form"
               className="group inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)]"
             >
               <Plus size={11} weight="bold" />
@@ -115,14 +116,15 @@ export function DashboardEmptyState({
                 weight="bold"
                 className="transition-transform duration-300 group-hover:translate-x-0.5"
               />
-            </Link>
+            </PendingDashboardLink>
           </div>
         </section>
       ) : (
         <div className="mt-12">
-          <Link
+          <PendingDashboardLink
             href="/dashboard/onboarding/submit?as=returning"
             prefetch
+            pendingLabel="Loading submit form"
             className="group relative grid grid-cols-[auto_1fr_auto] items-start gap-5 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 transition-colors hover:border-[var(--color-ink)]/40 md:p-8"
           >
             <span className="grid h-12 w-12 place-items-center bg-[var(--color-canvas)] text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">
@@ -145,7 +147,7 @@ export function DashboardEmptyState({
               weight="regular"
               className="mt-2 text-[var(--color-ink-3)] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--color-ink)]"
             />
-          </Link>
+          </PendingDashboardLink>
         </div>
       )}
     </Container>

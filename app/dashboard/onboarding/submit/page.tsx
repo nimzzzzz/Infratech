@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
 import { SubmitWizard } from "@/components/dashboard/submit-wizard";
+import { PendingDashboardLink } from "@/components/dashboard/pending-dashboard-link";
 import {
   getVendorSession,
   isDemoOverride,
@@ -146,12 +147,15 @@ export default async function SubmitPage({
   // redirect still sets it, but only when accurate); the gate ignores
   // it. asParam is still consumed for the demo toggle below.
   const skipCompanyStep = resubmitId !== null || vendor != null;
+  const returnHref = vendor ? "/dashboard" : "/dashboard/onboarding";
+  const returnLabel = vendor ? "Dashboard" : "Onboarding";
 
   return (
     <Container className="max-w-3xl py-10 md:py-14">
       <div className="flex items-center justify-between gap-4">
-        <Link
-          href={resubmitId !== null ? "/dashboard" : "/dashboard/onboarding"}
+        <PendingDashboardLink
+          href={returnHref}
+          pendingLabel={`Loading ${returnLabel.toLowerCase()}`}
           className="group inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
         >
           <ArrowLeft
@@ -159,8 +163,8 @@ export default async function SubmitPage({
             weight="bold"
             className="transition-transform duration-300 group-hover:-translate-x-0.5"
           />
-          Back
-        </Link>
+          {returnLabel}
+        </PendingDashboardLink>
 
         {env.DEMO_MODE ? (
           <DemoToggle skipCompanyStep={skipCompanyStep} />

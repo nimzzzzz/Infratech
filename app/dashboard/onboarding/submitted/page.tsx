@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import {
   ArrowRight,
   CheckCircle,
   Plus,
 } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
+import { PendingDashboardLink } from "@/components/dashboard/pending-dashboard-link";
 import { getVendorSession } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
@@ -74,9 +74,10 @@ export default async function OnboardingSubmittedPage({
       </p>
 
       <div className="mx-auto mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-        <Link
+        <PendingDashboardLink
           href="/dashboard"
           prefetch
+          pendingLabel="Loading dashboard"
           className="group inline-flex h-11 items-center justify-center gap-1.5 border border-[var(--color-line-strong)] bg-transparent px-5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-ink)] transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-canvas)]"
         >
           View dashboard
@@ -85,15 +86,16 @@ export default async function OnboardingSubmittedPage({
             weight="bold"
             className="transition-transform duration-300 group-hover:translate-x-0.5"
           />
-        </Link>
-        <Link
+        </PendingDashboardLink>
+        <PendingDashboardLink
           href="/dashboard/onboarding/submit?as=returning"
           prefetch
+          pendingLabel="Loading submit form"
           className="group inline-flex h-11 items-center justify-center gap-1.5 bg-[var(--color-ink)] px-5 text-[14px] uppercase tracking-[0.18em] text-[var(--color-canvas)] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-coral)] active:translate-y-[1px]"
         >
           <Plus size={11} weight="bold" />
           Submit another product
-        </Link>
+        </PendingDashboardLink>
       </div>
     </Container>
   );

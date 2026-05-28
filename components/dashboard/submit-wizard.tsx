@@ -321,7 +321,7 @@ export function SubmitWizard({
 
   // Note: a previous implementation pushed a history entry per step
   // change and listened for popstate to keep browser-back in sync.
-  // That machinery raced with the in-page Back button and could
+  // That machinery raced with the in-page Previous button and could
   // pop step state all the way to step 1 on a single click. Removed
   // (fix/wizard-and-signout-ux). Browser-back now navigates away
   // from the wizard with in-progress state lost — standard
@@ -665,7 +665,7 @@ export function SubmitWizard({
       {/*
         Phase 3 perf — all three step trees are kept mounted and
         toggled via the `hidden` attribute instead of conditional
-        render. Pre-fix: clicking Back from step 2 → step 1
+        render. Pre-fix: clicking Previous from step 2 → step 1
         unmounted the entire step-2 tree (4 sub-sections, ~30
         inputs, gallery thumbnails) and re-mounted step 1 from
         scratch, producing a visible white flash during the
@@ -790,7 +790,7 @@ export function SubmitWizard({
             weight="bold"
             className="transition-transform duration-300 group-hover:-translate-x-0.5"
           />
-          Back
+          Previous
         </button>
 
         {step < TOTAL_STEPS ? (
@@ -1082,7 +1082,7 @@ function SinglePageSubmit({
    * between the two views unmounted and re-mounted the entire
    * step-2 subtree (4 sections, the gallery + logo previews, ~30
    * controlled inputs), causing the same visible white flash as
-   * the multi-step Back button. Keep-mounted preserves form-input
+   * the multi-step Previous button. Keep-mounted preserves form-input
    * identity (focus, IME, browser autofill) across the toggle.
    *
    * The honeypot input + submitError banner live OUTSIDE both

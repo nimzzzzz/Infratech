@@ -7,6 +7,7 @@ import { SignOut } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { AllInfratechWordmark } from "@/components/shared/allinfratech-wordmark";
+import { PendingDashboardLink } from "@/components/dashboard/pending-dashboard-link";
 
 const nav = [
   {
@@ -33,6 +34,8 @@ export type DashboardHeaderProps = {
   userTitle?: string | null;
   /** Unread inquiry badge count. 0 hides the badge. */
   unreadCount: number;
+  /** Whether /dashboard is a valid escape route from onboarding. */
+  canReturnToDashboard?: boolean;
 };
 
 export function DashboardHeader({
@@ -41,6 +44,7 @@ export function DashboardHeader({
   userAvatarUrl,
   userTitle,
   unreadCount,
+  canReturnToDashboard = false,
 }: DashboardHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -150,16 +154,47 @@ export function DashboardHeader({
               wizard (isOnboarding) where the form is the focus,
               and on mobile (<sm) where the user pill itself is
               hidden — saves horizontal space. */}
-          {!isOnboarding && (
-            <Link
+          {isOnboarding ? (
+            canReturnToDashboard ? (
+              <PendingDashboardLink
+                href="/dashboard"
+                className="group inline-flex items-center gap-1 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
+              >
+                Dashboard
+                <span
+                  aria-hidden
+                  className="transition-transform duration-300 group-hover:translate-x-0.5"
+                >
+                  →
+                </span>
+              </PendingDashboardLink>
+            ) : (
+              <PendingDashboardLink
+                href="/"
+                className="group inline-flex items-center gap-1 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)]"
+              >
+                Browse
+                <span
+                  aria-hidden
+                  className="transition-transform duration-300 group-hover:translate-x-0.5"
+                >
+                  →
+                </span>
+              </PendingDashboardLink>
+            )
+          ) : (
+            <PendingDashboardLink
               href="/"
               className="group hidden items-center gap-1 text-[13px] uppercase tracking-[0.18em] text-[var(--color-ink-2)] transition-colors hover:text-[var(--color-ink)] sm:inline-flex"
             >
               Browse directory
-              <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">
+              <span
+                aria-hidden
+                className="transition-transform duration-300 group-hover:translate-x-0.5"
+              >
                 →
               </span>
-            </Link>
+            </PendingDashboardLink>
           )}
           <div className="hidden items-center gap-2.5 sm:flex">
             <UserAvatar avatarUrl={userAvatarUrl} name={userName} size={32} />

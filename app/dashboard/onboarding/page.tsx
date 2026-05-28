@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Plus } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/site/container";
+import { PendingDashboardLink } from "@/components/dashboard/pending-dashboard-link";
 import {
   getVendorSession,
   isDemoOverride,
@@ -58,9 +59,10 @@ export default async function OnboardingLandingPage({
 
       <ul className="mt-12 space-y-4">
         <li>
-          <Link
+          <PendingDashboardLink
             href="/dashboard/onboarding/submit"
             prefetch
+            pendingLabel="Loading submit form"
             className="group relative grid grid-cols-[auto_1fr_auto] items-start gap-5 border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-6 transition-colors hover:border-[var(--color-ink)]/40 md:p-8"
           >
             <span className="grid h-12 w-12 place-items-center bg-[var(--color-canvas)] text-[var(--color-ink)] ring-1 ring-[var(--color-line-strong)]">
@@ -84,7 +86,7 @@ export default async function OnboardingLandingPage({
               weight="regular"
               className="mt-2 text-[var(--color-ink-3)] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--color-ink)]"
             />
-          </Link>
+          </PendingDashboardLink>
         </li>
       </ul>
 

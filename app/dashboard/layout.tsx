@@ -92,6 +92,7 @@ async function DashboardHeaderShell() {
         userAvatarUrl={session.vendorMember.avatarUrl}
         userTitle={session.vendorMember.role}
         unreadCount={unreadCount}
+        canReturnToDashboard={Boolean(session.vendor)}
       />
     </>
   );
