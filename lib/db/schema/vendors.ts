@@ -141,6 +141,42 @@ export const vendorRegions = pgTable(
   (t) => [primaryKey({ columns: [t.vendorId, t.regionId] })],
 );
 
+/**
+ * A small, vendor-managed list of founders / executives shown only to
+ * authenticated vendor users. Public pages must not include these rows
+ * in server-rendered HTML; they are fetched through an auth-gated API.
+ */
+export const vendorLeadershipContacts = pgTable(
+  "vendor_leadership_contacts",
+  {
+    id: serial("id").primaryKey(),
+    vendorId: integer("vendor_id")
+      .notNull()
+      .references(() => vendors.id, { onDelete: "cascade" }),
+    vendorMemberId: integer("vendor_member_id").references(
+      () => vendorMembers.id,
+      { onDelete: "set null" },
+    ),
+    name: text("name").notNull(),
+    title: text("title").notNull(),
+    linkedinUrl: text("linkedin_url").notNull(),
+    displayOrder: integer("display_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("ix_vendor_leadership_contacts_vendor").on(t.vendorId),
+    uniqueIndex("ux_vendor_leadership_contacts_vendor_order").on(
+      t.vendorId,
+      t.displayOrder,
+    ),
+  ],
+);
+
 // Phase C gallery was originally vendor-level (vendor_gallery_images,
 // migration 0017). Reworked to product-level (app_screenshots, lives
 // in lib/db/schema/apps.ts) — migration 0018 drops the vendor-level
@@ -151,3 +187,7 @@ export type NewVendor = typeof vendors.$inferInsert;
 export type VendorMember = typeof vendorMembers.$inferSelect;
 export type NewVendorMember = typeof vendorMembers.$inferInsert;
 export type VendorRegion = typeof vendorRegions.$inferSelect;
+export type VendorLeadershipContact =
+  typeof vendorLeadershipContacts.$inferSelect;
+export type NewVendorLeadershipContact =
+  typeof vendorLeadershipContacts.$inferInsert;

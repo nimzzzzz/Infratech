@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { submissions, vendorMembers } from "@/lib/db/schema";
 import { TERMS_VERSION } from "@/lib/legal/terms-version";
 import { needsReacceptance } from "@/lib/legal/check-acceptance";
+import { ensureSubmittingMemberLeadershipContact } from "@/lib/submissions/leadership-contacts";
 import { companyEditBodySchema } from "./schema";
 
 /**
@@ -116,6 +117,23 @@ export async function POST(req: Request) {
 
   try {
     const { honeypot: _hp, ...payloadFields } = body;
+    const leadershipContacts = ensureSubmittingMemberLeadershipContact(
+      body.leadershipContacts,
+      member,
+    );
+    if (leadershipContacts.length === 0) {
+      return NextResponse.json(
+        {
+          error: "Invalid input",
+          fieldErrors: {
+            leadershipContacts: [
+              "Add your key contact before submitting",
+            ],
+          },
+        },
+        { status: 400 },
+      );
+    }
     const [submission] = await db
       .insert(submissions)
       .values({
@@ -124,6 +142,7 @@ export async function POST(req: Request) {
         submitterVendorId: member.vendorId,
         payload: {
           ...payloadFields,
+          leadershipContacts,
           termsVersionAtSubmit: TERMS_VERSION,
         },
       })

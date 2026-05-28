@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CompanyProfilePage() {
-  const { vendor } = await getVendorSession();
+  const { vendor, vendorMember } = await getVendorSession();
 
   const [vendorWithRegions, editStatus] = await Promise.all([
     getVendorWithRegions(vendor.id),
@@ -22,6 +22,7 @@ export default async function CompanyProfilePage() {
   const vendorData = vendorWithRegions ?? {
     ...vendor,
     regionSlugs: [] as string[],
+    leadershipContacts: [],
   };
 
   return (
@@ -38,7 +39,12 @@ export default async function CompanyProfilePage() {
       </p>
 
       <div className="mt-10">
-        <CompanyEditForm vendor={vendorData} editStatus={editStatus} />
+        <CompanyEditForm
+          vendor={vendorData}
+          vendorMember={vendorMember}
+          leadershipContacts={vendorData.leadershipContacts}
+          editStatus={editStatus}
+        />
       </div>
     </Container>
   );

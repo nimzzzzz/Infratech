@@ -55,6 +55,7 @@ export const COMPANY_EDIT_DIFF_FIELDS = [
   "companyRegions",
   "companyDescription",
   "companyLogoUrl",
+  "leadershipContacts",
 ] as const;
 
 export type DiffField = string;
@@ -166,4 +167,5 @@ export const DIFF_FIELD_LABELS: Record<string, string> = {
   companyRegions: "Regions",
   companyDescription: "Company description",
   companyLogoUrl: "Company logo",
+  leadershipContacts: "Key contacts",
 };

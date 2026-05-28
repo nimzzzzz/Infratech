@@ -12,6 +12,8 @@ import {
 import { TERMS_VERSION } from "@/lib/legal/terms-version";
 import { needsReacceptance } from "@/lib/legal/check-acceptance";
 import { checkVendorMemberRateLimit } from "@/lib/rate-limit/vendor-member";
+import { replaceVendorLeadershipContactsInTx } from "@/lib/queries/vendor-leadership";
+import { ensureSubmittingMemberLeadershipContact } from "@/lib/submissions/leadership-contacts";
 import { slugify } from "@/lib/submissions/slugify";
 import { submissionBodySchema } from "./schema";
 
@@ -128,18 +130,31 @@ export async function POST(req: Request) {
     );
   }
 
+  const leadershipContacts = ensureSubmittingMemberLeadershipContact(
+    body.leadershipContacts,
+    member,
+  );
+
   const mustCreateVendor = member.vendorId === null;
   if (mustCreateVendor) {
     const missing: string[] = [];
     if (!body.companyName) missing.push("companyName");
     if (!body.companyWebsite) missing.push("companyWebsite");
     if (!body.companyDescription) missing.push("companyDescription");
+    if (leadershipContacts.length === 0) missing.push("leadershipContacts");
     if (missing.length > 0) {
       return NextResponse.json(
         {
           error: "Company details required for first submission",
           fieldErrors: Object.fromEntries(
-            missing.map((k) => [k, ["Required for first submission"]]),
+            missing.map((k) => [
+              k,
+              [
+                k === "leadershipContacts"
+                  ? "Add your key contact before submitting"
+                  : "Required for first submission",
+              ],
+            ]),
           ),
         },
         { status: 422 },
@@ -244,6 +259,11 @@ export async function POST(req: Request) {
           );
         }
         vendorId = newVendor.id;
+        await replaceVendorLeadershipContactsInTx(
+          tx,
+          newVendor.id,
+          leadershipContacts,
+        );
       }
 
       const [submission] = await tx
@@ -283,6 +303,7 @@ export async function POST(req: Request) {
               ? {
                   companyLogoUrl: body.companyLogoUrl || null,
                   companyLogoAlt: body.companyLogoAlt || null,
+                  leadershipContacts,
                 }
               : {}),
           },

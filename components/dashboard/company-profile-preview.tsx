@@ -7,6 +7,7 @@ import {
   MapPin,
 } from "@phosphor-icons/react";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
+import type { LeadershipContactPayload } from "@/lib/queries/vendor-leadership";
 
 /**
  * Live preview of the public vendor profile shown next to the company
@@ -29,6 +30,7 @@ type PreviewData = {
   hqCountry: string;
   description: string;
   logoUrl: string | null;
+  leadershipContacts?: LeadershipContactPayload[];
   /** Pre-formatted regions string. "All regions" when all 7 geo
    *  regions are selected, comma-joined names otherwise, null when
    *  the vendor has none. */
@@ -101,6 +103,34 @@ export function CompanyProfilePreview({ data }: { data: PreviewData }) {
             </span>
           </PreviewFactRow>
         </dl>
+
+        {data.leadershipContacts && data.leadershipContacts.length > 0 ? (
+          <div className="mt-5 border-t border-[var(--color-line)] pt-5">
+            <p className="text-[12px] uppercase tracking-[0.2em] text-[var(--color-ink-3)]">
+              Key contacts
+            </p>
+            <div className="mt-3 space-y-3">
+              {data.leadershipContacts.slice(0, 4).map((contact, index) => (
+                <div
+                  key={`${contact.linkedinUrl}-${index}`}
+                  className="flex items-center justify-between gap-3 border-t border-[var(--color-line)] pt-3 first:border-t-0 first:pt-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-[15px] text-[var(--color-ink)]">
+                      {contact.name}
+                    </p>
+                    <p className="truncate text-[13px] text-[var(--color-ink-3)]">
+                      {contact.title}
+                    </p>
+                  </div>
+                  <span className="grid h-4 w-4 shrink-0 place-items-center bg-[#0a66c2] font-sans text-[10px] font-bold leading-none text-white">
+                    in
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {paragraphs.length > 0 ? (
           <div className="mt-5 space-y-3 border-t border-[var(--color-line)] pt-5">

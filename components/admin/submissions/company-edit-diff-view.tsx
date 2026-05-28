@@ -22,7 +22,15 @@ export function CompanyEditDiffView({
   payload: Record<string, unknown>;
 }) {
   const liveAsPayload = liveVendorToPayloadShape(liveVendor);
-  const diff = diffPayload(liveAsPayload, payload, COMPANY_EDIT_DIFF_FIELDS);
+  const proposedAsPayload = {
+    ...payload,
+    leadershipContacts: leadershipContactsToLabels(payload.leadershipContacts),
+  };
+  const diff = diffPayload(
+    liveAsPayload,
+    proposedAsPayload,
+    COMPANY_EDIT_DIFF_FIELDS,
+  );
 
   const proposedLogo = stringOrNull(payload.companyLogoUrl);
   const logoChanged = proposedLogo !== (liveVendor.logoUrl ?? null);
@@ -110,9 +118,27 @@ function liveVendorToPayloadShape(
     companyRegions: vendor.regionSlugs,
     companyDescription: vendor.description ?? "",
     companyLogoUrl: vendor.logoUrl ?? "",
+    leadershipContacts: vendor.leadershipContacts.map(
+      (contact) => `${contact.name} — ${contact.title}`,
+    ),
   };
 }
 
 function stringOrNull(v: unknown): string | null {
   return typeof v === "string" && v.length > 0 ? v : null;
+}
+
+function leadershipContactsToLabels(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(
+      (
+        contact,
+      ): contact is { name: string; title: string; linkedinUrl?: string } =>
+        contact &&
+        typeof contact === "object" &&
+        typeof (contact as Record<string, unknown>).name === "string" &&
+        typeof (contact as Record<string, unknown>).title === "string",
+    )
+    .map((contact) => `${contact.name} — ${contact.title}`);
 }

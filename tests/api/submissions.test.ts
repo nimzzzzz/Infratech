@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import {
   apps,
   submissions,
+  vendorLeadershipContacts,
   vendorMembers,
   vendorMemberLegalAcceptances,
   vendors,
@@ -33,6 +34,8 @@ async function seedMember(opts: {
   onboarded?: boolean;
   suspended?: boolean;
   acceptCurrentTerms?: boolean;
+  linkedinUrl?: string | null;
+  role?: string | null;
 }): Promise<{ id: number; vendorId: number | null }> {
   const [row] = await db
     .insert(vendorMembers)
@@ -41,6 +44,8 @@ async function seedMember(opts: {
       clerkUserId: opts.clerkUserId,
       name: "Test Member",
       primaryEmail: `${opts.clerkUserId}@test.example`,
+      linkedinUrl: opts.linkedinUrl ?? null,
+      role: opts.role ?? null,
       onboarded: opts.onboarded ?? true,
       suspended: opts.suspended ?? false,
     })
@@ -145,6 +150,54 @@ describe("POST /api/submissions — happy paths", () => {
     const payload = subRow.payload as { slug: string; name: string };
     expect(payload.slug).toBe("northstrand-field");
     expect(payload.name).toBe("Northstrand Field");
+  });
+
+  it("vendor-less user: automatically stores the signed-in member as the first leadership contact", async () => {
+    const { POST } = await import("@/app/api/submissions/route");
+    const member = await seedMember({
+      clerkUserId: "user_new_signup_leader",
+      vendorId: null,
+      linkedinUrl: "linkedin.com/in/newsignupleader",
+      role: "Founder",
+    });
+    authMock.userId = "user_new_signup_leader";
+
+    const res = await POST(
+      makeRequest({
+        ...validCompany({ leadershipContacts: [] }),
+        ...validProduct({ name: "Key Contact Seed Product" }),
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+
+    const [leadershipContact] = await db
+      .select()
+      .from(vendorLeadershipContacts)
+      .where(eq(vendorLeadershipContacts.vendorId, json.vendorId));
+    expect(leadershipContact).toMatchObject({
+      vendorMemberId: member.id,
+      name: "Test Member",
+      title: "Founder",
+      linkedinUrl: "https://linkedin.com/in/newsignupleader",
+      displayOrder: 0,
+    });
+
+    const [subRow] = await db
+      .select()
+      .from(submissions)
+      .where(eq(submissions.id, json.submissionId));
+    expect(subRow.payload).toMatchObject({
+      leadershipContacts: [
+        {
+          name: "Test Member",
+          title: "Founder",
+          linkedinUrl: "https://linkedin.com/in/newsignupleader",
+          vendorMemberId: member.id,
+        },
+      ],
+    });
   });
 
   it("returning vendor: creates submission only, no new vendor row", async () => {

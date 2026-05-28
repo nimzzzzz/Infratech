@@ -215,6 +215,7 @@ function mergeFormState(partial: Partial<FormState>): FormState {
     customPricing: "",
 
     ...partial,
+    leadershipContacts: partial.leadershipContacts ?? [],
   };
 }
 

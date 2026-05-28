@@ -6,10 +6,16 @@ import { Check, CheckCircle, Clock, XCircle } from "@phosphor-icons/react";
 import { CountrySelect } from "@/components/dashboard/country-select";
 import { LogoUploadField } from "@/components/dashboard/logo-upload-field";
 import { CompanyProfilePreview } from "@/components/dashboard/company-profile-preview";
+import { LeadershipContactsField } from "@/components/dashboard/leadership-contacts-field";
 import { lookups, regions } from "@/lib/data/taxonomy";
 import { companyStepSchema } from "@/app/api/submissions/schema";
 import { cn } from "@/lib/utils";
 import type { CompanyEditStatus, VendorWithRegions } from "@/lib/queries/company-edit";
+import type {
+  LeadershipContactPayload,
+  VendorLeadershipContact,
+} from "@/lib/queries/vendor-leadership";
+import type { VendorMember } from "@/lib/db/schema";
 
 /**
  * Company profile edit form. By design, this MUST mirror the signup
@@ -29,6 +35,8 @@ import type { CompanyEditStatus, VendorWithRegions } from "@/lib/queries/company
 
 type Props = {
   vendor: VendorWithRegions;
+  vendorMember: VendorMember;
+  leadershipContacts: VendorLeadershipContact[];
   editStatus: CompanyEditStatus;
 };
 
@@ -41,6 +49,7 @@ type FormState = {
   companyDescription: string;
   companyLogoUrl: string | null;
   companyLogoAlt: string;
+  leadershipContacts: LeadershipContactPayload[];
 };
 
 type FieldErrors = Partial<Record<string, string[]>>;
@@ -51,7 +60,11 @@ const GEO_REGION_SLUGS = regions
   .filter((r) => r.slug !== "global")
   .map((r) => r.slug);
 
-function vendorToFormState(vendor: VendorWithRegions): FormState {
+function vendorToFormState(
+  vendor: VendorWithRegions,
+  vendorMember: VendorMember,
+  leadershipContacts: VendorLeadershipContact[],
+): FormState {
   return {
     companyName: vendor.name,
     companyWebsite: vendor.websiteUrl ?? "",
@@ -61,10 +74,17 @@ function vendorToFormState(vendor: VendorWithRegions): FormState {
     companyDescription: vendor.description ?? "",
     companyLogoUrl: vendor.logoUrl ?? null,
     companyLogoAlt: "",
+    leadershipContacts: leadershipToFormState(
+      leadershipContacts,
+      vendorMember,
+    ),
   };
 }
 
-function payloadToFormState(payload: Record<string, unknown>): FormState {
+function payloadToFormState(
+  payload: Record<string, unknown>,
+  vendorMember: VendorMember,
+): FormState {
   return {
     companyName: (payload.companyName as string) ?? "",
     companyWebsite: (payload.companyWebsite as string) ?? "",
@@ -76,10 +96,63 @@ function payloadToFormState(payload: Record<string, unknown>): FormState {
     companyDescription: (payload.companyDescription as string) ?? "",
     companyLogoUrl: (payload.companyLogoUrl as string | null) ?? null,
     companyLogoAlt: (payload.companyLogoAlt as string) ?? "",
+    leadershipContacts: payloadLeadershipToFormState(
+      payload.leadershipContacts,
+      vendorMember,
+    ),
   };
 }
 
-export function CompanyEditForm({ vendor, editStatus }: Props) {
+function leadershipToFormState(
+  rows: VendorLeadershipContact[],
+  vendorMember: VendorMember,
+): LeadershipContactPayload[] {
+  if (rows.length > 0) {
+    return rows.map(({ name, title, linkedinUrl }) => ({
+      name,
+      title,
+      linkedinUrl,
+    }));
+  }
+  return [
+    {
+      name: vendorMember.name,
+      title: vendorMember.role ?? "",
+      linkedinUrl: vendorMember.linkedinUrl ?? "",
+    },
+  ];
+}
+
+function payloadLeadershipToFormState(
+  value: unknown,
+  vendorMember: VendorMember,
+): LeadershipContactPayload[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    return leadershipToFormState([], vendorMember);
+  }
+  return value
+    .slice(0, 4)
+    .filter(
+      (item): item is LeadershipContactPayload =>
+        item &&
+        typeof item === "object" &&
+        typeof (item as Record<string, unknown>).name === "string" &&
+        typeof (item as Record<string, unknown>).title === "string" &&
+        typeof (item as Record<string, unknown>).linkedinUrl === "string",
+    )
+    .map((item) => ({
+      name: item.name,
+      title: item.title,
+      linkedinUrl: item.linkedinUrl,
+    }));
+}
+
+export function CompanyEditForm({
+  vendor,
+  vendorMember,
+  leadershipContacts,
+  editStatus,
+}: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -88,8 +161,8 @@ export function CompanyEditForm({ vendor, editStatus }: Props) {
 
   const initialState: FormState =
     isRejected && editStatus.payload
-      ? payloadToFormState(editStatus.payload)
-      : vendorToFormState(vendor);
+      ? payloadToFormState(editStatus.payload, vendorMember)
+      : vendorToFormState(vendor, vendorMember, leadershipContacts);
 
   const [data, setData] = useState<FormState>(initialState);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -132,6 +205,7 @@ export function CompanyEditForm({ vendor, editStatus }: Props) {
       companyDescription: data.companyDescription,
       companyLogoUrl: data.companyLogoUrl ?? "",
       companyLogoAlt: data.companyLogoAlt,
+      leadershipContacts: data.leadershipContacts,
     });
     if (!result.success) {
       const flat = result.error.flatten().fieldErrors as FieldErrors;
@@ -168,6 +242,7 @@ export function CompanyEditForm({ vendor, editStatus }: Props) {
       companyDescription: data.companyDescription,
       companyLogoUrl: data.companyLogoUrl ?? "",
       companyLogoAlt: data.companyLogoAlt,
+      leadershipContacts: data.leadershipContacts,
     };
 
     startTransition(async () => {
@@ -233,6 +308,7 @@ export function CompanyEditForm({ vendor, editStatus }: Props) {
     hqCountry: data.companyHeadquarters,
     description: data.companyDescription,
     logoUrl: data.companyLogoUrl,
+    leadershipContacts: data.leadershipContacts,
     regionsLabel:
       data.companyRegions.length === 0
         ? null
@@ -431,6 +507,18 @@ export function CompanyEditForm({ vendor, editStatus }: Props) {
               <span className="num">2000</span>
             </p>
           </Field>
+        </div>
+
+        <div id="leadershipContacts" className="md:col-span-2 scroll-mt-24">
+          <LeadershipContactsField
+            contacts={data.leadershipContacts}
+            error={err(errors, "leadershipContacts")}
+            idPrefix="leadershipContacts"
+            onChange={(contacts) => {
+              update("leadershipContacts", contacts);
+              clearError("leadershipContacts");
+            }}
+          />
         </div>
 
         <div id="companyLogoUrl" className="md:col-span-2 scroll-mt-24">

@@ -14,6 +14,7 @@ import { env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { db } from "@/lib/db/client";
 import { submissions } from "@/lib/db/schema";
+import type { LeadershipContactPayload } from "@/lib/queries/vendor-leadership";
 
 export const metadata: Metadata = {
   title: "Submit a product",
@@ -50,6 +51,7 @@ type WizardPrefillValues = {
   customCapabilities?: string[];
   customIndustries?: string[];
   customPricing?: string;
+  leadershipContacts?: LeadershipContactPayload[];
 };
 
 function payloadToWizardValues(
@@ -62,6 +64,24 @@ function payloadToWizardValues(
     Array.isArray(p[k]) && (p[k] as unknown[]).every((x) => typeof x === "string")
       ? (p[k] as string[])
       : undefined;
+  const leadershipContacts = Array.isArray(p.leadershipContacts)
+    ? p.leadershipContacts
+        .filter(
+          (
+            item,
+          ): item is {
+            name: string;
+            title: string;
+            linkedinUrl: string;
+          } =>
+            item &&
+            typeof item === "object" &&
+            typeof (item as Record<string, unknown>).name === "string" &&
+            typeof (item as Record<string, unknown>).title === "string" &&
+            typeof (item as Record<string, unknown>).linkedinUrl === "string",
+        )
+        .slice(0, 4)
+    : undefined;
   return {
     name: str("name"),
     url: str("url"),
@@ -76,6 +96,7 @@ function payloadToWizardValues(
     customCapabilities: arr("customCapabilities"),
     customIndustries: arr("customIndustries"),
     customPricing: str("customPricing"),
+    leadershipContacts,
   };
 }
 
@@ -149,6 +170,17 @@ export default async function SubmitPage({
   const skipCompanyStep = resubmitId !== null || vendor != null;
   const returnHref = vendor ? "/dashboard" : "/dashboard/onboarding";
   const returnLabel = vendor ? "Dashboard" : "Onboarding";
+  const accountLeadershipValues = !skipCompanyStep
+    ? {
+        leadershipContacts: [
+          {
+            name: vendorMember.name,
+            title: vendorMember.role ?? "",
+            linkedinUrl: vendorMember.linkedinUrl ?? "",
+          },
+        ],
+      }
+    : undefined;
 
   return (
     <Container className="max-w-3xl py-10 md:py-14">
@@ -183,7 +215,7 @@ export default async function SubmitPage({
           domain: vendor ? domainFrom(vendor.websiteUrl) : "",
         }}
         skipCompanyStep={skipCompanyStep}
-        initialValues={resubmitValues}
+        initialValues={resubmitValues ?? accountLeadershipValues}
         submitUrl={
           resubmitId !== null
             ? `/api/submissions/${resubmitId}/resubmit`

@@ -53,6 +53,8 @@ const optionalPlainText = (max: number) =>
   plainText(max).optional().or(z.literal(""));
 
 const HOSTNAME_ERROR = "Enter a valid web address (e.g. example.com)";
+const LINKEDIN_PROFILE_ERROR =
+  "Enter a LinkedIn profile URL (e.g. linkedin.com/in/name)";
 
 const url = (max: number) =>
   z
@@ -86,6 +88,25 @@ const optionalUrl = (max: number) =>
         .optional()
         .or(z.literal("")),
     );
+
+function isLinkedInProfileUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    const host = u.hostname.replace(/^www\./, "").toLowerCase();
+    return host === "linkedin.com" && /^\/in\/[^/]+\/?$/.test(u.pathname);
+  } catch {
+    return false;
+  }
+}
+
+const linkedinProfileUrl = z
+  .string()
+  .trim()
+  .min(1, "Required")
+  .transform(normaliseUrl)
+  .pipe(z.string().url(LINKEDIN_PROFILE_ERROR).max(500))
+  .refine(hasRealHostname, { message: LINKEDIN_PROFILE_ERROR })
+  .refine(isLinkedInProfileUrl, { message: LINKEDIN_PROFILE_ERROR });
 
 const slugArray = z.string().array();
 
@@ -186,6 +207,16 @@ export const companyStepSchema = z.object({
   // LetterAvatar treatment if these aren't set.
   companyLogoUrl: optionalBlobUrl,
   companyLogoAlt: optionalPlainText(200),
+  leadershipContacts: z
+    .array(
+      z.object({
+        name: plainText(120).min(1, "Required"),
+        title: plainText(120).min(1, "Required"),
+        linkedinUrl: linkedinProfileUrl,
+      }),
+    )
+    .max(4, "List up to four people")
+    .default([]),
 });
 
 /**
@@ -278,6 +309,7 @@ export const submissionBodySchema = z.object({
   // submissions; returning vendors don't carry these fields).
   companyLogoUrl: optionalBlobUrl,
   companyLogoAlt: optionalPlainText(200),
+  leadershipContacts: companyStepSchema.shape.leadershipContacts,
 
   // --- Product block (always required) ---
   name: plainText(200).min(1),

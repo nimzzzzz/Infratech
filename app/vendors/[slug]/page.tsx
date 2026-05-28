@@ -13,6 +13,7 @@ import {
 import { Container } from "@/components/site/container";
 import { LetterAvatar } from "@/components/browse/letter-avatar";
 import { AppCard } from "@/components/browse/app-card";
+import { VendorLeadershipPanel } from "@/components/vendor/vendor-leadership-panel";
 import {
   getVendorBySlug,
   getVendorRegionSlugs,
@@ -90,7 +91,7 @@ export default async function VendorDetailPage({
       <JsonLd vendor={vendor} toolCount={tools.length} />
 
       {/* HERO */}
-      <section className="relative overflow-hidden border-b border-[var(--color-line)] pt-10 md:pt-14">
+      <section className="relative overflow-hidden border-b border-[var(--color-line)] py-10 md:py-14">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-32 right-0 h-[440px] w-[440px] opacity-50 blur-3xl"
@@ -211,6 +212,7 @@ export default async function VendorDetailPage({
                   value={<span className="num">{tools.length}</span>}
                 />
               </dl>
+              <VendorLeadershipPanel slug={vendor.slug} />
             </aside>
           </div>
         </Container>

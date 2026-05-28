@@ -9,6 +9,10 @@ import {
   type SubmissionStatus,
   type Vendor,
 } from "@/lib/db/schema";
+import {
+  listVendorLeadershipContacts,
+  type VendorLeadershipContact,
+} from "@/lib/queries/vendor-leadership";
 
 export type CompanyEditStatus = {
   id: number;
@@ -57,7 +61,10 @@ export async function getCompanyEditStatus(
   };
 }
 
-export type VendorWithRegions = Vendor & { regionSlugs: string[] };
+export type VendorWithRegions = Vendor & {
+  regionSlugs: string[];
+  leadershipContacts: VendorLeadershipContact[];
+};
 
 /**
  * Fetch a vendor row together with its current region slugs. Used to
@@ -79,5 +86,11 @@ export async function getVendorWithRegions(
     .innerJoin(regions, eq(regions.id, vendorRegions.regionId))
     .where(eq(vendorRegions.vendorId, vendorId));
 
-  return { ...vendor, regionSlugs: regionRows.map((r) => r.slug) };
+  const leadershipContacts = await listVendorLeadershipContacts(vendorId);
+
+  return {
+    ...vendor,
+    regionSlugs: regionRows.map((r) => r.slug),
+    leadershipContacts,
+  };
 }

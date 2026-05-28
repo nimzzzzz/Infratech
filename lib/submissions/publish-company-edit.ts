@@ -2,6 +2,8 @@ import "server-only";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { vendors, vendorRegions, regions } from "@/lib/db/schema";
+import { replaceVendorLeadershipContactsInTx } from "@/lib/queries/vendor-leadership";
+import type { LeadershipContactInput } from "@/lib/submissions/leadership-contacts";
 
 type Tx = Parameters<Parameters<(typeof db)["transaction"]>[0]>[0];
 
@@ -13,6 +15,7 @@ export type CompanyEditPayload = {
   companyRegions?: string[];
   companyDescription?: string;
   companyLogoUrl?: string | null;
+  leadershipContacts?: LeadershipContactInput[];
 };
 
 /**
@@ -64,5 +67,13 @@ export async function publishCompanyEditInTx(
         .insert(vendorRegions)
         .values(regionRows.map((r) => ({ vendorId, regionId: r.id })));
     }
+  }
+
+  if (payload.leadershipContacts !== undefined) {
+    await replaceVendorLeadershipContactsInTx(
+      tx,
+      vendorId,
+      payload.leadershipContacts,
+    );
   }
 }

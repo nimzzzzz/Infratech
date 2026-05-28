@@ -26,12 +26,14 @@ import { cn } from "@/lib/utils";
 import { CountrySelect } from "./country-select";
 import { LogoUploadField } from "./logo-upload-field";
 import { GalleryUploadField } from "./gallery-upload-field";
+import { LeadershipContactsField } from "./leadership-contacts-field";
 import {
   ReviewImage,
   ReviewGalleryStrip,
 } from "./review-image";
 import { VideoEmbed } from "@/components/media/video-embed";
 import { isYouTubeOrVimeo } from "@/lib/media/video";
+import type { LeadershipContactPayload } from "@/lib/queries/vendor-leadership";
 
 /**
  * Per-field validation error map. Keys are FormState field names.
@@ -78,6 +80,7 @@ const FIELD_LABELS: Record<string, string> = {
   companyDescription: "Company description",
   companyLogoUrl: "Company logo",
   companyLogoAlt: "Company logo alt text",
+  leadershipContacts: "Key contacts",
   name: "Product name",
   url: "Product website",
   appleAppStoreUrl: "Apple App Store URL",
@@ -192,6 +195,7 @@ export type FormState = {
   companyDescription: string;
   companyLogoUrl: string | null;
   companyLogoAlt: string;
+  leadershipContacts: LeadershipContactPayload[];
 
   // ── Tool-level ──
   name: string;
@@ -222,6 +226,7 @@ const initialState = (companyName: string, domain: string): FormState => ({
   companyDescription: "",
   companyLogoUrl: null,
   companyLogoAlt: "",
+  leadershipContacts: [],
 
   name: "",
   url: "",
@@ -411,6 +416,7 @@ export function SubmitWizard({
         // URL, so a paste-attack via dev tools can't sneak past.
         companyLogoUrl: data.companyLogoUrl ?? "",
         companyLogoAlt: data.companyLogoAlt,
+        leadershipContacts: data.leadershipContacts,
       };
     }
     return {
@@ -515,6 +521,7 @@ export function SubmitWizard({
       // absent.
       companyLogoUrl: data.companyLogoUrl ?? "",
       companyLogoAlt: data.companyLogoAlt,
+      leadershipContacts: data.leadershipContacts,
       // Product block
       name: data.name,
       url: data.url,
@@ -922,6 +929,15 @@ function FullReviewView({
           value={data.companyDescription}
           multiline
         />
+        {data.leadershipContacts.length > 0 ? (
+          <ReviewRow
+            label="Key contacts"
+            value={data.leadershipContacts
+              .map((contact) => `${contact.name} — ${contact.title}`)
+              .join("\n")}
+            multiline
+          />
+        ) : null}
         {data.companyLogoUrl ? (
           <ReviewImage
             label="Company logo"
@@ -1599,6 +1615,18 @@ function CompanyStep({
             <span className="num">2000</span>
           </p>
         </Field>
+      </div>
+
+      <div id="step1-leadershipContacts" className="md:col-span-2 scroll-mt-24">
+        <LeadershipContactsField
+          contacts={data.leadershipContacts}
+          error={err(errors, "leadershipContacts")}
+          idPrefix="step1-leadershipContacts"
+          onChange={(contacts) => {
+            update("leadershipContacts", contacts);
+            clearError("leadershipContacts");
+          }}
+        />
       </div>
 
       <div
