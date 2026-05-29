@@ -5,6 +5,15 @@ import { auth } from "@clerk/nextjs/server";
 import { MainChrome } from "@/components/site/main-chrome";
 import "./globals.css";
 
+// The root layout reads auth() (added for the header-flicker fix), which
+// requires the request context. That conflicts with statically-generated
+// routes in the tree (e.g. /apps/[slug]) and surfaces as a 500 with
+// digest DYNAMIC_SERVER_USAGE. Forcing dynamic rendering for the whole
+// tree matches the auth() requirement. Trade-off: no edge-static caching
+// for public pages — acceptable pre-launch; the proper fix is route
+// groups isolating auth() to authenticated trees.
+export const dynamic = "force-dynamic";
+
 const alike = Alike({
   subsets: ["latin"],
   weight: "400",
