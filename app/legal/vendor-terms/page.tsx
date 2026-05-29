@@ -16,29 +16,26 @@ const ul = "list-disc space-y-2 pl-6";
 const sections: DocumentSection[] = [
   {
     id: "relationship-to-general-terms",
-    label: "Relationship to general terms",
+    label: "How these terms fit together",
     content: (
       <p>
-        These Vendor Terms apply in addition to the general{" "}
+        These Vendor Terms add to our general{" "}
         <a
           href="/legal/terms"
           className="bloom-text underline-offset-4 hover:underline"
         >
           Terms of Service
         </a>{" "}
-        and the{" "}
+        and{" "}
         <a
           href="/legal/privacy"
           className="bloom-text underline-offset-4 hover:underline"
         >
           Privacy Policy
         </a>
-        . They govern the relationship between Resolute Management Consultancy
-        (&ldquo;Resolute&rdquo;, &ldquo;we&rdquo;) and any individual or
-        organisation (&ldquo;Vendor&rdquo;, &ldquo;you&rdquo;) that creates a
-        vendor account on AllInfratech to submit and manage a listing. If
-        anything in these Vendor Terms conflicts with the general Terms of
-        Service, these Vendor Terms govern for the vendor relationship.
+        , and apply when you create a vendor account to submit and manage a
+        listing. If anything here conflicts with the general terms, these terms
+        apply for the vendor relationship.
       </p>
     ),
   },
@@ -47,234 +44,151 @@ const sections: DocumentSection[] = [
     label: "Eligibility and authority",
     content: (
       <>
-        <p>By creating a vendor account, you represent and warrant that:</p>
+        <p>When you create a vendor account, you confirm that:</p>
         <ul className={ul}>
-          <li>You are at least 18 years old and able to enter a binding contract.</li>
+          <li>You&rsquo;re at least 18 and able to enter a contract.</li>
           <li>
-            You are authorised by the company that owns the software product you
-            intend to list to act on its behalf.
+            You&rsquo;re authorised to represent the company that owns the
+            product you&rsquo;re listing.
           </li>
+          <li>The information you give us is accurate and not misleading.</li>
           <li>
-            The information you submit is accurate and not misleading.
+            You won&rsquo;t impersonate another company, product, or person.
           </li>
-          <li>You will not impersonate another company, product, or individual.</li>
         </ul>
         <p>
-          We may request reasonable evidence of your authority to manage a
-          listing at any time. If we are not satisfied, we may suspend the
-          listing pending verification.
+          We may ask for reasonable proof that you&rsquo;re authorised to manage
+          a listing, and may pause the listing until we&rsquo;re satisfied.
         </p>
       </>
     ),
   },
   {
     id: "the-listing",
-    label: "The listing",
+    label: "Your listing",
     content: (
       <>
         <p>
-          Through the vendor dashboard you may submit and update: product name,
-          tagline, description, logo, screenshots, website URL, founded year,
-          headquarters, applicable project stages, capabilities, pricing basis,
-          and other fields offered by the dashboard.
+          Through the dashboard you can submit and update your product details
+          &mdash; name, tagline, description, logo, screenshots, website, stages,
+          capabilities, pricing, and the other fields we offer.
         </p>
         <p>
-          <strong>Editorial discretion.</strong> AllInfratech is an editorial
-          directory. Resolute reserves absolute editorial discretion over whether
-          to publish a listing, copy-editing for clarity or tone, categorisation
-          into stages and capabilities (including overriding your selections),
-          adding editorial commentary, and removing or suspending a listing at
-          any time. We will generally not change the substance of your
-          description without good reason.
+          AllInfratech is an editorial directory, so we decide what gets
+          published and how it&rsquo;s presented. That means we may edit your copy
+          for clarity, adjust how a product is categorised, add context, or
+          decline, suspend, or remove a listing. We won&rsquo;t change the
+          substance of your description without good reason.
         </p>
         <p>
-          <strong>Free of charge.</strong> Listings are free. We do not offer
-          paid placements, sponsored ranking, or any paid visibility, and we will
-          not solicit payment from you. If anyone purporting to represent
-          AllInfratech or Resolute asks you to pay for placement, the request is
-          fraudulent &mdash; please report it to{" "}
-          <strong>team@allinfratech.com</strong>.
+          Listings are free. We don&rsquo;t offer paid placements or sponsored
+          ranking, and we&rsquo;ll never ask you to pay to be listed. If anyone
+          claiming to represent us asks you for payment, it&rsquo;s not genuine
+          &mdash; please tell us at team@allinfratech.com.
         </p>
       </>
     ),
   },
   {
     id: "content-licence",
-    label: "Content licence",
+    label: "Permission to show your content",
     content: (
       <>
         <p>
-          By submitting content (including logos, screenshots, product
-          descriptions, marketing copy, taglines, and links) you grant Resolute a
-          worldwide, non-exclusive, royalty-free, sublicensable licence to:
-        </p>
-        <ul className={ul}>
-          <li>
-            Display, reproduce, format, and adapt the content within the
-            Directory.
-          </li>
-          <li>
-            Include the content in editorial features, comparisons, or curated
-            collections within the Directory.
-          </li>
-          <li>
-            Use the content in a reasonable promotional context for the Directory
-            itself (for example, social-media posts about a new listing).
-          </li>
-        </ul>
-        <p>
-          This licence terminates when your listing is removed, except that we
-          may retain copies for archival, audit, and legal-defence purposes, and
-          we are not required to remove copies already incorporated into prior
-          promotional materials.
+          You keep ownership of everything you submit &mdash; logos, screenshots,
+          descriptions, and the rest. By submitting it, you give us permission to
+          display, format, and adapt that content within the directory, and to
+          use it to promote the directory itself (for example, a post about a new
+          listing). That permission is worldwide and royalty-free, and it lasts
+          while your listing is published.
         </p>
         <p>
-          You retain ownership of all intellectual property in the content you
-          submit. You warrant that you have all rights necessary to grant the
-          licence above and that the content does not infringe any third
-          party&rsquo;s rights.
+          You confirm you have the rights to grant that permission and that your
+          content doesn&rsquo;t infringe anyone else&rsquo;s rights. If your
+          listing is removed, we may keep copies where we need them for our own
+          records, and we don&rsquo;t have to undo material already used to
+          promote the directory.
         </p>
       </>
     ),
   },
   {
     id: "acceptable-submissions",
-    label: "Acceptable submissions",
+    label: "What not to submit",
     content: (
       <>
-        <p>You agree not to submit content that:</p>
+        <p>Please don&rsquo;t submit content that:</p>
         <ul className={ul}>
+          <li>is false, misleading, or inaccurate;</li>
+          <li>infringes someone else&rsquo;s rights;</li>
           <li>
-            Is false, misleading, or materially inaccurate.
+            contains malware or anything designed to harm visitors or harvest
+            data;
           </li>
-          <li>Infringes any third party&rsquo;s intellectual-property rights.</li>
-          <li>
-            Contains malware, tracking pixels, or other code intended to harm
-            visitors or harvest data.
-          </li>
-          <li>
-            Defames, disparages, or unfairly compares competitors.
-          </li>
-          <li>Is unlawful, obscene, harassing, or otherwise inappropriate.</li>
+          <li>unfairly disparages competitors; or</li>
+          <li>is unlawful, obscene, or harassing.</li>
         </ul>
-        <p>
-          Rich-text inputs are sanitised against an allowlist (paragraphs, bold,
-          italic, lists, links). HTML, scripts, iframes, and inline styles are
-          stripped server-side.
-        </p>
       </>
     ),
   },
   {
     id: "vendor-contact-messages",
-    label: "Visitor contact messages",
+    label: "Messages from visitors",
     content: (
-      <>
-        <p>
-          Visitors may use a per-product contact form to send a message to you.
-          Messages are forwarded by email to the contact address on your vendor
-          account; a copy is sent to Resolute&rsquo;s internal inbox for
-          moderation. Your email address is never displayed publicly.
-        </p>
-        <p>
-          You are solely responsible for any subsequent communication with the
-          visitor and for the lawfulness of how you handle the personal data they
-          send you (including under the UAE Personal Data Protection Law and, if
-          applicable, the EU/UK GDPR). Resolute is not a party to that
-          communication or any business that follows.
-        </p>
-      </>
+      <p>
+        Visitors can message you through the contact form on your product page.
+        We forward those messages to your registered email and keep a copy for
+        moderation; your address is never shown publicly. You&rsquo;re
+        responsible for any conversation that follows and for handling the
+        personal data people send you in line with applicable data-protection
+        law &mdash; we&rsquo;re not part of it.
+      </p>
     ),
   },
   {
     id: "suspension-and-termination",
-    label: "Suspension and termination",
+    label: "Suspension and closing your account",
     content: (
-      <>
-        <p>
-          We may suspend or remove your listing and account, with or without
-          notice, for reasons including breach of these terms, submission of
-          false or infringing content, a reasonable belief that you are not
-          authorised to represent the listed product, or operational, legal, or
-          editorial reasons at Resolute&rsquo;s sole discretion.
-        </p>
-        <p>
-          You may terminate your account at any time by contacting{" "}
-          <strong>team@allinfratech.com</strong>. On termination, we will remove
-          your published listing within 30&nbsp;days. Audit records may be
-          retained as required to evidence compliance &mdash; see the{" "}
-          <a
-            href="/legal/privacy"
-            className="bloom-text underline-offset-4 hover:underline"
-          >
-            Privacy Policy
-          </a>
-          .
-        </p>
-      </>
+      <p>
+        We may suspend or remove your listing or account at any time &mdash; for
+        example, if these terms are broken, a submission is false or infringing,
+        or we have reason to think you&rsquo;re not authorised to represent the
+        product. You can close your account any time by emailing
+        team@allinfratech.com, and we&rsquo;ll remove your published listing
+        within 30 days. We may keep limited records where we need them &mdash; see
+        the{" "}
+        <a
+          href="/legal/privacy"
+          className="bloom-text underline-offset-4 hover:underline"
+        >
+          Privacy Policy
+        </a>
+        .
+      </p>
     ),
   },
   {
     id: "disclaimers-and-liability",
-    label: "Disclaimers and liability",
+    label: "What we can and can't promise",
     content: (
-      <>
-        <p>
-          The Directory is provided to vendors free of charge and on an
-          &ldquo;as is&rdquo; basis. Without limiting the disclaimers in the
-          general Terms of Service:
-        </p>
-        <ul className={ul}>
-          <li>
-            We do not guarantee any level of traffic, leads, conversions, page
-            rank, or commercial benefit from your listing.
-          </li>
-          <li>
-            We do not guarantee uptime, indexing, or that your listing will
-            appear in any particular position relative to other listings.
-          </li>
-          <li>
-            We are not responsible for the conduct, claims, or solvency of any
-            visitor who contacts you through the Directory.
-          </li>
-        </ul>
-        <p>
-          Our liability to you is limited as set out in the general{" "}
-          <a
-            href="/legal/terms#limitation-of-liability"
-            className="bloom-text underline-offset-4 hover:underline"
-          >
-            Terms of Service
-          </a>{" "}
-          (including the AED&nbsp;500 aggregate cap).
-        </p>
-      </>
+      <p>
+        Listings are free and provided as they are. We can&rsquo;t promise any
+        particular level of traffic, leads, or results from your listing, or that
+        it will appear in any particular position. We&rsquo;re also not
+        responsible for anyone who contacts you through the directory.
+      </p>
     ),
   },
   {
     id: "vendor-indemnity",
-    label: "Vendor indemnity",
+    label: "If your content causes a problem",
     content: (
-      <>
-        <p>
-          In addition to the indemnity in the general Terms of Service, you agree
-          to indemnify Resolute against any claim brought by a third party
-          alleging that:
-        </p>
-        <ul className={ul}>
-          <li>
-            Content you submitted infringes their intellectual-property, privacy,
-            or other rights;
-          </li>
-          <li>
-            You were not authorised to represent the product you listed;
-          </li>
-          <li>
-            The product or its marketing as represented by you violates
-            applicable law.
-          </li>
-        </ul>
-      </>
+      <p>
+        If something you submit leads to a claim against us &mdash; for example,
+        because it infringes someone&rsquo;s rights or you weren&rsquo;t
+        authorised to represent the product &mdash; you agree to cover the
+        resulting costs.
+      </p>
     ),
   },
   {
@@ -282,30 +196,20 @@ const sections: DocumentSection[] = [
     label: "Changes to these terms",
     content: (
       <p>
-        We may update these Vendor Terms. For material changes, we will email the
-        contact address on your account at least 14&nbsp;days before the new
-        version takes effect, and we may require you to re-accept inside the
-        vendor dashboard before continuing to use it. If you do not accept, you
-        may close your account and we will remove the listing.
+        We may update these Vendor Terms. For significant changes we&rsquo;ll
+        email the address on your account, and we may ask you to re-accept the
+        updated terms in your dashboard. If you don&rsquo;t accept, you can close
+        your account and we&rsquo;ll remove the listing.
       </p>
     ),
   },
   {
     id: "governing-law",
-    label: "Governing law and disputes",
+    label: "Governing law",
     content: (
       <p>
-        These Vendor Terms are governed by the same law and dispute-resolution
-        process as the general Terms of Service: laws of the{" "}
-        <strong>
-          Dubai International Financial Centre (DIFC), United Arab Emirates
-        </strong>
-        , with disputes resolved by{" "}
-        <strong>
-          arbitration administered by the DIFC-LCIA Arbitration Centre
-        </strong>{" "}
-        under the DIFC-LCIA Arbitration Rules. Seat: Dubai. Language: English.
-        One arbitrator. Questions: <strong>team@allinfratech.com</strong>.
+        These terms are governed by the laws of the United Arab Emirates.
+        Questions? Email team@allinfratech.com.
       </p>
     ),
   },
@@ -317,7 +221,7 @@ export default function VendorTermsPage() {
       eyebrow="Legal"
       title="Vendor Terms"
       lastUpdated={TERMS_LAST_UPDATED}
-      version="1.1"
+      version="1.2"
       sections={sections}
     />
   );
