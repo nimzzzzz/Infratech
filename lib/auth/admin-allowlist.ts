@@ -26,20 +26,35 @@ import { env } from "@/lib/env";
  * value and would otherwise trip the allowlist. The webhook handler
  * is responsible for selecting the primary address.
  */
+/**
+ * Parse a raw CLERK_ADMIN_EMAILS value into a trimmed, lowercased,
+ * de-blanked list. The single source of truth for how the env var is
+ * tokenised — both isAdminEmail (membership test) and getAdminEmails
+ * (recipient list) build on this.
+ */
+function parseAdminList(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/**
+ * The full admin recipient list from CLERK_ADMIN_EMAILS — parsed,
+ * trimmed, lowercased, blanks dropped. Empty array when the env var is
+ * unset/empty. Used to BCC admins on submission-review notifications.
+ */
+export function getAdminEmails(): string[] {
+  return parseAdminList(env.clerk().adminEmails);
+}
+
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
   const candidate = email.trim().toLowerCase();
   if (!candidate) return false;
 
-  const raw = env.clerk().adminEmails;
-  if (!raw) return false;
-
-  const allowed = raw
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-
-  return allowed.includes(candidate);
+  return parseAdminList(env.clerk().adminEmails).includes(candidate);
 }
 
 /**
@@ -52,10 +67,6 @@ export function isAdminEmailWithList(
 ): boolean {
   if (!email) return false;
   const candidate = email.trim().toLowerCase();
-  if (!candidate || !rawList) return false;
-  const allowed = rawList
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  return allowed.includes(candidate);
+  if (!candidate) return false;
+  return parseAdminList(rawList).includes(candidate);
 }
