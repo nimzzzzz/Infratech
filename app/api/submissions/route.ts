@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq, isNull } from "drizzle-orm";
@@ -14,6 +14,7 @@ import { needsReacceptance } from "@/lib/legal/check-acceptance";
 import { checkVendorMemberRateLimit } from "@/lib/rate-limit/vendor-member";
 import { replaceVendorLeadershipContactsInTx } from "@/lib/queries/vendor-leadership";
 import { ensureSubmittingMemberLeadershipContact } from "@/lib/submissions/leadership-contacts";
+import { notifyAdminsOfSubmission } from "@/lib/email/send-admin-notification";
 import { slugify } from "@/lib/submissions/slugify";
 import { submissionBodySchema } from "./schema";
 
@@ -319,6 +320,12 @@ export async function POST(req: Request) {
     // race, double-click, etc.). 'layout' scope so the dashboard
     // layout's session lookup re-runs too.
     revalidatePath("/dashboard", "layout");
+
+    // Best-effort admin notification — fire-and-forget so Resend
+    // latency never blocks the response. Success path only.
+    after(() =>
+      notifyAdminsOfSubmission({ submissionId: result.submissionId }),
+    );
 
     return NextResponse.json({
       submissionId: result.submissionId,

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
@@ -7,6 +7,7 @@ import { submissions, vendorMembers } from "@/lib/db/schema";
 import { TERMS_VERSION } from "@/lib/legal/terms-version";
 import { needsReacceptance } from "@/lib/legal/check-acceptance";
 import { ensureSubmittingMemberLeadershipContact } from "@/lib/submissions/leadership-contacts";
+import { notifyAdminsOfSubmission } from "@/lib/email/send-admin-notification";
 import { companyEditBodySchema } from "./schema";
 
 /**
@@ -151,6 +152,9 @@ export async function POST(req: Request) {
     // Submission is pending_review; the vendor's dashboard +
     // /dashboard/company need to reflect the new pending state.
     revalidatePath("/dashboard", "layout");
+
+    // Best-effort admin notification — success path only.
+    after(() => notifyAdminsOfSubmission({ submissionId: submission.id }));
 
     return NextResponse.json({ success: true, submissionId: submission.id });
   } catch (err) {
